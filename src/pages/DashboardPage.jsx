@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { auth } from '../firebase';
-import { signOut } from 'firebase/auth';
-import Sidebar from '../components/common/Sidebar';
-
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { auth } from "../firebase";
+import { signOut } from "firebase/auth";
+import Sidebar from "../components/common/Sidebar";
+import Navbar from "../components/common/Navbar";
 
 const DashboardPage = () => {
   const [user, setUser] = useState(null);
@@ -14,7 +14,7 @@ const DashboardPage = () => {
       if (currentUser) {
         setUser(currentUser);
       } else {
-        navigate('/signin');
+        navigate("/signin");
       }
     });
 
@@ -24,9 +24,9 @@ const DashboardPage = () => {
   const handleSignOut = async () => {
     try {
       await signOut(auth);
-      navigate('/signin');
+      navigate("/signin");
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error("Error signing out:", error);
     }
   };
 
@@ -40,12 +40,10 @@ const DashboardPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-100">
-
-          <Sidebar/>
-        <h1>This is Dashbord</h1>
-
-
-     
+      <Sidebar />
+      <div>
+        <Navbar />
+      </div>
     </div>
   );
 };
