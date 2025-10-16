@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import imgLogout from "../assets/logout.png";
 
 
-const Sidebar = () => {
-  const [isOpen, setIsOpen] = useState(false);
+const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
   const [isAccordionOpen, setIsAccordionOpen] = useState(false);
 
   const toggleSidebar = () => {
@@ -19,24 +18,14 @@ const Sidebar = () => {
       {/* Backdrop overlay for mobile */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
           onClick={toggleSidebar}
         ></div>
       )}
 
-      <div className="lg:hidden py-16 text-center">
-        <button
-          type="button"
-          onClick={toggleSidebar}
-          className="py-2 px-3 inline-flex justify-center items-center gap-x-2 text-start bg-gray-800 border border-gray-800 text-white text-sm font-medium rounded-lg shadow-2xs align-middle hover:bg-gray-950 focus:outline-hidden focus:bg-gray-900"
-        >
-          Open
-        </button>
-      </div>
-
       <div
         id="hs-sidebar-footer"
-        className={`lg:block lg:translate-x-0 lg:end-auto lg:bottom-0 w-64 transition-all duration-300 transform h-full fixed top-0 start-0 bottom-0 z-60 bg-white border-e border-gray-200 ${isOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`lg:block lg:translate-x-0 lg:end-auto lg:bottom-0 w-64 transition-all duration-300 transform h-full fixed top-0 start-0 bottom-0 z-50 bg-white border-e border-gray-200 ${isOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         role="dialog"
         tabIndex="-1"
@@ -131,7 +120,7 @@ const Sidebar = () => {
                       <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
                       <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                     </svg>
-                    Student
+                    Employee
                   </a>
                 </li>
                 <li>
@@ -289,11 +278,9 @@ const Sidebar = () => {
               <button
                 id="hs-sidebar-footer-example-with-dropdown"
                 type="button"
+                onClick={handleSignOut}
                 className="w-full inline-flex shrink-0 items-center gap-x-1 p-2 text-start text-sm text-gray-800 rounded-md hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100"
-                aria-haspopup="menu"
-                aria-expanded="false"
-                aria-label="Dropdown"
-
+                aria-label="Log Out"
               >
                 <img src={imgLogout} width="15" height="15" alt="" />
 

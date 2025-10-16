@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react'; 
 
-const Navbar = () => {
+const Navbar = ({ toggleSidebar, handleSignOut }) => {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     
     const [searchValue, setSearchValue] = useState('');
@@ -22,6 +22,16 @@ const Navbar = () => {
            
             <div className="px-4 sm:px-6 py-3 flex items-center justify-between">
                 
+                {/* Mobile menu button */}
+                <button
+                    onClick={toggleSidebar}
+                    className="lg:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 mr-2"
+                    aria-label="Toggle sidebar"
+                >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
                 
                 <div className="flex-shrink-0 mr-4 sm:mr-8">
                     
@@ -100,8 +110,7 @@ const Navbar = () => {
                             <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50 border border-gray-100">
                                 <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">View Profile</a>
                                 <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Switch Account</a>
-                                <hr className="my-1" />
-                                <a href="#" className="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Sign Out</a>
+                                <hr className="my-0" />
                             </div>
                         )}
                     </div>
