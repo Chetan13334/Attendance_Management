@@ -14,7 +14,12 @@ const MOCK_USER = { uid: "mock-user-123", email: "test@user.com" };
 
 const DashboardPage = () => {
   const [user, setUser] = useState(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
 
   useEffect(() => {
    
@@ -38,21 +43,19 @@ const DashboardPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen bg-gray-100">
       
-      <aside className="bg-gray-800 text-white w-64 fixed top-0 left-0 h-screen z-30 hidden lg:block">
-        <Sidebar />
-      </aside>
+      {/* Sidebar */}
+      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} handleSignOut={handleSignOut} />
 
-      
-      <div className="flex-1 flex flex-col lg:ml-64">
+      {/* Main content wrapper */}
+      <div className="flex-1 lg:ml-64">
        
-        <header className="fixed top-0 left-0 lg:left-64 right-0 h-16 z-20 bg-indigo-600 text-white shadow-lg flex items-center px-4">
-          <Navbar />
-        </header>
+        {/* Navbar */}
+        <Navbar toggleSidebar={toggleSidebar} handleSignOut={handleSignOut} />
 
         
-        <main className="pt-20 px-4 sm:px-6">
+        <main className="pt-20 px-4 sm:px-6 pb-8">
 
           <div className="mt-8 bg-white p-6 rounded-lg shadow">
             <Statsoverview />
