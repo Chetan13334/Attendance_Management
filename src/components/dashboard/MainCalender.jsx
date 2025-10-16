@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { ChevronDown, ArrowRight, CornerDownRight } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import CalenderBTN from '../common/CalenderBTN';
 
 // --- Mock Data ---
 
@@ -23,16 +24,27 @@ const initialStudents = [
   { id: '13', name: 'Adeline Decker', avatarColor: 'bg-fuchsia-300' },
 ];
 
-// Definition of the 7-day schedule
-const daysOfWeek = [
-  { date: 23, day: 'Monday', index: 1 },
-  { date: 24, day: 'Thursday', index: 2 },
-  { date: 25, day: 'Wednesday', special: 'Holiday', detail: 'Annual Book Fair', index: 3 },
-  { date: 26, day: 'Thursday', index: 4 },
-  { date: 27, day: 'Friday', index: 5 },
-  { date: 28, day: 'Saturday', index: 6 },
-  { date: 29, day: 'Sunday', index: 7 },
-];
+// Helper function to generate week data
+const generateWeekData = (startDate) => {
+  const days = [];
+  const date = new Date(startDate);
+  
+  for (let i = 0; i < 7; i++) {
+    const currentDate = new Date(date);
+    currentDate.setDate(date.getDate() + i);
+    
+    days.push({
+      date: currentDate.getDate(),
+      day: currentDate.toLocaleDateString('en-US', { weekday: 'long' }),
+      fullDate: currentDate.toISOString().split('T')[0],
+      month: currentDate.toLocaleDateString('en-US', { month: 'short' }),
+      year: currentDate.getFullYear(),
+      index: i + 1
+    });
+  }
+  
+  return days;
+};
 
 // Status mapping for styling and labels
 const attendanceStatuses = {
@@ -117,6 +129,9 @@ const StudentProfile = ({ student, isSelected, onToggle }) => (
 export default function MainCalender() {
     const [selectedStudents, setSelectedStudents] = useState({});
     const [attendance, setAttendance] = useState(initialAttendance);
+    const [currentWeekStart, setCurrentWeekStart] = useState(new Date(2024, 9, 23)); // Oct 23, 2024
+    const [daysOfWeek, setDaysOfWeek] = useState(generateWeekData(new Date(2024, 9, 23)));
+    const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
 
     // Grid layout class for 1 wider profile column and 7 equal day columns
     const gridColsClass = 'grid grid-cols-[300px_repeat(7,minmax(0,1fr))]';
@@ -151,14 +166,83 @@ export default function MainCalender() {
         }));
     };
 
+    const handlePreviousWeek = () => {
+        const newWeekStart = new Date(currentWeekStart);
+        newWeekStart.setDate(currentWeekStart.getDate() - 7);
+        setCurrentWeekStart(newWeekStart);
+        setDaysOfWeek(generateWeekData(newWeekStart));
+    };
+
+    const handleNextWeek = () => {
+        const newWeekStart = new Date(currentWeekStart);
+        newWeekStart.setDate(currentWeekStart.getDate() + 7);
+        setCurrentWeekStart(newWeekStart);
+        setDaysOfWeek(generateWeekData(newWeekStart));
+    };
+
+    const handleToday = () => {
+        const today = new Date();
+        const dayOfWeek = today.getDay();
+        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const monday = new Date(today);
+        monday.setDate(today.getDate() + mondayOffset);
+        setCurrentWeekStart(monday);
+        setDaysOfWeek(generateWeekData(monday));
+    };
+
+    const handleOpenCalendarModal = () => {
+        setIsCalendarModalOpen(true);
+    };
+
+    const handleCloseCalendarModal = () => {
+        setIsCalendarModalOpen(false);
+    };
+
     return (
         <div className="mt-15 p-8 md:p-0 min-h-screen bg-gray-100 font-sans">
             <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
-                <div>
-                    <button className=" ml-24 px-2 py-2 bg-blue-500 text-white rounded-md hover:bg-black-600">
-                        Show Calender
-                    </button>
+                {/* Week Navigation Bar */}
+                <div className="flex items-center justify-between p-4 bg-gray-50 border-b border-gray-200">
+                    <div className="flex items-center gap-2">
+                        <button 
+                            onClick={handleOpenCalendarModal}
+                            className="px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm font-medium"
+                        >
+                            Show Calendar
+                        </button>
+                        <button 
+                            onClick={handleToday}
+                            className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm font-medium"
+                        >
+                            Today
+                        </button>
+                    </div>
+                    
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={handlePreviousWeek}
+                            className="p-2 rounded-md hover:bg-gray-200 transition-colors"
+                            title="Previous Week"
+                        >
+                            <ChevronLeft className="w-5 h-5 text-gray-600" />
+                        </button>
+                        
+                        <div className="text-sm font-semibold text-gray-700">
+                            {daysOfWeek[0]?.month} {daysOfWeek[0]?.date} - {daysOfWeek[6]?.month} {daysOfWeek[6]?.date}, {daysOfWeek[0]?.year}
+                        </div>
+                        
+                        <button
+                            onClick={handleNextWeek}
+                            className="p-2 rounded-md hover:bg-gray-200 transition-colors"
+                            title="Next Week"
+                        >
+                            <ChevronRight className="w-5 h-5 text-gray-600" />
+                        </button>
+                    </div>
+                    
+                    <div className="w-24"></div> {/* Spacer for alignment */}
                 </div>
+                
                 {/* --- Header Row --- */}
                 <div className={`${gridColsClass} border-b border-gray-200 text-gray-800 font-semibold text-center`}>
                     
@@ -170,18 +254,29 @@ export default function MainCalender() {
                     
 
                     {/* Day Headers */}
-                    {daysOfWeek.map((day) => (
-                        <div
-                            key={day.date}
-                            className={`p-3 border-r border-gray-200 text-sm flex flex-col justify-center transition-colors
-                                ${day.special === 'Holiday' ? 'bg-gray-100 text-gray-500' : 'text-gray-500'}
-                                ${day.date === 29 ? 'border-r-0' : ''}
-                            `}
-                        >
-                            <span className="text-lg font-bold text-gray-700">{day.date}</span>
-                            <span className="text-xs font-medium uppercase mt-0.5">{day.day}</span>
-                        </div>
-                    ))}
+                    {daysOfWeek.map((day, index) => {
+                        const isToday = new Date().toISOString().split('T')[0] === day.fullDate;
+                        return (
+                            <div
+                                key={day.fullDate}
+                                className={`p-3 border-r border-gray-200 text-sm flex flex-col justify-center transition-colors
+                                    ${day.special === 'Holiday' ? 'bg-gray-100 text-gray-500' : 'text-gray-500'}
+                                    ${isToday ? 'bg-blue-50' : ''}
+                                    ${index === 6 ? 'border-r-0' : ''}
+                                `}
+                            >
+                                <span className={`text-lg font-bold ${isToday ? 'text-blue-600' : 'text-gray-700'}`}>
+                                    {day.date}
+                                </span>
+                                <span className={`text-xs font-medium uppercase mt-0.5 ${isToday ? 'text-blue-600' : ''}`}>
+                                    {day.day.substring(0, 3)}
+                                </span>
+                                <span className="text-[10px] text-gray-400 mt-0.5">
+                                    {day.month}
+                                </span>
+                            </div>
+                        );
+                    })}
                 </div>
 
                 {/* --- Student Rows (Body) --- */}
@@ -230,10 +325,40 @@ export default function MainCalender() {
                     })}
                 </div>
                 {/* Optional: Footer or summary bar */}
-                <div className="p-4 border-t border-gray-200 text-sm text-gray-500 flex justify-end">
-                    <span>Attendance data shown for 7 days (Oct 23 - Oct 29).</span>
+                <div className="p-4 border-t border-gray-200 text-sm text-gray-500 flex justify-between items-center">
+                    <span className="font-medium">Total Students: {initialStudents.length}</span>
+                    <span>Week of {daysOfWeek[0]?.month} {daysOfWeek[0]?.date} - {daysOfWeek[6]?.month} {daysOfWeek[6]?.date}, {daysOfWeek[0]?.year}</span>
                 </div>
             </div>
+
+            {/* Calendar Modal Popup */}
+            {isCalendarModalOpen && (
+                <div className="fixed inset-0 z-50 overflow-y-auto">
+                    {/* Backdrop */}
+                    <div 
+                        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+                        onClick={handleCloseCalendarModal}
+                    ></div>
+                    
+                    {/* Modal Content */}
+                    <div className="flex items-center justify-center min-h-screen p-4">
+                        <div className="relative bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+                            {/* Close Button */}
+                            <button
+                                onClick={handleCloseCalendarModal}
+                                className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white hover:bg-gray-100 shadow-lg transition-colors"
+                            >
+                                <X className="w-6 h-6 text-gray-600" />
+                            </button>
+                            
+                            {/* Calendar Component */}
+                            <div className="overflow-y-auto max-h-[90vh]">
+                                <CalenderBTN />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
