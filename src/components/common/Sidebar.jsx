@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import imgLogout from "../assets/logout.png";
 
 
@@ -76,9 +77,9 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
             >
               <ul className="space-y-1">
                 <li>
-                  <a
+                  <Link
+                    to="/dashboard"
                     className="flex items-center gap-x-3.5 py-2 px-2.5 bg-gray-100 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100"
-                    href="#"
                   >
                     <svg
                       className="size-4"
@@ -96,7 +97,7 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
                       <polyline points="9 22 9 12 15 12 15 22" />
                     </svg>
                     Dashboard
-                  </a>
+                  </Link>
                 </li>
                 <li>
                   <a
@@ -124,9 +125,9 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
                   </a>
                 </li>
                 <li>
-                  <a
+                  <Link
+                    to="/dashboard"
                     className="flex items-center  gap-x-3.5 py-2 px-2.5 bg-gray-100 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100"
-                    href="#"
                   >
                     <svg
                       className="size-4"
@@ -143,7 +144,7 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
                       <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9l2 2 4-4" />
                     </svg>
                     Attendance
-                  </a>
+                  </Link>
                 </li>
 
                 <li className="hs-accordion" id="users-accordion">
@@ -241,9 +242,9 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
 
 
                 <li>
-                  <a
+                  <Link
+                    to="/calendar"
                     className="w-full flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100"
-                    href="#"
                   >
                     <svg
                       className="size-4"
@@ -266,8 +267,13 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
                     <span className="ms-auto py-0.5 px-1.5 inline-flex items-center gap-x-1.5 text-xs bg-gray-200 text-gray-800 rounded-full">
                       New
                     </span>
-                  </a>
+                  </Link>
                 </li>
+
+
+
+
+                
               </ul>
             </div>
           </nav>
