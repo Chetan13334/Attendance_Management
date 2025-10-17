@@ -3,12 +3,15 @@ import { db } from "../../firebase";
 import { collection, addDoc } from "firebase/firestore";
 
 const EmployeeForm = () => {
-  const [photo, setPhoto] = useState("https://placehold.co/160x160/cbd5e1/000?text=P");
+  const [photo, setPhoto] = useState(
+    "https://placehold.co/160x160/cbd5e1/000?text=P"
+  );
   const [formData, setFormData] = useState({
     Name: "",
     Gender: "",
     ContactNumber: "",
     DateOfJoining: "",
+    DateOfBirth: "",
     EmployeeID: "",
     Role: "",
     Department: "",
@@ -69,7 +72,6 @@ const EmployeeForm = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid sm:grid-cols-12 gap-x-12 gap-y-5">
-
             {/* Profile Photo */}
             <div className="sm:col-span-3">
               <label className="text-sm font-semibold text-gray-700 mt-2.5 block">
@@ -83,18 +85,27 @@ const EmployeeForm = () => {
                 alt="Employee Avatar"
                 onError={(e) => {
                   e.target.onerror = null;
-                  e.target.src = "https://placehold.co/160x160/cbd5e1/000?text=P";
+                  e.target.src =
+                    "https://placehold.co/160x160/cbd5e1/000?text=P";
                 }}
               />
               <label className="cursor-pointer py-2 px-4 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-lg shadow-sm hover:bg-indigo-100 transition duration-150 text-sm font-medium">
                 Upload Photo
-                <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handlePhotoChange}
+                />
               </label>
             </div>
 
             {/* Full Name */}
             <div className="sm:col-span-3">
-              <label htmlFor="Name" className="text-sm font-semibold text-gray-700 mt-2.5 block">
+              <label
+                htmlFor="Name"
+                className="text-sm font-semibold text-gray-700 mt-2.5 block"
+              >
                 Full Name
               </label>
             </div>
@@ -111,11 +122,16 @@ const EmployeeForm = () => {
 
             {/* Gender */}
             <div className="sm:col-span-3">
-              <label className="text-sm font-semibold text-gray-700 mt-2.5 block">Gender</label>
+              <label className="text-sm font-semibold text-gray-700 mt-2.5 block">
+                Gender
+              </label>
             </div>
             <div className="sm:col-span-9 flex gap-6">
               {["Male", "Female", "Other"].map((gender) => (
-                <label key={gender} className="flex items-center gap-2 text-gray-700">
+                <label
+                  key={gender}
+                  className="flex items-center gap-2 text-gray-700"
+                >
                   <input
                     type="radio"
                     name="gender"
@@ -131,7 +147,10 @@ const EmployeeForm = () => {
 
             {/* Contact Number */}
             <div className="sm:col-span-3">
-              <label htmlFor="ContactNumber" className="text-sm font-semibold text-gray-700 mt-2.5 block">
+              <label
+                htmlFor="ContactNumber"
+                className="text-sm font-semibold text-gray-700 mt-2.5 block"
+              >
                 Contact Number
               </label>
             </div>
@@ -148,7 +167,10 @@ const EmployeeForm = () => {
 
             {/* Date of Joining */}
             <div className="sm:col-span-3">
-              <label htmlFor="DateOfJoining" className="text-sm font-semibold text-gray-700 mt-2.5 block">
+              <label
+                htmlFor="DateOfJoining"
+                className="text-sm font-semibold text-gray-700 mt-2.5 block"
+              >
                 Date of Joining
               </label>
             </div>
@@ -162,9 +184,31 @@ const EmployeeForm = () => {
               />
             </div>
 
+            {/*Date of Birth */}
+            <div className="sm:col-span-3">
+              <label
+                htmlFor="DateOfBirth"
+                className="text-sm font-semibold text-gray-700 mt-2.5 block"
+              >
+                Date of Birth
+              </label>
+            </div>
+            <div className="sm:col-span-9">
+              <input
+                id="DateOfBirth"
+                value={formData.DateOfBirth}
+                onChange={handleChange}
+                type="date"
+                className="w-full max-w-sm px-4 py-2 rounded-xl bg-white text-gray-800 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+              />
+            </div>
+
             {/* Employee ID */}
             <div className="sm:col-span-3">
-              <label htmlFor="EmployeeID" className="text-sm font-semibold text-gray-700 mt-2.5 block">
+              <label
+                htmlFor="EmployeeID"
+                className="text-sm font-semibold text-gray-700 mt-2.5 block"
+              >
                 Employee ID
               </label>
             </div>
@@ -181,7 +225,10 @@ const EmployeeForm = () => {
 
             {/* Role */}
             <div className="sm:col-span-3">
-              <label htmlFor="Role" className="text-sm font-semibold text-gray-700 mt-2.5 block">
+              <label
+                htmlFor="Role"
+                className="text-sm font-semibold text-gray-700 mt-2.5 block"
+              >
                 Role
               </label>
             </div>
@@ -198,7 +245,10 @@ const EmployeeForm = () => {
 
             {/* Department */}
             <div className="sm:col-span-3">
-              <label htmlFor="Department" className="text-sm font-semibold text-gray-700 mt-2.5 block">
+              <label
+                htmlFor="Department"
+                className="text-sm font-semibold text-gray-700 mt-2.5 block"
+              >
                 Department
               </label>
             </div>
