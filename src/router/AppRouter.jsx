@@ -7,8 +7,7 @@ import CalenderPage from '../pages/CalenderPage';
 import EmployeeFormPage from '../pages/EmployeeFormPage';
 import EmployeeDetailsPage from '../pages/EmployeeDetailsPage';
 import CalenderComPage from '../pages/CalenderComPage';
-import EmployeeFormPage from '../pages/EmployeeFormPage';
-import EmployeeDetailsPage from '../pages/EmployeeDetailsPage';
+
 
 const AppRouter = () => {
   return (
