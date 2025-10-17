@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import imgLogout from "../assets/logout.png";
 
-
 const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
   const [isAccordionOpen, setIsAccordionOpen] = useState(false);
 
@@ -26,21 +25,20 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
 
       <div
         id="hs-sidebar-footer"
-        className={`lg:block lg:translate-x-0 lg:end-auto lg:bottom-0 w-64 transition-all duration-300 transform h-full fixed top-0 start-0 bottom-0 z-50 bg-white border-e border-gray-200 ${isOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
+        className={`lg:block lg:translate-x-0 lg:end-auto lg:bottom-0 w-64 transition-all duration-300 transform h-full fixed top-0 start-0 bottom-0 z-50 bg-white border-e border-gray-200 ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
         role="dialog"
         tabIndex="-1"
         aria-label="Sidebar"
       >
         <div className="relative flex flex-col h-full max-h-full">
-          
           <header className="mt-auto p-4 flex justify-between items-center gap-x-5">
             <a
               className="flex-none font-semibold text-xl text-black focus:outline-hidden focus:opacity-80"
               href="#"
               aria-label="Brand"
             >
-              
               Attendify
             </a>
 
@@ -100,7 +98,8 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
                   </Link>
                 </li>
                 <li>
-                  <a
+                  <Link
+                    to="/employee_details"
                     className="flex items-center gap-x-3.5 py-2 px-2.5 bg-gray-100 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100"
                     href="#"
                   >
@@ -122,7 +121,7 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
                       <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                     </svg>
                     Employee
-                  </a>
+                  </Link>
                 </li>
                 <li>
                   <Link
@@ -174,8 +173,9 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
                     </svg>
                     Report
                     <svg
-                      className={`ms-auto size-4 text-gray-600 group-hover:text-gray-500 ${isAccordionOpen ? 'block' : 'hidden'
-                        }`}
+                      className={`ms-auto size-4 text-gray-600 group-hover:text-gray-500 ${
+                        isAccordionOpen ? "block" : "hidden"
+                      }`}
                       xmlns="http://www.w3.org/2000/svg"
                       width="24"
                       height="24"
@@ -189,8 +189,9 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
                       <path d="m18 15-6-6-6 6" />
                     </svg>
                     <svg
-                      className={`ms-auto size-4 text-gray-600 group-hover:text-gray-500 ${isAccordionOpen ? 'hidden' : 'block'
-                        }`}
+                      className={`ms-auto size-4 text-gray-600 group-hover:text-gray-500 ${
+                        isAccordionOpen ? "hidden" : "block"
+                      }`}
                       xmlns="http://www.w3.org/2000/svg"
                       width="24"
                       height="24"
@@ -207,8 +208,9 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
 
                   <div
                     id="users-accordion-collapse-1"
-                    className={`w-full overflow-hidden transition-[height] duration-300 ${isAccordionOpen ? 'block' : 'hidden'
-                      }`}
+                    className={`w-full overflow-hidden transition-[height] duration-300 ${
+                      isAccordionOpen ? "block" : "hidden"
+                    }`}
                     role="region"
                     aria-labelledby="users-accordion"
                   >
@@ -235,11 +237,6 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
                     </ul>
                   </div>
                 </li>
-
-
-
-
-
 
                 <li>
                   <Link
@@ -270,14 +267,17 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
                   </Link>
                 </li>
 
-
-
-
-                
+                <li className="mt-3 px-2">
+                  <Link
+                    to="/add-employee"
+                    className="w-full flex items-center justify-center gap-x-2 py-2 px-3 text-sm font-medium text-white bg-blue-600 rounded-lg shadow hover:bg-blue-800 focus:outline-none transition"
+                  >
+                    + Add Employee
+                  </Link>
+                </li>
               </ul>
             </div>
           </nav>
-
 
           <footer className="mt-auto p-1 border-t border-gray-200">
             <div className="hs-dropdown [--strategy:absolute] [--auto-close:inside] relative w-full inline-flex">
@@ -295,9 +295,7 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
             </div>
           </footer>
         </div>
-        
       </div>
-      
     </>
   );
 };

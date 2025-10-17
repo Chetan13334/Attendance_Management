@@ -1,24 +1,24 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { collection, onSnapshot } from "firebase/firestore";
+import { db } from "../../firebase"; // adjust path
 import { Search } from "lucide-react";
 
-
 const DUMMY_RECORDS = [
-  { id: "101", name: "Amit Sharma", time: "09:05 AM", status: "Present", remarks: "On time" },
-  { id: "102", name: "Priya Verma", time: "09:12 AM", status: "Late", remarks: "5 min late" },
-  { id: "103", name: "Rohit Mehta", time: "-", status: "Absent", remarks: "Not marked" },
-  { id: "104", name: "Neha Patel", time: "09:00 AM", status: "Present", remarks: "Perfect" },
-  { id: "105", name: "Karan Singh", time: "09:10 AM", status: "Late", remarks: "Slight delay" },
-  { id: "106", name: "Anjali Gupta", time: "09:03 AM", status: "Present", remarks: "On time" },
-  { id: "107", name: "Rahul Jain", time: "-", status: "Absent", remarks: "Leave applied" },
-  { id: "108", name: "Meena Joshi", time: "08:59 AM", status: "Present", remarks: "Early" },
-  { id: "109", name: "Vikas Kumar", time: "09:06 AM", status: "Present", remarks: "On time" },
-  { id: "110", name: "Sneha Das", time: "09:02 AM", status: "Present", remarks: "Good" },
-  { id: "111", name: "Arjun Yadav", time: "-", status: "Absent", remarks: "No info" },
-  { id: "112", name: "Deepika Rao", time: "09:15 AM", status: "Late", remarks: "Traffic" },
-  { id: "113", name: "Ravi Malhotra", time: "09:00 AM", status: "Present", remarks: "Excellent" },
-  { id: "114", name: "Simran Kaur", time: "09:07 AM", status: "Present", remarks: "Good" },
+  { time: "09:05 AM", status: "Present", remarks: "On time" },
+  { time: "09:12 AM", status: "Late", remarks: "5 min late" },
+  { time: "-", status: "Absent", remarks: "Not marked" },
+  { time: "09:00 AM", status: "Present", remarks: "Perfect" },
+  { time: "09:10 AM", status: "Late", remarks: "Slight delay" },
+  { time: "09:03 AM", status: "Present", remarks: "On time" },
+  { time: "-", status: "Absent", remarks: "Leave applied" },
+  { time: "08:59 AM", status: "Present", remarks: "Early" },
+  { time: "09:06 AM", status: "Present", remarks: "On time" },
+  { time: "09:02 AM", status: "Present", remarks: "Good" },
+  { time: "-", status: "Absent", remarks: "No info" },
+  { time: "09:15 AM", status: "Late", remarks: "Traffic" },
+  { time: "09:00 AM", status: "Present", remarks: "Excellent" },
+  { time: "09:07 AM", status: "Present", remarks: "Good" },
 ];
-
 
 const getStatusClasses = (status) => {
   if (status === "Present") return "bg-green-100 text-green-800";
@@ -27,36 +27,75 @@ const getStatusClasses = (status) => {
   return "bg-gray-100 text-gray-800";
 };
 
-function AttendanceTable({ records = DUMMY_RECORDS }) {
+function AttendanceTable() {
+  const [employees, setEmployees] = useState([]);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      collection(db, "Employee_Details"),
+      (snapshot) => {
+        const list = snapshot.docs.map((doc) => {
+          const data = doc.data();
+
+          // Make sure we get plain string values
+          const name = typeof data.Name === "string" ? data.Name : data.Name?.toString() || "";
+          const id =
+            typeof data.EmployeeID === "string"
+              ? data.EmployeeID
+              : data.EmployeeID?.toString() || "";
+
+          return { id, name };
+        });
+
+        setEmployees(list);
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
+
+  // Merge Firestore employees with dummy data
+  const mergedRecords = employees.map((emp, index) => {
+    const dummy = DUMMY_RECORDS[index] || {
+      time: "-",
+      status: "Absent",
+      remarks: "Not marked",
+    };
+    return {
+      id: emp.id,
+      name: emp.name,
+      ...dummy,
+    };
+  });
+
   return (
     <div className="bg-white rounded-xl shadow-lg mt-8">
-      
       <div className="p-4 sm:p-6 flex justify-between items-center border-b border-gray-100 flex-wrap">
         <h3 className="text-xl font-semibold text-gray-800 mb-2 sm:mb-0">
           Today's Records
         </h3>
-      
       </div>
 
-      
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              {["Name", "Roll No.", "Time", "Status", "Remarks"].map((header) => (
-                <th
-                  key={header}
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                >
-                  {header}
-                </th>
-              ))}
+              {["Name", "Employee Id", "Time", "Status", "Remarks"].map(
+                (header) => (
+                  <th
+                    key={header}
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                  >
+                    {header}
+                  </th>
+                )
+              )}
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-100">
-            {records.map((record) => (
+            {mergedRecords.map((record, index) => (
               <tr
-                key={record.id}
+                key={record.id || index}
                 className="hover:bg-gray-50 transition duration-150"
               >
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
