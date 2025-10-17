@@ -54,7 +54,7 @@ const LegendItem = ({ label, value, dotColor, textColor }) => (
 /**
  * Main App Component: Renders the entire Legend Bar
  */
-const App = () => {
+const LegendBar = () => {
   return (
     <div className="  flex items-center justify-center p-0">
       <div className="max-w-full">
@@ -79,4 +79,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default LegendBar;
