@@ -76,7 +76,7 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
               <ul className="space-y-1">
                 <li>
                   <Link
-                    to="/dashboard"
+                  
                     className="flex items-center gap-x-3.5 py-2 px-2.5 bg-gray-100 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100"
                   >
                     <svg

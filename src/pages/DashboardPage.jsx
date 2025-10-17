@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { auth } from "../firebase";
+import { auth } from "../firebase.js";
 import { signOut } from "firebase/auth";
 
 import Sidebar from "../components/common/Sidebar.jsx";
@@ -37,7 +37,7 @@ const DashboardPage = () => {
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-gray-600">Loading Dashboard...</div>
+        <div className="text-gray-600">Loading Attendance...</div>
       </div>
     );
   }

@@ -70,9 +70,12 @@ const Employee_Details = () => {
                         </div>
                       )}
                     </td>
+
+                    {/* Corrected Employee ID field */}
                     <td className="px-6 py-4 text-gray-800 font-medium">
-                      {emp.EmployeID || "-"}
+                      {emp.EmployeeID || "-"}
                     </td>
+
                     <td className="px-6 py-4 text-gray-800 font-medium">
                       {emp.Name || "-"}
                     </td>
