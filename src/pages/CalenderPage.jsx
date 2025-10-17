@@ -5,7 +5,7 @@ import { signOut } from "firebase/auth";
 
 import Sidebar from "../components/common/Sidebar.jsx";
 import Navbar from "../components/common/Navbar.jsx";
-import CalenderCom from "../components/dashboard/MainCalender.jsx";
+import Calender from "../components/dashboard/MainCalender.jsx";
 
 
 const CalenderPage = () => {
@@ -35,7 +35,7 @@ const CalenderPage = () => {
         <Navbar toggleSidebar={toggleSidebar} handleSignOut={handleSignOut} />
         {/* -----------This is the main calender page---------- */}
         <br />
-        <CalenderCom/>     
+        <Calender/>     
       
       </div>
     </div>
