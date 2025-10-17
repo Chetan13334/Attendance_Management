@@ -1,7 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 
 import { ChevronDown, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '../../firebase'; // Adjusted path to firebase
 
 import LegendBar from '../common/LegendBar';
 
@@ -10,48 +12,6 @@ import LegendBar from '../common/LegendBar';
 // Helper function to get initials for the avatar background
 const getInitials = (name) => name.split(' ').map(n => n[0]).join('');
 
-// Student list with unique IDs
-const initialStudents = [
-  { id: '1', name: 'Marta Adams', avatarColor: 'bg-purple-300' },
-  { id: '2', name: 'Robin Logan', avatarColor: 'bg-yellow-300' },
-  { id: '3', name: 'Cruz French', avatarColor: 'bg-blue-300' },
-  { id: '4', name: 'Claudine Cherry', avatarColor: 'bg-green-300' },
-  { id: '5', name: 'Mitch Huber', avatarColor: 'bg-pink-300' },
-  { id: '6', name: 'Essie Fry', avatarColor: 'bg-indigo-300' },
-  { id: '7', name: 'Shanna Orozco', avatarColor: 'bg-red-300' },
-  { id: '8', name: 'Gabriel Nelson', avatarColor: 'bg-teal-300' },
-  { id: '9', name: 'Shirley George', avatarColor: 'bg-cyan-300' },
-  { id: '10', name: 'Gustavo Lopez', avatarColor: 'bg-orange-300' },
-  { id: '11', name: 'Dante Cantrell', avatarColor: 'bg-lime-300' },
-  { id: '12', name: 'Irwin Roberts', avatarColor: 'bg-violet-300' },
-  { id: '13', name: 'Adeline Decker', avatarColor: 'bg-fuchsia-300' },
-];
-
-// Helper function to generate week data (Monday to Friday only)
-const generateWeekData = (startDate) => {
-  const days = [];
-  const date = new Date(startDate);
-  
-  // Only generate 5 days (Monday to Friday)
-  for (let i = 0; i < 5; i++) {
-    const currentDate = new Date(date);
-    currentDate.setDate(date.getDate() + i);
-    
-    const dayData = {
-      date: currentDate.getDate(),
-      day: currentDate.toLocaleDateString('en-US', { weekday: 'long' }),
-      fullDate: currentDate.toISOString().split('T')[0],
-      month: currentDate.toLocaleDateString('en-US', { month: 'short' }),
-      year: currentDate.getFullYear(),
-      index: i + 1
-    };
-    
-    days.push(dayData);
-  }
-  
-  return days;
-};
-
 // Status mapping for styling and labels
 const attendanceStatuses = {
     'on-time': { label: 'On time', detail: null, classes: 'text-gray-700 hover:bg-gray-50' },
@@ -59,23 +19,6 @@ const attendanceStatuses = {
     'late-traffic': { label: 'Late', detail: '(Traffic Jam)', classes: 'bg-yellow-50 text-yellow-800 border-l-yellow-400' },
     'absent-family': { label: 'Absent', detail: '(Family Problem)', classes: 'bg-red-50 text-red-800 border-l-red-500' },
     'late-family': { label: 'Late', detail: '(Family Problem)', classes: 'bg-yellow-50 text-yellow-800 border-l-yellow-400' },
-};
-
-// Initial attendance data structure (Student ID -> Date -> Status Key)
-const initialAttendance = {
-    '1': { 23: 'on-time', 24: 'absent-health', 25: 'holiday', 26: 'on-time', 27: 'on-time', 28: 'on-time', 29: 'late-traffic' },
-    '2': { 23: 'on-time', 24: 'late-traffic', 25: 'holiday', 26: 'on-time', 27: 'on-time', 28: 'on-time', 29: 'on-time' },
-    '3': { 23: 'on-time', 24: 'on-time', 25: 'holiday', 26: 'on-time', 27: 'on-time', 28: 'on-time', 29: 'on-time' },
-    '4': { 23: 'on-time', 24: 'on-time', 25: 'holiday', 26: 'on-time', 27: 'on-time', 28: 'on-time', 29: 'on-time' },
-    '5': { 23: 'on-time', 24: 'on-time', 25: 'holiday', 26: 'on-time', 27: 'on-time', 28: 'late-family', 29: 'on-time' },
-    '6': { 23: 'on-time', 24: 'on-time', 25: 'holiday', 26: 'on-time', 27: 'on-time', 28: 'on-time', 29: 'absent-health' },
-    '7': { 23: 'late-traffic', 24: 'on-time', 25: 'holiday', 26: 'absent-health', 27: 'on-time', 28: 'on-time', 29: 'on-time' },
-    '8': { 23: 'on-time', 24: 'on-time', 25: 'holiday', 26: 'on-time', 27: 'on-time', 28: 'on-time', 29: 'on-time' },
-    '9': { 23: 'on-time', 24: 'on-time', 25: 'holiday', 26: 'on-time', 27: 'on-time', 28: 'late-traffic', 29: 'on-time' },
-    '10': { 23: 'on-time', 24: 'absent-family', 25: 'holiday', 26: 'late-family', 27: 'on-time', 28: 'on-time', 29: 'on-time' },
-    '11': { 23: 'on-time', 24: 'on-time', 25: 'holiday', 26: 'on-time', 27: 'on-time', 28: 'on-time', 29: 'on-time' },
-    '12': { 23: 'on-time', 24: 'on-time', 25: 'holiday', 26: 'on-time', 27: 'on-time', 28: 'on-time', 29: 'on-time' },
-    '13': { 23: 'on-time', 24: 'on-time', 25: 'holiday', 26: 'on-time', 27: 'on-time', 28: 'on-time', 29: 'on-time' },
 };
 
 // --- Sub-Components (Defined within App scope for single file rule) ---
@@ -164,9 +107,63 @@ const StudentProfile = ({ student, isSelected, onToggle }) => (
 export default function MainCalender() {
     const navigate = useNavigate();
     const [selectedStudents, setSelectedStudents] = useState({});
-    const [attendance, setAttendance] = useState(initialAttendance);
+    const [attendance, setAttendance] = useState({});
     const [currentWeekStart, setCurrentWeekStart] = useState(new Date(2024, 9, 23)); // Oct 23, 2024
-    const [daysOfWeek, setDaysOfWeek] = useState(generateWeekData(new Date(2024, 9, 23)));
+    const [daysOfWeek, setDaysOfWeek] = useState([]);
+    const [students, setStudents] = useState([]);
+
+    // Fetch students from Firebase Employee_Details collection
+    useEffect(() => {
+        const unsubscribe = onSnapshot(collection(db, "Employee_Details"), (snapshot) => {
+            const list = snapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+            }));
+            // Transform Firebase data to match the expected format
+            const transformedStudents = list.map((emp, index) => ({
+                id: emp.id,
+                name: emp.Name || `Employee ${index + 1}`,
+                avatarColor: emp.avatarColor || 'bg-purple-300' // Default color if not provided
+            }));
+            setStudents(transformedStudents);
+        });
+
+        return () => unsubscribe(); // cleanup
+    }, []);
+
+    // Generate week data (Monday to Friday only)
+    useEffect(() => {
+        const generateWeekData = (startDate) => {
+            const days = [];
+            const date = new Date(startDate);
+            
+            // Adjust to Monday if the start date is not Monday
+            const dayOfWeek = date.getDay();
+            const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Sunday is 0, so we adjust to Monday
+            date.setDate(date.getDate() + mondayOffset);
+            
+            // Generate 5 days (Monday to Friday)
+            for (let i = 0; i < 5; i++) {
+                const currentDate = new Date(date);
+                currentDate.setDate(date.getDate() + i);
+                
+                const dayData = {
+                    date: currentDate.getDate(),
+                    day: currentDate.toLocaleDateString('en-US', { weekday: 'long' }),
+                    fullDate: currentDate.toISOString().split('T')[0],
+                    month: currentDate.toLocaleDateString('en-US', { month: 'short' }),
+                    year: currentDate.getFullYear(),
+                    index: i + 1
+                };
+                
+                days.push(dayData);
+            }
+            
+            return days;
+        };
+        
+        setDaysOfWeek(generateWeekData(currentWeekStart));
+    }, [currentWeekStart]);
 
     // Grid layout class for 1 wider profile column and 5 equal day columns (Monday to Friday)
     const gridColsClass = 'grid grid-cols-[300px_repeat(5,minmax(0,1fr))]';
@@ -205,24 +202,21 @@ export default function MainCalender() {
         const newWeekStart = new Date(currentWeekStart);
         newWeekStart.setDate(currentWeekStart.getDate() - 7);
         setCurrentWeekStart(newWeekStart);
-        setDaysOfWeek(generateWeekData(newWeekStart));
     };
 
     const handleNextWeek = () => {
         const newWeekStart = new Date(currentWeekStart);
         newWeekStart.setDate(currentWeekStart.getDate() + 7);
         setCurrentWeekStart(newWeekStart);
-        setDaysOfWeek(generateWeekData(newWeekStart));
     };
 
     const handleToday = () => {
         const today = new Date();
         const dayOfWeek = today.getDay();
-        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Sunday is 0, so we adjust to Monday
         const monday = new Date(today);
         monday.setDate(today.getDate() + mondayOffset);
         setCurrentWeekStart(monday);
-        setDaysOfWeek(generateWeekData(monday));
     };
 
     const handleOpenCalendarModal = () => {
@@ -317,15 +311,12 @@ export default function MainCalender() {
 
                 {/* --- Student Rows (Body) --- */}
                 <div className="divide-y divide-gray-100 max-h-[80vh] overflow-y-auto">
-                    {initialStudents.map((student) => {
-                        // Replicate the data redundancy from the image for visual purposes
-                        const displayStudent = student.id === '4' ? initialStudents.find(s => s.id === '1') : student;
-
+                    {students.map((student) => {
                         return (
                             <div key={student.id} className={`${gridColsClass} hover:bg-red-50/20`}>
                                 {/* Student Profile */}
                                 <StudentProfile
-                                    student={displayStudent}
+                                    student={student}
                                     isSelected={!!selectedStudents[student.id]}
                                     onToggle={handleToggleSelect}
                                 />
@@ -362,7 +353,7 @@ export default function MainCalender() {
                 </div>
                 {/* Optional: Footer or summary bar */}
                 <div className="p-4 border-t border-gray-200 text-sm text-gray-500 flex justify-between items-center">
-                    <span className="font-medium">Total Students: {initialStudents.length}</span>
+                    <span className="font-medium">Total Students: {students.length}</span>
                     <span>Week of {daysOfWeek[0]?.month} {daysOfWeek[0]?.date} - {daysOfWeek[4]?.month} {daysOfWeek[4]?.date}, {daysOfWeek[0]?.year}</span>
                 </div>
             </div>

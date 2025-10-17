@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../../firebase"; // adjust path
-import { Search } from "lucide-react";
+import { Search, Calendar, Clock, User } from "lucide-react";
 
 const DUMMY_RECORDS = [
   { time: "09:05 AM", status: "Present", remarks: "On time" },
@@ -29,6 +29,8 @@ const getStatusClasses = (status) => {
 
 function AttendanceTable() {
   const [employees, setEmployees] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(
@@ -67,6 +69,18 @@ function AttendanceTable() {
       ...dummy,
     };
   });
+
+  // Function to handle event card click
+  const handleEventClick = (event) => {
+    setSelectedEvent(event);
+    setIsModalOpen(true);
+  };
+
+  // Function to close the modal
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedEvent(null);
+  };
 
   return (
     <div className="bg-white rounded-xl shadow-lg mt-8">
@@ -111,7 +125,8 @@ function AttendanceTable() {
                   <span
                     className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClasses(
                       record.status
-                    )}`}
+                    )} cursor-pointer`}
+                    onClick={() => handleEventClick(record)}
                   >
                     {record.status}
                   </span>
@@ -124,6 +139,89 @@ function AttendanceTable() {
           </tbody>
         </table>
       </div>
+
+      {/* Modal for event details */}
+      {isModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-sm bg-black bg-opacity-50">
+          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-gray-800">Event Details</h3>
+              <button
+                onClick={closeModal}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {selectedEvent && (
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                  <User className="text-blue-500" size={20} />
+                  <div>
+                    <p className="text-sm text-gray-500">Employee</p>
+                    <p className="font-medium">{selectedEvent.name}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <Calendar className="text-green-500" size={20} />
+                  <div>
+                    <p className="text-sm text-gray-500">Date</p>
+                    <p className="font-medium">{new Date().toLocaleDateString()}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <Clock className="text-purple-500" size={20} />
+                  <div>
+                    <p className="text-sm text-gray-500">Time</p>
+                    <p className="font-medium">{selectedEvent.time}</p>
+                  </div>
+                </div>
+
+                <div className="pt-4">
+                  <p className="text-sm text-gray-500">Status</p>
+                  <span
+                    className={`px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full ${getStatusClasses(
+                      selectedEvent.status
+                    )}`}
+                  >
+                    {selectedEvent.status}
+                  </span>
+                </div>
+
+                <div className="pt-2">
+                  <p className="text-sm text-gray-500">Remarks</p>
+                  <p className="font-medium">{selectedEvent.remarks}</p>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={closeModal}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
