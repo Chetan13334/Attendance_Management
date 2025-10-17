@@ -1,14 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { auth } from "../firebase.js";
+import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
 
 import Sidebar from "../components/common/Sidebar.jsx";
 import Navbar from "../components/common/Navbar.jsx";
-import CalenderCom from "../components/dashboard/MainCalender.jsx";
+import CalenderCom from "../components/common/CalenderCom.jsx";
 
-
-const CalenderPage = () => {
+const CalenderComPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -33,13 +32,14 @@ const CalenderPage = () => {
        
         {/* Navbar */}
         <Navbar toggleSidebar={toggleSidebar} handleSignOut={handleSignOut} />
-        {/* -----------This is the main calender page---------- */}
-        <br />
-        <CalenderCom/>     
-      
+        
+        {/* Main Calendar Component */}
+        <main className="pt-20">
+          <CalenderCom />     
+        </main>
       </div>
     </div>
   );
 };
 
-export default CalenderPage;
+export default CalenderComPage;

@@ -1,6 +1,8 @@
 import React, { useState, useCallback } from 'react';
+
 import { ChevronDown, ChevronLeft, ChevronRight, X } from 'lucide-react';
-import CalenderBTN from '../common/CalenderBTN';
+import { useNavigate } from 'react-router-dom';
+
 import LegendBar from '../common/LegendBar';
 
 // --- Mock Data ---
@@ -160,11 +162,11 @@ const StudentProfile = ({ student, isSelected, onToggle }) => (
 // --- Main App Component ---
 
 export default function MainCalender() {
+    const navigate = useNavigate();
     const [selectedStudents, setSelectedStudents] = useState({});
     const [attendance, setAttendance] = useState(initialAttendance);
     const [currentWeekStart, setCurrentWeekStart] = useState(new Date(2024, 9, 23)); // Oct 23, 2024
     const [daysOfWeek, setDaysOfWeek] = useState(generateWeekData(new Date(2024, 9, 23)));
-    const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
 
     // Grid layout class for 1 wider profile column and 5 equal day columns (Monday to Friday)
     const gridColsClass = 'grid grid-cols-[300px_repeat(5,minmax(0,1fr))]';
@@ -224,11 +226,7 @@ export default function MainCalender() {
     };
 
     const handleOpenCalendarModal = () => {
-        setIsCalendarModalOpen(true);
-    };
-
-    const handleCloseCalendarModal = () => {
-        setIsCalendarModalOpen(false);
+        navigate('/calendarcom');
     };
 
     return (
@@ -368,35 +366,6 @@ export default function MainCalender() {
                     <span>Week of {daysOfWeek[0]?.month} {daysOfWeek[0]?.date} - {daysOfWeek[4]?.month} {daysOfWeek[4]?.date}, {daysOfWeek[0]?.year}</span>
                 </div>
             </div>
-
-            {/* Calendar Modal Popup */}
-            {isCalendarModalOpen && (
-                <div className="fixed inset-0 z-50 overflow-y-auto">
-                    {/* Backdrop with Blur */}
-                    <div 
-                        className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-all duration-300"
-                        onClick={handleCloseCalendarModal}
-                    ></div>
-                    
-                    {/* Modal Content */}
-                    <div className="flex items-center justify-center min-h-screen p-4 sm:p-6 md:p-8">
-                        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl transform transition-all duration-300 scale-100">
-                            {/* Close Button */}
-                            <button
-                                onClick={handleCloseCalendarModal}
-                                className="absolute -top-3 -right-3 z-10 p-2 rounded-full bg-red-500 hover:bg-red-600 shadow-lg transition-all duration-200 hover:scale-110"
-                            >
-                                <X className="w-5 h-5 text-white" />
-                            </button>
-                            
-                            {/* Calendar Component */}
-                            <div className="overflow-hidden rounded-2xl">
-                                <CalenderBTN />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
