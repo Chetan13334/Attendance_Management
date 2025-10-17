@@ -7,6 +7,8 @@ import CalenderPage from '../pages/CalenderPage';
 import EmployeeFormPage from '../pages/EmployeeFormPage';
 import EmployeeDetailsPage from '../pages/EmployeeDetailsPage';
 import CalenderComPage from '../pages/CalenderComPage';
+import EmployeeFormPage from '../pages/EmployeeFormPage';
+import EmployeeDetailsPage from '../pages/EmployeeDetailsPage';
 
 const AppRouter = () => {
   return (
@@ -20,6 +22,8 @@ const AppRouter = () => {
         <Route path="/add-employee" element={<EmployeeFormPage />} />
         <Route path="/employee_details" element={<EmployeeDetailsPage/>} />
         <Route path="/calendarcom" element={<CalenderComPage />} />
+        <Route path="/add-employee" element={<EmployeeFormPage />} />
+        <Route path="/employee_details" element={<EmployeeDetailsPage/>} />
         
       </Routes>
     </Router>
