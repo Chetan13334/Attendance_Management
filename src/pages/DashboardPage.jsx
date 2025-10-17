@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
 import { signOut } from "firebase/auth";
+import { collection, getDocs } from "firebase/firestore";
 
 import Sidebar from "../components/common/Sidebar.jsx";
 import Navbar from "../components/common/Navbar.jsx";
 
-import AttendanceTable from "../components/dashboard/AttendanceTable.jsx";
+import MainDashbord from "../components/dashboard/AttendanceTable.jsx";
 import Statsoverview from "../components/dashboard/Statsoverview.jsx";
+import { UserCheck, UserX, Clock, Calendar } from 'lucide-react';
+import AttendanceTable from "../components/dashboard/AttendanceTable.jsx";
 
 
 const MOCK_USER = { uid: "mock-user-123", email: "test@user.com" };
@@ -15,6 +18,7 @@ const MOCK_USER = { uid: "mock-user-123", email: "test@user.com" };
 const DashboardPage = () => {
   const [user, setUser] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [eventCount, setEventCount] = useState(0);
   const navigate = useNavigate();
 
   const toggleSidebar = () => {
@@ -22,7 +26,20 @@ const DashboardPage = () => {
   };
 
   useEffect(() => {
-   
+    // Fetch event count from Firebase
+    const fetchEventCount = async () => {
+      try {
+        const eventsRef = collection(db, 'Events');
+        const snapshot = await getDocs(eventsRef);
+        setEventCount(snapshot.size);
+      } catch (error) {
+        console.error('Error fetching event count:', error);
+        setEventCount(0);
+      }
+    };
+
+    fetchEventCount();
+    
     setTimeout(() => {
       setUser(MOCK_USER);
     }, 500);
@@ -58,9 +75,14 @@ const DashboardPage = () => {
         <main className="pt-20 px-4 sm:px-6 pb-8">
 
           <div className="mt-8 bg-white p-6 rounded-lg shadow">
-            <Statsoverview />
+            <Statsoverview stats={[
+              { title: "Active Users", value: 1200, icon: UserCheck, color: "green" },
+              { title: "Inactive Users", value: 80, icon: UserX, color: "red" },
+              { title: "Clocked Hours", value: 56, icon: Clock, color: "blue" },
+              { title: "Events", value: eventCount, icon: Calendar, color: "yellow" },
+            ]} />
           </div>
-          <div className="mt-4 bg-white p-6 rounded-lg shadow">
+          <div className="mt-4">
             <AttendanceTable />
           </div>
         </main>

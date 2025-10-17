@@ -1,16 +1,19 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
+import { db } from '../../firebase';
+import { collection, addDoc, getDocs, query, orderBy } from 'firebase/firestore';
 
 const CalenderCom = () => {
+  const navigate = useNavigate();
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-  const [events, setEvents] = useState([
-    { event_date: new Date(2024, 3, 1), event_title: "April Fool's Day", event_theme: 'blue' },
-    { event_date: new Date(2024, 3, 10), event_title: "Birthday", event_theme: 'red' },
-    { event_date: new Date(2024, 3, 16), event_title: "Upcoming Event", event_theme: 'green' },
-  ]);
+  const [events, setEvents] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [eventForm, setEventForm] = useState({ title: '', theme: 'blue' });
+  const [loading, setLoading] = useState(false);
 
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -25,6 +28,29 @@ const CalenderCom = () => {
     { value: 'green', label: 'Green Theme' },
     { value: 'purple', label: 'Purple Theme' }
   ];
+
+  // Fetch events from Firebase
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      const eventsRef = collection(db, 'Events');
+      const q = query(eventsRef, orderBy('event_date', 'asc'));
+      const querySnapshot = await getDocs(q);
+      
+      const fetchedEvents = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        event_date: doc.data().event_date?.toDate() || new Date(doc.data().event_date)
+      }));
+      
+      setEvents(fetchedEvents);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    }
+  };
 
   const getCalendarDays = () => {
     const firstDay = new Date(currentYear, currentMonth, 1);
@@ -57,13 +83,35 @@ const CalenderCom = () => {
     setEventForm({ title: '', theme: 'blue' });
   };
 
-  const handleAddEvent = () => {
+  const handleAddEvent = async () => {
     if (!eventForm.title.trim()) {
       alert('Please enter event title');
       return;
     }
-    setEvents([...events, { event_date: selectedDate, event_title: eventForm.title, event_theme: eventForm.theme }]);
-    setIsModalOpen(false);
+    
+    setLoading(true);
+    try {
+      // Add event to Firebase
+      const eventsRef = collection(db, 'Events');
+      await addDoc(eventsRef, {
+        event_date: selectedDate,
+        event_title: eventForm.title,
+        event_theme: eventForm.theme,
+        created_at: new Date()
+      });
+      
+      // Refresh events list
+      await fetchEvents();
+      
+      setIsModalOpen(false);
+      setEventForm({ title: '', theme: 'blue' });
+      alert('Event added successfully!');
+    } catch (error) {
+      console.error('Error adding event:', error);
+      alert('Failed to add event. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getEventsForDate = (date) =>
@@ -73,9 +121,25 @@ const CalenderCom = () => {
   const weeks = [];
   for (let i = 0; i < calendarDays.length; i += 7) weeks.push(calendarDays.slice(i, i + 7));
 
+  const handleBackToCalendar = () => {
+    navigate('/calendar');
+  };
+
   return (
-    <div className="bg-gray-200 min-h-screen py-10">
-      <div className="container mx-auto bg-white rounded shadow overflow-hidden w-full lg:w-10/12">
+    <div className=" ">
+      {/* Back Button */}
+      
+
+      <div className="container mx-auto bg-white rounded shadow overflow-hidden w-full ">
+        <div className="container mx-auto pt-1 px-1">
+        <button
+          onClick={handleBackToCalendar}
+          className="flex items-center gap-1 px-2 py-1 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors font-medium mb-4"
+        >
+          <ArrowLeft className=" " />
+          Back 
+        </button>
+      </div>
         {/* Header */}
         <div className="flex justify-between items-center border-b p-4 bg-gray-100">
           <span className="text-lg font-bold">
@@ -155,8 +219,8 @@ const CalenderCom = () => {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-96 relative">
+        <div className="fixed inset-0 flex items-center justify-center backdrop-blur-sm bg-black/20 z-50">
+  <div className="bg-white rounded-lg shadow-lg p-6 w-96 relative">
             <button
               onClick={() => setIsModalOpen(false)}
               className="absolute top-2 right-3 text-gray-400 hover:text-gray-600"
@@ -197,9 +261,14 @@ const CalenderCom = () => {
               </button>
               <button
                 onClick={handleAddEvent}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                disabled={loading}
+                className={`px-4 py-2 rounded ${
+                  loading
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-blue-500 hover:bg-blue-600'
+                } text-white`}
               >
-                Add Event
+                {loading ? 'Adding...' : 'Add Event'}
               </button>
             </div>
           </div>
