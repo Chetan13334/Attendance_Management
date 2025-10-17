@@ -18,7 +18,7 @@ const Navbar = ({ toggleSidebar, handleSignOut }) => {
     
     
     return (
-        <nav className="w-full bg-white border-b shadow-sm fixed top-0 left-0 right-0 z-40 lg:pl-64">
+        <nav className="w-full bg-white shadow-sm fixed top-0 left-0 right-0 z-40 lg:pl-64">
            
             <div className="px-4 sm:px-6 py-3 flex items-center justify-between">
                 
@@ -92,7 +92,7 @@ const Navbar = ({ toggleSidebar, handleSignOut }) => {
                             
                             <div className="hidden sm:block pr-1 text-right">
                                 <div className="text-sm font-semibold text-gray-800">Mithun Ray</div>
-                                <div className="text-xs text-gray-500">Student</div>
+                                <div className="text-xs text-gray-500">Employee</div>
                             </div>
                             
                             <svg 

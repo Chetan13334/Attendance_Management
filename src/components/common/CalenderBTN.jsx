@@ -143,8 +143,9 @@ const CalenderBTN = () => {
 
   return (
     <div className="antialiased sans-serif bg-gray-100 min-h-screen">
-      <div className="container mx-auto px-4 py-2 md:py-24">
+      <div className="container mx-auto px-4 py-2 md:py-">
         <div className="bg-white rounded-lg shadow overflow-hidden">
+          
           {/* Header */}
           <div className="flex items-center justify-between py-2 px-6">
             <div>
@@ -226,7 +227,7 @@ const CalenderBTN = () => {
                     >
                       {dayInfo.day}
                     </div>
-                    <div style={{ height: '80px' }} className="overflow-y-auto mt-1">
+                    <div style={{ height: '20px' }} className="overflow-y-auto mt-1">
                       {dayEvents.map((event, eventIdx) => (
                         <div
                           key={eventIdx}

@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { ChevronDown, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import CalenderBTN from '../common/CalenderBTN';
+import LegendBar from '../common/LegendBar';
 
 // --- Mock Data ---
 
@@ -24,23 +25,26 @@ const initialStudents = [
   { id: '13', name: 'Adeline Decker', avatarColor: 'bg-fuchsia-300' },
 ];
 
-// Helper function to generate week data
+// Helper function to generate week data (Monday to Friday only)
 const generateWeekData = (startDate) => {
   const days = [];
   const date = new Date(startDate);
   
-  for (let i = 0; i < 7; i++) {
+  // Only generate 5 days (Monday to Friday)
+  for (let i = 0; i < 5; i++) {
     const currentDate = new Date(date);
     currentDate.setDate(date.getDate() + i);
     
-    days.push({
+    const dayData = {
       date: currentDate.getDate(),
       day: currentDate.toLocaleDateString('en-US', { weekday: 'long' }),
       fullDate: currentDate.toISOString().split('T')[0],
       month: currentDate.toLocaleDateString('en-US', { month: 'short' }),
       year: currentDate.getFullYear(),
       index: i + 1
-    });
+    };
+    
+    days.push(dayData);
   }
   
   return days;
@@ -75,7 +79,7 @@ const initialAttendance = {
 // --- Sub-Components (Defined within App scope for single file rule) ---
 
 // Attendance Cell Component
-const AttendanceCell = ({ statusKey, date, studentId, isHoliday, onClick }) => {
+const AttendanceCell = ({ statusKey, date, studentId, isHoliday, isFuture, holidayDetail, onClick }) => {
     const status = attendanceStatuses[statusKey] || attendanceStatuses['on-time'];
     
     // Class names for the holiday column
@@ -83,23 +87,52 @@ const AttendanceCell = ({ statusKey, date, studentId, isHoliday, onClick }) => {
 
     // Simulate buttons working by adding a pointer and an onClick handler
     const handleClick = useCallback(() => {
-        onClick(studentId, date, statusKey);
-    }, [studentId, date, statusKey, onClick]);
+        if (!isFuture && !isHoliday) {
+            onClick(studentId, date, statusKey);
+        }
+    }, [studentId, date, statusKey, onClick, isFuture, isHoliday]);
+
+    // If it's a future date, show dashes
+    if (isFuture) {
+        return (
+            <div
+                className="flex flex-col justify-center items-center p-0 text-xs font-medium h-full border-r border-gray-100 bg-gray-50"
+            >
+                <span className="text-gray-400 text-lg">----</span>
+            </div>
+        );
+    }
+
+    // If it's a holiday (Saturday/Sunday or special holiday)
+    if (isHoliday) {
+        return (
+            <div
+                className="flex flex-col justify-center items-center p-0 text-xs font-medium h-full border-r border-gray-100 bg-gray-100 text-gray-500"
+            >
+                <span className="leading-tight font-semibold">Holiday</span>
+                {holidayDetail && (
+                    <span className="text-[10px] font-normal mt-0.5">
+                        ({holidayDetail})
+                    </span>
+                )}
+            </div>
+        );
+    }
 
     return (
         <div
             className={`
                 flex flex-col justify-center items-center p-0 text-xs font-medium h-full cursor-pointer
                 border-r border-gray-100 transition duration-100 ease-in-out
-                ${isHoliday ? 'bg-gray-50' : status.classes} 
-                ${statusKey !== 'on-time' && !isHoliday ? 'border-l-4' : 'border-l-transparent'}
+                ${status.classes} 
+                ${statusKey !== 'on-time' ? 'border-l-4' : 'border-l-transparent'}
                 ${status.border}
             `}
             onClick={handleClick}
         >
             <span className="leading-tight">{status.label}</span>
             {status.detail && (
-                <span className={`text-[10px] font-normal mt-0.5 ${isHoliday ? 'text-gray-500' : 'text-gray-500'}`}>
+                <span className="text-[10px] font-normal mt-0.5 text-gray-500">
                     {status.detail}
                 </span>
             )}
@@ -133,8 +166,8 @@ export default function MainCalender() {
     const [daysOfWeek, setDaysOfWeek] = useState(generateWeekData(new Date(2024, 9, 23)));
     const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
 
-    // Grid layout class for 1 wider profile column and 7 equal day columns
-    const gridColsClass = 'grid grid-cols-[300px_repeat(7,minmax(0,1fr))]';
+    // Grid layout class for 1 wider profile column and 5 equal day columns (Monday to Friday)
+    const gridColsClass = 'grid grid-cols-[300px_repeat(5,minmax(0,1fr))]';
 
     const handleToggleSelect = (studentId) => {
         setSelectedStudents(prev => ({
@@ -210,6 +243,7 @@ export default function MainCalender() {
                         >
                             Show Calendar
                         </button>
+                        
                         <button 
                             onClick={handleToday}
                             className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm font-medium"
@@ -228,7 +262,7 @@ export default function MainCalender() {
                         </button>
                         
                         <div className="text-sm font-semibold text-gray-700">
-                            {daysOfWeek[0]?.month} {daysOfWeek[0]?.date} - {daysOfWeek[6]?.month} {daysOfWeek[6]?.date}, {daysOfWeek[0]?.year}
+                            {daysOfWeek[0]?.month} {daysOfWeek[0]?.date} - {daysOfWeek[4]?.month} {daysOfWeek[4]?.date}, {daysOfWeek[0]?.year}
                         </div>
                         
                         <button
@@ -238,9 +272,13 @@ export default function MainCalender() {
                         >
                             <ChevronRight className="w-5 h-5 text-gray-600" />
                         </button>
+                        
                     </div>
-                    
-                    <div className="w-24"></div> {/* Spacer for alignment */}
+                   
+                    {/* Legend Bar on the right side */}
+                    <div className="flex-shrink-0">
+                        <LegendBar />
+                    </div>
                 </div>
                 
                 {/* --- Header Row --- */}
@@ -262,7 +300,7 @@ export default function MainCalender() {
                                 className={`p-3 border-r border-gray-200 text-sm flex flex-col justify-center transition-colors
                                     ${day.special === 'Holiday' ? 'bg-gray-100 text-gray-500' : 'text-gray-500'}
                                     ${isToday ? 'bg-blue-50' : ''}
-                                    ${index === 6 ? 'border-r-0' : ''}
+                                    ${index === 4 ? 'border-r-0' : ''}
                                 `}
                             >
                                 <span className={`text-lg font-bold ${isToday ? 'text-blue-600' : 'text-gray-700'}`}>
@@ -298,24 +336,24 @@ export default function MainCalender() {
                                 {daysOfWeek.map((day) => {
                                     const statusKey = attendance[student.id]?.[day.date] || 'on-time';
                                     const isHoliday = day.special === 'Holiday';
-
-                                    // Special case to render the holiday details only on the holiday column (date 25)
-                                    const currentStatusKey = (isHoliday && statusKey !== 'holiday') ? 'holiday' : statusKey;
-                                    const currentStatus = isHoliday && day.detail ? {
-                                        label: 'Holiday',
-                                        detail: `(${day.detail})`,
-                                        classes: 'bg-gray-100 text-gray-500',
-                                        border: 'border-l-transparent'
-                                    } : attendanceStatuses[currentStatusKey];
-
+                                    const holidayDetail = day.detail || null;
+                                    
+                                    // Check if the date is in the future
+                                    const today = new Date();
+                                    today.setHours(0, 0, 0, 0);
+                                    const cellDate = new Date(day.fullDate);
+                                    cellDate.setHours(0, 0, 0, 0);
+                                    const isFuture = cellDate > today;
 
                                     return (
                                         <AttendanceCell
-                                            key={day.date}
+                                            key={day.fullDate}
                                             studentId={student.id}
                                             date={day.date}
-                                            statusKey={currentStatusKey}
+                                            statusKey={statusKey}
                                             isHoliday={isHoliday}
+                                            isFuture={isFuture}
+                                            holidayDetail={holidayDetail}
                                             onClick={handleCellClick}
                                         />
                                     );
@@ -327,32 +365,32 @@ export default function MainCalender() {
                 {/* Optional: Footer or summary bar */}
                 <div className="p-4 border-t border-gray-200 text-sm text-gray-500 flex justify-between items-center">
                     <span className="font-medium">Total Students: {initialStudents.length}</span>
-                    <span>Week of {daysOfWeek[0]?.month} {daysOfWeek[0]?.date} - {daysOfWeek[6]?.month} {daysOfWeek[6]?.date}, {daysOfWeek[0]?.year}</span>
+                    <span>Week of {daysOfWeek[0]?.month} {daysOfWeek[0]?.date} - {daysOfWeek[4]?.month} {daysOfWeek[4]?.date}, {daysOfWeek[0]?.year}</span>
                 </div>
             </div>
 
             {/* Calendar Modal Popup */}
             {isCalendarModalOpen && (
                 <div className="fixed inset-0 z-50 overflow-y-auto">
-                    {/* Backdrop */}
+                    {/* Backdrop with Blur */}
                     <div 
-                        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+                        className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-all duration-300"
                         onClick={handleCloseCalendarModal}
                     ></div>
                     
                     {/* Modal Content */}
-                    <div className="flex items-center justify-center min-h-screen p-4">
-                        <div className="relative bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+                    <div className="flex items-center justify-center min-h-screen p-4 sm:p-6 md:p-8">
+                        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl transform transition-all duration-300 scale-100">
                             {/* Close Button */}
                             <button
                                 onClick={handleCloseCalendarModal}
-                                className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white hover:bg-gray-100 shadow-lg transition-colors"
+                                className="absolute -top-3 -right-3 z-10 p-2 rounded-full bg-red-500 hover:bg-red-600 shadow-lg transition-all duration-200 hover:scale-110"
                             >
-                                <X className="w-6 h-6 text-gray-600" />
+                                <X className="w-5 h-5 text-white" />
                             </button>
                             
                             {/* Calendar Component */}
-                            <div className="overflow-y-auto max-h-[90vh]">
+                            <div className="overflow-hidden rounded-2xl">
                                 <CalenderBTN />
                             </div>
                         </div>
