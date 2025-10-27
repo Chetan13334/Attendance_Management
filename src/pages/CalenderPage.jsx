@@ -7,7 +7,6 @@ import Sidebar from "../components/common/Sidebar.jsx";
 import Navbar from "../components/common/Navbar.jsx";
 import Calender from "../components/dashboard/MainCalender.jsx";
 
-
 const CalenderPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
@@ -24,19 +23,20 @@ const CalenderPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      
       {/* Sidebar */}
-      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} handleSignOut={handleSignOut} />
+      <Sidebar
+        isOpen={isSidebarOpen}
+        setIsOpen={setIsSidebarOpen}
+        handleSignOut={handleSignOut}
+      />
 
       {/* Main content wrapper */}
       <div className="flex-1 lg:ml-64">
-       
         {/* Navbar */}
         <Navbar toggleSidebar={toggleSidebar} handleSignOut={handleSignOut} />
         {/* -----------This is the main calender page---------- */}
         <br />
-        <Calender/>     
-      
+        <Calender />
       </div>
     </div>
   );
