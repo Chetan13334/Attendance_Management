@@ -1,19 +1,26 @@
-
-
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
-import { db } from '../../firebase';
-import { collection, addDoc, getDocs, query, orderBy } from 'firebase/firestore';
+// src/components/dashboard/CalenderCom.jsx
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { db } from "../../firebase";
+import {
+  collection,
+  onSnapshot,
+  addDoc,
+  query,
+  orderBy,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
 
 const CalenderCom = () => {
   const navigate = useNavigate();
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [events, setEvents] = useState([]);
+  const [employees, setEmployees] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
-  const [eventForm, setEventForm] = useState({ title: '', theme: 'blue' });
+  const [eventForm, setEventForm] = useState({ title: "", theme: "blue" });
   const [loading, setLoading] = useState(false);
 
   const monthNames = [
@@ -40,187 +47,175 @@ const CalenderCom = () => {
     "Saturday",
   ];
 
-  const themes = [
-    { value: "blue", label: "Blue Theme" },
-    { value: "red", label: "Red Theme" },
-    { value: "yellow", label: "Yellow Theme" },
-    { value: "green", label: "Green Theme" },
-    { value: "purple", label: "Purple Theme" },
-  ];
-
-  // Fetch events from Firebase
+  // --- Firestore: realtime events ---
   useEffect(() => {
-    fetchEvents();
+    const eventsRef = collection(db, "Events");
+    const q = query(eventsRef, orderBy("event_date", "asc"));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const list = snapshot.docs.map((doc) => {
+          const data = doc.data();
+          const raw = data.event_date;
+          const event_date = raw && raw.toDate ? raw.toDate() : new Date(raw);
+          return { id: doc.id, ...data, event_date };
+        });
+        setEvents(list);
+      },
+      (err) => console.error("Events listener error:", err)
+    );
+
+    return () => unsubscribe();
   }, []);
 
-  const fetchEvents = async () => {
-    try {
-      const eventsRef = collection(db, 'Events');
-      const q = query(eventsRef, orderBy('event_date', 'asc'));
-      const querySnapshot = await getDocs(q);
-      
-      const fetchedEvents = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        event_date: doc.data().event_date?.toDate() || new Date(doc.data().event_date)
-      }));
-      
-      setEvents(fetchedEvents);
-    } catch (error) {
-      console.error('Error fetching events:', error);
-    }
-  };
+  // --- Firestore: realtime employees (for birthdays) ---
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      collection(db, "Employee_Details"),
+      (snapshot) => {
+        const list = snapshot.docs.map((doc) => {
+          const data = doc.data();
+          const raw = data.DateOfBirth;
+          const DateOfBirth =
+            raw && raw.toDate ? raw.toDate() : raw ? new Date(raw) : null;
+          return { id: doc.id, ...data, DateOfBirth };
+        });
+        setEmployees(list);
+      },
+      (err) => console.error("Employees listener error:", err)
+    );
 
+    return () => unsubscribe();
+  }, []);
+
+  // --- calendar day generation ---
   const getCalendarDays = () => {
     const firstDay = new Date(currentYear, currentMonth, 1);
     const lastDay = new Date(currentYear, currentMonth + 1, 0);
     const days = [];
     for (let i = 0; i < firstDay.getDay(); i++) days.push(null);
-    for (let day = 1; day <= lastDay.getDate(); day++) {
-      days.push(new Date(currentYear, currentMonth, day));
-    }
+    for (let d = 1; d <= lastDay.getDate(); d++)
+      days.push(new Date(currentYear, currentMonth, d));
     return days;
   };
-
-  const handlePrevMonth = () => {
-    if (currentMonth === 0) {
-      setCurrentMonth(11);
-      setCurrentYear(currentYear - 1);
-    } else setCurrentMonth(currentMonth - 1);
-  };
-
-  const handleNextMonth = () => {
-    if (currentMonth === 11) {
-      setCurrentMonth(0);
-      setCurrentYear(currentYear + 1);
-    } else setCurrentMonth(currentMonth + 1);
-  };
-
-  const handleDayClick = (date) => {
-    setSelectedDate(date);
-    setIsModalOpen(true);
-    setEventForm({ title: "", theme: "blue" });
-  };
-
-  const handleAddEvent = async () => {
-    if (!eventForm.title.trim()) {
-      alert("Please enter event title");
-      return;
-    }
-    
-    setLoading(true);
-    try {
-      // Add event to Firebase
-      const eventsRef = collection(db, 'Events');
-      await addDoc(eventsRef, {
-        event_date: selectedDate,
-        event_title: eventForm.title,
-        event_theme: eventForm.theme,
-        created_at: new Date()
-      });
-      
-      // Refresh events list
-      await fetchEvents();
-      
-      setIsModalOpen(false);
-      setEventForm({ title: '', theme: 'blue' });
-      alert('Event added successfully!');
-    } catch (error) {
-      console.error('Error adding event:', error);
-      alert('Failed to add event. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getEventsForDate = (date) =>
-    events.filter(
-      (e) => new Date(e.event_date).toDateString() === date?.toDateString()
-    );
-
   const calendarDays = getCalendarDays();
   const weeks = [];
   for (let i = 0; i < calendarDays.length; i += 7)
     weeks.push(calendarDays.slice(i, i + 7));
 
-  const handleBackToCalendar = () => {
-    navigate('/calendar');
+  // --- Birthday finder ---
+  const getBirthdaysForDate = (date) => {
+    if (!date) return [];
+    return employees.filter((emp) => {
+      if (!emp.DateOfBirth) return false;
+      return (
+        emp.DateOfBirth.getDate() === date.getDate() &&
+        emp.DateOfBirth.getMonth() === date.getMonth()
+      );
+    });
+  };
+
+  // --- events for date ---
+  const getEventsForDate = (date) => {
+    if (!date) return [];
+    return events.filter((ev) => {
+      if (!ev.event_date) return false;
+      const d1 = new Date(ev.event_date);
+      d1.setHours(0, 0, 0, 0);
+      const d2 = new Date(date);
+      d2.setHours(0, 0, 0, 0);
+      return d1.getTime() === d2.getTime();
+    });
+  };
+
+  // --- navigation ---
+  const handlePrevMonth = () => {
+    if (currentMonth === 0) {
+      setCurrentMonth(11);
+      setCurrentYear((y) => y - 1);
+    } else setCurrentMonth((m) => m - 1);
+  };
+  const handleNextMonth = () => {
+    if (currentMonth === 11) {
+      setCurrentMonth(0);
+      setCurrentYear((y) => y + 1);
+    } else setCurrentMonth((m) => m + 1);
+  };
+  const handleBackToCalendar = () => navigate("/calendar");
+
+  // --- OPEN modal ---
+  const handleDayClick = (date) => {
+    if (!date) return;
+    setSelectedDate(date);
+    setEventForm({ title: "", theme: "blue" });
+    setIsModalOpen(true);
+  };
+
+  // --- Add event ---
+  const handleAddEvent = async () => {
+    if (!eventForm.title.trim() || !selectedDate) {
+      alert("Please add an event title");
+      return;
+    }
+    setLoading(true);
+    try {
+      await addDoc(collection(db, "Events"), {
+        event_date: selectedDate,
+        event_title: eventForm.title,
+        event_theme: eventForm.theme,
+        created_at: new Date(),
+      });
+      setIsModalOpen(false);
+      setEventForm({ title: "", theme: "blue" });
+    } catch (err) {
+      console.error("Error adding event:", err);
+      alert("Failed to add event");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // --- Delete event ---
+  const handleDeleteEvent = async (id) => {
+    if (!window.confirm("Delete this event?")) return;
+    try {
+      await deleteDoc(doc(db, "Events", id));
+    } catch (err) {
+      console.error("Error deleting event:", err);
+      alert("Failed to delete event");
+    }
   };
 
   return (
-    <div className=" ">
-      {/* Back Button */}
-      
-
-      <div className="container mx-auto bg-white rounded shadow overflow-hidden w-full ">
-        <div className="container mx-auto pt-1 px-1">
-        <button
-          onClick={handleBackToCalendar}
-          className="flex items-center gap-1 px-2 py-1 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors font-medium mb-4"
-        >
-          <ArrowLeft className=" " />
-          Back 
-        </button>
-      </div>
-        {/* Header */}
-        <div className="flex justify-between items-center p-4 ">
+    <div>
+      <div className="container mx-auto bg-white rounded shadow overflow-hidden w-full">
+        <div className="p-4 flex justify-between items-center">
           <span className="text-lg font-bold">
             {monthNames[currentMonth]} {currentYear}
           </span>
-          <div className="flex justify-center gap-2">
-  {/* Prev Button */}
-  <button
-    onClick={handlePrevMonth}
-    type="button"
-    className=" text-black rounded-l-md border-r border-gray-100 py-2 px-3 hover:bg-gray-300 hover:text-white flex items-center"
-  >
-    <svg
-      className="w-5 h-5 mr-2"
-      fill="currentColor"
-      viewBox="0 0 20 20"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        fillRule="evenodd"
-        d="M7.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z"
-        clipRule="evenodd"
-      ></path>
-    </svg>
-    <span></span>
-  </button>
-
-  {/* Next Button */}
-  <button
-    onClick={handleNextMonth}
-    type="button"
-    className="text-black rounded-l-md border-r border-gray-100 py-2 px-3 hover:bg-gray-300 hover:text-white flex items-center"
-  >
-    <span></span>
-    <svg
-      className="w-5 h-5 ml-2"
-      fill="currentColor"
-      viewBox="0 0 20 20"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        fillRule="evenodd"
-        d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z"
-        clipRule="evenodd"
-      ></path>
-    </svg>
-  </button>
-</div>
-
+          <div className="flex gap-2">
+            <button
+              onClick={handlePrevMonth}
+              className="p-1 text-gray-500 hover:text-black"
+            >
+              ◀
+            </button>
+            <button
+              onClick={handleNextMonth}
+              className="p-1 text-gray-500 hover:text-black"
+            >
+              ▶
+            </button>
+          </div>
         </div>
 
-        {/* Calendar Table */}
-        <table className="w-full">
+        <table className="w-full table-fixed">
           <thead>
             <tr>
               {daysOfWeek.map((day, i) => (
                 <th
                   key={i}
-                  className="p-2 shadow p-4 bg-white rounded text-xs md:text-sm text-gray-700 bg-gray-50"
+                  className="p-2 bg-gray-50 text-xs md:text-sm text-gray-700"
                 >
                   <span className="hidden sm:inline">{day}</span>
                   <span className="sm:hidden">{day.slice(0, 3)}</span>
@@ -228,46 +223,91 @@ const CalenderCom = () => {
               ))}
             </tr>
           </thead>
+
           <tbody>
             {weeks.map((week, wi) => (
               <tr key={wi} className="text-center">
                 {week.map((date, di) => {
                   const dayEvents = getEventsForDate(date);
+                  const birthdays = getBirthdaysForDate(date);
                   return (
                     <td
                       key={di}
                       onClick={() => date && handleDayClick(date)}
-                      className={` border border-gray-200 p-1 h-32 sm:h-40 overflow-auto cursor-pointer transition-all duration-200 hover:bg-gray-100 align-top ${
-                        date ? "" : "bg-gray-50"
-                      }`}
+                      className="border border-gray-200 p-1 h-32 sm:h-40 overflow-hidden cursor-pointer align-top hover:bg-gray-100"
                     >
-                      {date && (
+                      {date ? (
                         <div className="flex flex-col h-full">
-                          <div className="text-gray-500 text-sm text-center pr-1">
+                          <div className="text-gray-500 text-sm text-center">
                             {date.getDate()}
                           </div>
-                          <div className="flex-grow mt-1 overflow-y-auto">
-                            {dayEvents.map((event, idx) => (
+
+                          <div className="flex-grow mt-1 overflow-y-auto flex flex-col gap-2 px-1">
+                            {/* Events */}
+                            {dayEvents.map((ev) => (
                               <div
-                                key={idx}
-                                className={`text-white rounded p-1 text-xs mb-1 ${
-                                  event.event_theme === "blue"
+                                key={ev.id}
+                                className={`relative group text-white rounded p-1 text-xs mb-1 ${
+                                  ev.event_theme === "blue"
                                     ? "bg-blue-400"
-                                    : event.event_theme === "red"
+                                    : ev.event_theme === "red"
                                     ? "bg-red-400"
-                                    : event.event_theme === "yellow"
+                                    : ev.event_theme === "yellow"
                                     ? "bg-yellow-400"
-                                    : event.event_theme === "green"
+                                    : ev.event_theme === "green"
                                     ? "bg-green-400"
                                     : "bg-purple-400"
                                 }`}
                               >
-                                {event.event_title}
+                                {ev.event_title}
+
+                                {/* Delete (X) button */}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteEvent(ev.id);
+                                  }}
+                                  className="absolute bottom-0.5 right-1 text-[15px] opacity-0 group-hover:opacity-100 transition-opacity text-white hover:text-black"
+                                  title="Delete Event"
+                                >
+                                  🗙
+                                </button>
+                              </div>
+                            ))}
+
+                            {/* Birthdays */}
+                            {birthdays.map((b) => (
+                              <div
+                                key={b.id}
+                                className="bg-gradient-to-r from-red-400 via-pink-300 to-red-100 border border-yellow-500 rounded-xl p-2.5 shadow-md flex items-center gap-3"
+                              >
+                                <div className="relative">
+                                  <img
+                                    src={
+                                      b.Photo ||
+                                      "https://placehold.co/40x40/ffe08a/000?text=P"
+                                    }
+                                    alt={b.Name}
+                                    className="w-9 h-9 rounded-full object-cover border-2 border-green-500"
+                                  />
+                                  <span className="absolute -bottom-1 -right-1 text-[9px] bg-white text-green-800 rounded-full px-1.5 py-0.5 shadow">
+                                    ✨
+                                  </span>
+                                </div>
+
+                                <div className="flex flex-col text-left leading-tight">
+                                  <span className="font-semibold text-black text-sm truncate">
+                                    {b.Name}
+                                  </span>
+                                  <span className="text-black font-bold text-[11px] italic">
+                                    Happy Birthday 🍫🍯🍩🍰
+                                  </span>
+                                </div>
                               </div>
                             ))}
                           </div>
                         </div>
-                      )}
+                      ) : null}
                     </td>
                   );
                 })}
@@ -280,51 +320,45 @@ const CalenderCom = () => {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center backdrop-blur-sm bg-black/20 z-50">
-  <div className="bg-white rounded-lg shadow-lg p-6 w-96 relative">
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-96 relative">
             <button
               onClick={() => setIsModalOpen(false)}
-              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors"
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
             >
               ✕
             </button>
 
-            {/* Heading */}
             <h2 className="text-2xl font-semibold mb-1 text-gray-800">
               Add Event
             </h2>
-
-            {/* Selected Date */}
             <p className="text-sm text-gray-500 mb-4">
               {selectedDate?.toDateString()}
             </p>
 
-            {/* Event Title Input */}
             <input
               type="text"
               placeholder="Event Title"
               value={eventForm.title}
               onChange={(e) =>
-                setEventForm({ ...eventForm, title: e.target.value })
+                setEventForm((s) => ({ ...s, title: e.target.value }))
               }
               className="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-400 outline-none mb-4 shadow-sm placeholder-gray-400 transition-all"
             />
 
-            {/* Theme Selector */}
             <select
               value={eventForm.theme}
               onChange={(e) =>
-                setEventForm({ ...eventForm, theme: e.target.value })
+                setEventForm((s) => ({ ...s, theme: e.target.value }))
               }
               className="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-400 outline-none mb-6 shadow-sm transition-all cursor-pointer appearance-none bg-white"
             >
-              {themes.map((theme) => (
-                <option key={theme.value} value={theme.value}>
-                  {theme.label}
-                </option>
-              ))}
+              <option value="blue">Blue Theme</option>
+              <option value="red">Red Theme</option>
+              <option value="yellow">Yellow Theme</option>
+              <option value="green">Green Theme</option>
+              <option value="purple">Purple Theme</option>
             </select>
 
-            {/* Buttons */}
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -336,13 +370,13 @@ const CalenderCom = () => {
               <button
                 onClick={handleAddEvent}
                 disabled={loading}
-                className={`px-4 py-2 rounded ${
+                className={`px-5 py-2 rounded-xl font-medium text-white ${
                   loading
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-blue-500 hover:bg-blue-600'
-                } text-white`}
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-gradient-to-r from-blue-400 to-blue-700 hover:from-blue-500 hover:to-blue-800"
+                } transition-all shadow-md`}
               >
-                {loading ? 'Adding...' : 'Add Event'}
+                {loading ? "Adding..." : "Add Event"}
               </button>
             </div>
           </div>

@@ -61,8 +61,8 @@ const EmployeeForm = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-pink-50">
-      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-xl p-10">
+    <div className="flex items-center justify-center min-h-screen bg-white">
+      <div className="w-full max-w-5xl bg-white rounded-2xl p-10">
         <div className="mb-8 border-b pb-4 border-gray-200">
           <h2 className="text-3xl font-bold text-gray-800">Add Employee</h2>
           <p className="text-sm text-gray-500 mt-1">
