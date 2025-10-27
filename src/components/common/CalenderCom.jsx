@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { db } from '../../firebase';
 import { collection, addDoc, getDocs, query, orderBy } from 'firebase/firestore';
+import leftbtn from '../assets/left-arrow.png';
 
 const CalenderCom = () => {
   const navigate = useNavigate();
@@ -156,63 +157,40 @@ const CalenderCom = () => {
         <div className="container mx-auto pt-1 px-1">
         <button
           onClick={handleBackToCalendar}
-          className="flex items-center gap-1 px-2 py-1 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors font-medium mb-4"
+          className="flex items-center gap-0 px-2 py-1 text-white rounded-md  font-medium mb-4"
         >
-          <ArrowLeft className=" " />
-          Back 
+          {/* <ArrowLeft className=" " /> */}
+          <img src={leftbtn} alt="BTN"  className='h-7 w-7'/>
+          
         </button>
       </div>
         {/* Header */}
-        <div className="flex justify-between items-center p-4 ">
-          <span className="text-lg font-bold">
-            {monthNames[currentMonth]} {currentYear}
-          </span>
-          <div className="flex justify-center gap-2">
-  {/* Prev Button */}
-  <button
-    onClick={handlePrevMonth}
-    type="button"
-    className=" text-black rounded-l-md border-r border-gray-100 py-2 px-3 hover:bg-gray-300 hover:text-white flex items-center"
-  >
-    <svg
-      className="w-5 h-5 mr-2"
-      fill="currentColor"
-      viewBox="0 0 20 20"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        fillRule="evenodd"
-        d="M7.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z"
-        clipRule="evenodd"
-      ></path>
-    </svg>
-    <span></span>
-  </button>
+       <div className="flex justify-between items-center p-4">
+  <span className="text-lg font-bold">
+    {monthNames[currentMonth]} {currentYear}
+  </span>
 
-  {/* Next Button */}
-  <button
-    onClick={handleNextMonth}
-    type="button"
-    className="text-black rounded-l-md border-r border-gray-100 py-2 px-3 hover:bg-gray-300 hover:text-white flex items-center"
-  >
-    <span></span>
-    <svg
-      className="w-5 h-5 ml-2"
-      fill="currentColor"
-      viewBox="0 0 20 20"
-      xmlns="http://www.w3.org/2000/svg"
+  {/* Month Navigation */}
+  <nav className="inline-flex space-x-2.5">
+    {/* Previous Button */}
+    <button
+      onClick={handlePrevMonth}
+      type="button"
+      className="flex items-center py-2 px-3 rounded font-medium select-none  dark:text-black  transition-colors hover:font-semibold"
     >
-      <path
-        fillRule="evenodd"
-        d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z"
-        clipRule="evenodd"
-      ></path>
-    </svg>
-  </button>
+      ⪻
+    </button>
+
+    {/* Next Button */}
+    <button
+      onClick={handleNextMonth}
+      type="button"
+      className="flex items-center py-2 px-3 rounded font-medium select-none  dark:text-black  transition-colors hover:font-semibold"
+    >
+      ⪼
+    </button>
+  </nav>
 </div>
-
-        </div>
-
         {/* Calendar Table */}
         <table className="w-full">
           <thead>

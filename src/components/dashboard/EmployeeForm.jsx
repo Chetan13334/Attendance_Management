@@ -36,11 +36,20 @@ const EmployeeForm = () => {
     e.preventDefault();
 
     try {
-      await addDoc(collection(db, "Employee_Details"), {
+      console.log("EmployeeForm: Attempting to add employee with data:", {
         ...formData,
         Photo: photo,
       });
+      
+      const docRef = await addDoc(collection(db, "Employee_Details"), {
+        ...formData,
+        Photo: photo,
+        createdAt: new Date() // Add timestamp
+      });
+      
+      console.log("EmployeeForm: Employee added successfully with ID:", docRef.id);
       alert("✅ Employee added successfully!");
+      
       setFormData({
         Name: "",
         Gender: "",
@@ -52,7 +61,7 @@ const EmployeeForm = () => {
       });
       setPhoto("https://placehold.co/160x160/cbd5e1/000?text=P");
     } catch (error) {
-      console.error("Error adding employee:", error);
+      console.error("EmployeeForm: Error adding employee:", error);
       alert("❌ Failed to add employee. Check console for details.");
     }
   };

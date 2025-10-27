@@ -83,7 +83,7 @@ const EventModal = ({ isOpen, onClose, events }) => {
                   <div>
                     <h4 className="font-semibold text-gray-800">{event.event_title}</h4>
                     <p className="text-sm text-gray-600 mt-1">
-                      {event.event_date ? new Date(event.event_date).toLocaleDateString() : 'Date not specified'}
+                      Event On: {event.event_date ? new Date(event.event_date).toLocaleDateString() : 'Date not specified'}
                     </p>
                   </div>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -129,10 +129,19 @@ function Statsoverview({ stats = [] }) {
         const eventsRef = collection(db, 'Events');
         const querySnapshot = await getDocs(eventsRef);
         
-        const fetchedEvents = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        const fetchedEvents = querySnapshot.docs.map(doc => {
+          const data = doc.data();
+          // Handle Firebase timestamps properly
+          const eventDate = data.event_date;
+          const createdAt = data.created_at;
+          
+          return {
+            id: doc.id,
+            ...data,
+            event_date: eventDate?.toDate ? eventDate.toDate() : eventDate,
+            created_at: createdAt?.toDate ? createdAt.toDate() : createdAt
+          };
+        });
         
         setEvents(fetchedEvents);
       } catch (error) {

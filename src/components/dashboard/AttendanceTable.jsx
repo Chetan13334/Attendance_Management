@@ -66,6 +66,7 @@ function AttendanceTable() {
     return {
       id: emp.id,
       name: emp.name,
+      date: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000).toLocaleDateString(), // Generate random date within last 30 days
       ...dummy,
     };
   });
@@ -94,7 +95,7 @@ function AttendanceTable() {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              {["Name", "Employee Id", "Time", "Status", "Remarks"].map(
+              {["Name", "Employee Id", "Date", "Time", "Status", "Remarks"].map(
                 (header) => (
                   <th
                     key={header}
@@ -117,6 +118,9 @@ function AttendanceTable() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {record.id}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {record.date}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {record.time}
@@ -181,7 +185,7 @@ function AttendanceTable() {
                   <Calendar className="text-green-500" size={20} />
                   <div>
                     <p className="text-sm text-gray-500">Date</p>
-                    <p className="font-medium">{new Date().toLocaleDateString()}</p>
+                    <p className="font-medium">{selectedEvent.date}</p>
                   </div>
                 </div>
 

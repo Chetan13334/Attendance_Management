@@ -10,7 +10,7 @@ const firebaseConfig = {
   projectId: "attendance-management-b58f5",
   storageBucket: "attendance-management-b58f5.appspot.com",
   messagingSenderId: "1064034709705",
-  appId: "1:1064034709705:web:YOUR_APP_ID_HERE"
+  appId: "1:1064034709705:web:37b236ea3aa23e90ca9d18"
 };
 
 // Initialize Firebase

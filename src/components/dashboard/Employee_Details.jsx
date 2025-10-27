@@ -7,13 +7,23 @@ const Employee_Details = () => {
 
   useEffect(() => {
     // Real-time listener for Firestore data
-    const unsubscribe = onSnapshot(collection(db, "Employee_Details"), (snapshot) => {
-      const list = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setEmployees(list);
-    });
+    const unsubscribe = onSnapshot(collection(db, "Employee_Details"), 
+      (snapshot) => {
+        console.log("Employee_Details: Received snapshot");
+        const list = snapshot.docs.map((doc) => {
+          console.log("Employee_Details: Document data:", doc.id, doc.data());
+          return {
+            id: doc.id,
+            ...doc.data(),
+          };
+        });
+        console.log("Employee_Details: Processed list:", list);
+        setEmployees(list);
+      },
+      (error) => {
+        console.error("Employee_Details: Error fetching data:", error);
+      }
+    );
 
     return () => unsubscribe(); // cleanup
   }, []);
@@ -73,26 +83,26 @@ const Employee_Details = () => {
 
                     {/* Corrected Employee ID field */}
                     <td className="px-6 py-4 text-gray-800 font-medium">
-                      {emp.EmployeeID || "-"}
+                      {emp.EmployeeID || emp.employeeId || emp.id || "-"}
                     </td>
 
                     <td className="px-6 py-4 text-gray-800 font-medium">
-                      {emp.Name || "-"}
+                      {emp.Name || emp.name || emp.displayName || "-"}
                     </td>
                     <td className="px-6 py-4 text-gray-600">
-                      {emp.Gender || "-"}
+                      {emp.Gender || emp.gender || "-"}
                     </td>
                     <td className="px-6 py-4 text-gray-600">
-                      {emp.Department || "-"}
+                      {emp.Department || emp.department || "-"}
                     </td>
                     <td className="px-6 py-4 text-gray-600">
-                      {emp.Role || "-"}
+                      {emp.Role || emp.role || "-"}
                     </td>
                     <td className="px-6 py-4 text-gray-600">
-                      {emp.ContactNumber || "-"}
+                      {emp.ContactNumber || emp.contactNumber || emp.phone || "-"}
                     </td>
                     <td className="px-6 py-4 text-gray-600">
-                      {emp.DateOfJoining || "-"}
+                      {emp.DateOfJoining || emp.dateOfJoining || "-"}
                     </td>
                   </tr>
                 ))}
