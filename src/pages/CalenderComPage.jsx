@@ -7,6 +7,7 @@ import Sidebar from "../components/common/Sidebar.jsx";
 import Navbar from "../components/common/Navbar.jsx";
 import CalenderCom from "../components/common/CalenderCom.jsx";
 
+
 const CalenderComPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
@@ -23,19 +24,19 @@ const CalenderComPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      
+
       {/* Sidebar */}
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} handleSignOut={handleSignOut} />
 
       {/* Main content wrapper */}
       <div className="flex-1 lg:ml-64">
-       
+
         {/* Navbar */}
         <Navbar toggleSidebar={toggleSidebar} handleSignOut={handleSignOut} />
-        
+
         {/* Main Calendar Component */}
         <main className="pt-20">
-          <CalenderCom />     
+          <CalenderCom />
         </main>
       </div>
     </div>

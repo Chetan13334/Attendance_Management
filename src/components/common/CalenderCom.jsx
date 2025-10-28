@@ -208,7 +208,6 @@ const CalenderCom = () => {
               className="flex items-center gap-2 px-2 py-2 rounded-xl bg-white text-black font-medium shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300"
             >
               <ChevronLeft size={20} />
-              
             </button>
 
             {/* Next Month Button */}
@@ -216,7 +215,6 @@ const CalenderCom = () => {
               onClick={handleNextMonth}
               className="flex items-center gap-2 px-2 py-2 rounded-xl bg-white  text-black font-medium shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300"
             >
-              
               <ChevronRight size={20} />
             </button>
           </div>
@@ -260,16 +258,17 @@ const CalenderCom = () => {
                             {dayEvents.map((ev) => (
                               <div
                                 key={ev.id}
-                                className={`relative group text-white rounded p-1 text-xs mb-1 ${ev.event_theme === "blue"
+                                className={`relative group text-white rounded p-1 text-xs mb-1 ${
+                                  ev.event_theme === "blue"
                                     ? "bg-blue-400"
                                     : ev.event_theme === "red"
-                                      ? "bg-red-400"
-                                      : ev.event_theme === "yellow"
-                                        ? "bg-yellow-400"
-                                        : ev.event_theme === "green"
-                                          ? "bg-green-400"
-                                          : "bg-purple-400"
-                                  }`}
+                                    ? "bg-red-400"
+                                    : ev.event_theme === "yellow"
+                                    ? "bg-yellow-400"
+                                    : ev.event_theme === "green"
+                                    ? "bg-green-400"
+                                    : "bg-purple-400"
+                                }`}
                               >
                                 {ev.event_title}
 
@@ -297,7 +296,7 @@ const CalenderCom = () => {
       hover:shadow-2xl cursor-pointer 
       flex items-center gap-3
     "
-                                style={{ maxWidth: '200px' }} // Added max-width for better control if placed in a list
+                                style={{ maxWidth: "200px" }} // Added max-width for better control if placed in a list
                               >
                                 {/* Profile Image with Ring and Decorative Frame */}
                                 <div className="relative flex-shrink-0">
@@ -394,10 +393,11 @@ const CalenderCom = () => {
               <button
                 onClick={handleAddEvent}
                 disabled={loading}
-                className={`px-5 py-2 rounded-xl font-medium text-white ${loading
+                className={`px-5 py-2 rounded-xl font-medium text-white ${
+                  loading
                     ? "bg-gray-400 cursor-not-allowed"
                     : "bg-gradient-to-r from-blue-400 to-blue-700 hover:from-blue-500 hover:to-blue-800"
-                  } transition-all shadow-md`}
+                } transition-all shadow-md`}
               >
                 {loading ? "Adding..." : "Add Event"}
               </button>

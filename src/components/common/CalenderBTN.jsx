@@ -74,7 +74,8 @@ const CalenderBTN = () => {
   for (let i = 0; i < calendarDays.length; i += 7) weeks.push(calendarDays.slice(i, i + 7));
 
   return (
-    <div className="bg-gray-200 min-h-screen py-10">
+    // Removed the full-screen background classes to ensure proper rendering within page layout
+    <div className="py-10">
       <div className="container mx-auto bg-white rounded shadow overflow-hidden w-full lg:w-10/12">
         {/* Header */}
         <div className="flex justify-between items-center border-b p-4 bg-gray-100">
@@ -115,7 +116,7 @@ const CalenderBTN = () => {
                     <td
                       key={di}
                       onClick={() => date && handleDayClick(date)}
-                      className={`border p-1 h-32 sm:h-40 overflow-auto cursor-pointer transition-all duration-200 hover:bg-gray-100 align-top ${
+                      className={`border p-1 h-32 sm:h-40 overflow-hidden cursor-pointer transition-all duration-200 hover:bg-gray-100 align-top ${
                         date ? '' : 'bg-gray-50'
                       }`}
                     >
