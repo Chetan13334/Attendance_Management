@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react'; 
+import logomain from '../assets/pfizer.png';
 
 const Navbar = ({ toggleSidebar, handleSignOut }) => {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -35,9 +36,10 @@ const Navbar = ({ toggleSidebar, handleSignOut }) => {
                 
                 <div className="flex-shrink-0 mr-4 sm:mr-8">
                     
-                    <h2 className="text-sm lg:text-lg font-bold text-gray-800">Attendance</h2>
+                    <h2 className="text-sm lg:text-lg font-bold text-gray-800"><img src={logomain} alt=",mainlogo" className='w-8 h-8' />
+                    </h2>
                     
-                    <p className="text-[0.6rem] lg:text-xs text-gray-500">Manage and review records</p>
+                    {/* <p className="text-[0.6rem] lg:text-xs text-gray-500">Manage and review records</p> */}
                 </div>
 
                 

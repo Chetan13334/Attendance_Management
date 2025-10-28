@@ -146,86 +146,98 @@ function AttendanceTable() {
 
       {/* Modal for event details */}
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-sm bg-black bg-opacity-50">
-          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-gray-800">Event Details</h3>
-              <button
-                onClick={closeModal}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
+  <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/60 backdrop-blur-md">
+    <div className="bg-white/80 backdrop-blur-lg border border-gray-200 rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4 transform transition-all duration-300 scale-100 hover:scale-[1.01]">
+      
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6 border-b pb-3">
+        <h3 className="text-2xl font-semibold text-gray-800 flex items-center gap-2">
+          📅 Event Details
+        </h3>
+        <button
+          onClick={closeModal}
+          className="text-gray-400 hover:text-red-500 transition"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+
+      {/* Content */}
+      {selectedEvent && (
+        <div className="space-y-5">
+          <div className="flex items-center gap-4">
+            <div className="p-2 rounded-lg bg-blue-50 text-blue-600">
+              <User size={22} />
             </div>
-
-            {selectedEvent && (
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <User className="text-blue-500" size={20} />
-                  <div>
-                    <p className="text-sm text-gray-500">Employee</p>
-                    <p className="font-medium">{selectedEvent.name}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-3">
-                  <Calendar className="text-green-500" size={20} />
-                  <div>
-                    <p className="text-sm text-gray-500">Date</p>
-                    <p className="font-medium">{selectedEvent.date}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-3">
-                  <Clock className="text-purple-500" size={20} />
-                  <div>
-                    <p className="text-sm text-gray-500">Time</p>
-                    <p className="font-medium">{selectedEvent.time}</p>
-                  </div>
-                </div>
-
-                <div className="pt-4">
-                  <p className="text-sm text-gray-500">Status</p>
-                  <span
-                    className={`px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full ${getStatusClasses(
-                      selectedEvent.status
-                    )}`}
-                  >
-                    {selectedEvent.status}
-                  </span>
-                </div>
-
-                <div className="pt-2">
-                  <p className="text-sm text-gray-500">Remarks</p>
-                  <p className="font-medium">{selectedEvent.remarks}</p>
-                </div>
-              </div>
-            )}
-
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={closeModal}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
-              >
-                Close
-              </button>
+            <div>
+              <p className="text-xs text-gray-500 uppercase tracking-wide">Employee</p>
+              <p className="font-medium text-gray-800">{selectedEvent.name}</p>
             </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="p-2 rounded-lg bg-green-50 text-green-600">
+              <Calendar size={22} />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 uppercase tracking-wide">Date</p>
+              <p className="font-medium text-gray-800">{selectedEvent.date}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="p-2 rounded-lg bg-purple-50 text-purple-600">
+              <Clock size={22} />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 uppercase tracking-wide">Time</p>
+              <p className="font-medium text-gray-800">{selectedEvent.time}</p>
+            </div>
+          </div>
+
+          <div className="pt-2">
+            <p className="text-xs text-gray-500 uppercase tracking-wide">Status</p>
+            <span
+              className={`mt-1 inline-flex items-center px-3 py-1 text-sm font-semibold rounded-full shadow-sm ${getStatusClasses(
+                selectedEvent.status
+              )}`}
+            >
+              {selectedEvent.status}
+            </span>
+          </div>
+
+          <div className="pt-2">
+            <p className="text-xs text-gray-500 uppercase tracking-wide">Remarks</p>
+            <p className="font-medium text-gray-700 mt-1">{selectedEvent.remarks}</p>
           </div>
         </div>
       )}
+
+      {/* Footer */}
+      <div className="mt-8 flex justify-end">
+        <button
+          onClick={closeModal}
+          className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-md hover:from-blue-600 hover:to-blue-700 transition-all duration-200"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }
