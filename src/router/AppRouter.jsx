@@ -9,6 +9,7 @@ import EmployeeFormPage from '../pages/EmployeeFormPage';
 import EmployeeDetailsPage from '../pages/EmployeeDetailsPage';
 import CalenderComPage from '../pages/CalenderComPage';
 import EditEmployeePage from '../pages/EditEmployeePage';
+import EventsPage from '../pages/EventsPage';
 
 const AppRouter = () => {
   return (
@@ -18,15 +19,13 @@ const AppRouter = () => {
         <Route path="/signin" element={<SignInPage />} />
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/events" element={<EventsPage />} />
         <Route path="/report" element={<ReportPage />} />
         <Route path="/calendar" element={<CalenderPage />} />
         <Route path="/add-employee" element={<EmployeeFormPage />} />
         <Route path="/employee_details" element={<EmployeeDetailsPage/>} />
         <Route path="/calendarcom" element={<CalenderComPage />} />
-        <Route path="/add-employee" element={<EmployeeFormPage />} />
-        <Route path="/employee_details" element={<EmployeeDetailsPage/>} />
         <Route path="/edit-employee/:id" element={<EditEmployeePage />} />
-        
       </Routes>
     </Router>
   );

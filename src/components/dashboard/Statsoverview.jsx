@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { UserCheck, UserX, Clock, Calendar } from 'lucide-react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase';
-import AllEventsModal from '../common/AllEventsModal';
+import { useNavigate } from 'react-router-dom';
 
 const IconMap = {
   UserCheck,
@@ -59,8 +59,8 @@ const StatCard = ({ title, value, icon: Icon, color, onClick }) => {
 };
 
 function Statsoverview({ stats = [] }) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [events, setEvents] = useState([]);
+  const navigate = useNavigate();
 
   // Fetch events from Firebase
   useEffect(() => {
@@ -93,11 +93,8 @@ function Statsoverview({ stats = [] }) {
   }, []);
 
   const handleEventCardClick = () => {
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
+    // Navigate to the events page instead of opening a modal
+    navigate('/events');
   };
 
   if (!stats.length) {
@@ -105,33 +102,24 @@ function Statsoverview({ stats = [] }) {
       { title: "Active Users", value: 1200, icon: UserCheck, color: "green" },
       { title: "Inactive Users", value: 80, icon: UserX, color: "red" },
       { title: "Clocked Hours", value: 56, icon: Clock, color: "blue" },
-      { title: "Events", value: 24, icon: Calendar, color: "yellow", onClick: handleEventCardClick },
+      { title: "Events", value: events.length, icon: Calendar, color: "yellow", onClick: handleEventCardClick },
     ];
   } else {
     // If stats are provided, find the Events card and add the onClick handler
     stats = stats.map(stat => {
       if (stat.title === "Events") {
-        return { ...stat, onClick: handleEventCardClick };
+        return { ...stat, onClick: handleEventCardClick, value: events.length };
       }
       return stat;
     });
   }
 
   return (
-    <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => (
-          <StatCard key={stat.title} {...stat} />
-        ))}
-      </div>
-
-      {/* Event Modal */}
-      <AllEventsModal 
-        isOpen={isModalOpen} 
-        onClose={closeModal} 
-        events={events} 
-      />
-    </>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {stats.map((stat) => (
+        <StatCard key={stat.title} {...stat} />
+      ))}
+    </div>
   );
 }
 
