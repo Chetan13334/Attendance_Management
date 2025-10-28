@@ -1,8 +1,12 @@
 import React, { useState } from "react";
 import { db } from "../../firebase";
 import { collection, addDoc } from "firebase/firestore";
+import Back_Button from "../assets/left-arrow.png";
+import { useNavigate } from "react-router-dom";
 
 const EmployeeForm = () => {
+  const navigate = useNavigate();
+
   const [photo, setPhoto] = useState(
     "https://placehold.co/160x160/cbd5e1/000?text=P"
   );
@@ -43,16 +47,19 @@ const EmployeeForm = () => {
         ...formData,
         Photo: photo,
       });
-      
+
       const docRef = await addDoc(collection(db, "Employee_Details"), {
         ...formData,
         Photo: photo,
-        createdAt: new Date() // Add timestamp
+        createdAt: new Date(), // Add timestamp
       });
-      
-      console.log("EmployeeForm: Employee added successfully with ID:", docRef.id);
+
+      console.log(
+        "EmployeeForm: Employee added successfully with ID:",
+        docRef.id
+      );
       alert("✅ Employee added successfully!");
-      
+
       setFormData({
         Name: "",
         Gender: "",
@@ -70,7 +77,8 @@ const EmployeeForm = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-white">
+    <div className="relative flex items-center justify-center min-h-screen bg-white">
+
       <div className="w-full max-w-5xl bg-white rounded-2xl p-10">
         <div className="mb-8 border-b pb-4 border-gray-200">
           <h2 className="text-3xl font-bold text-gray-800">Add Employee</h2>
@@ -193,7 +201,7 @@ const EmployeeForm = () => {
               />
             </div>
 
-            {/*Date of Birth */}
+            {/* Date of Birth */}
             <div className="sm:col-span-3">
               <label
                 htmlFor="DateOfBirth"
@@ -283,7 +291,7 @@ const EmployeeForm = () => {
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700 shadow-lg transition duration-150"
+              className="px-6 py-2.5 rounded-xl bg-white text-green-600 font-medium hover:bg-green-400 hover:text-white shadow-lg transition duration-150"
             >
               Save Changes
             </button>
