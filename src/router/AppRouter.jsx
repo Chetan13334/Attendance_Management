@@ -8,6 +8,7 @@ import CalenderPage from '../pages/CalenderPage';
 import EmployeeFormPage from '../pages/EmployeeFormPage';
 import EmployeeDetailsPage from '../pages/EmployeeDetailsPage';
 import CalenderComPage from '../pages/CalenderComPage';
+import EditEmployeePage from '../pages/EditEmployeePage';
 
 const AppRouter = () => {
   return (
@@ -22,6 +23,10 @@ const AppRouter = () => {
         <Route path="/add-employee" element={<EmployeeFormPage />} />
         <Route path="/employee_details" element={<EmployeeDetailsPage/>} />
         <Route path="/calendarcom" element={<CalenderComPage />} />
+        <Route path="/add-employee" element={<EmployeeFormPage />} />
+        <Route path="/employee_details" element={<EmployeeDetailsPage/>} />
+        <Route path="/edit-employee/:id" element={<EditEmployeePage />} />
+        
       </Routes>
     </Router>
   );

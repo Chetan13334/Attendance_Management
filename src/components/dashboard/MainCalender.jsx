@@ -250,7 +250,7 @@ export default function MainCalender() {
                         
                         <button 
                             onClick={handleToday}
-                            className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm font-medium"
+                            className="px-3 py-1.5 bg-green-500 text-white rounded-md hover:bg-green-700 text-sm font-medium"
                         >
                             Today
                         </button>
@@ -290,7 +290,7 @@ export default function MainCalender() {
                     
                     {/* Header Corner */}
                     <div className="flex items-center justify-start p-4 text-sm font-bold border-r border-gray-200">
-                        <span className='mr-1'>Student Profile</span>
+                        <span className='mr-1'>Employee Profile</span>
                         <ChevronDown className="w-4 h-4 text-gray-400 cursor-pointer" />
                     </div>
                     
