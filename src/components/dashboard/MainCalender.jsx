@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase'; // Adjusted path to firebase
 
+
 import LegendBar from '../common/LegendBar';
 
 // --- Mock Data ---
@@ -361,13 +362,17 @@ export default function MainCalender() {
                                 })}
                             </div>
                         );
+                       
                     })}
                 </div>
                 {/* Optional: Footer or summary bar */}
                 <div className="p-4 border-t border-gray-200 text-sm text-gray-500 flex justify-between items-center">
                     <span className="font-medium">Total Employees: {students.length}</span>
                     <span>Week of {daysOfWeek[0]?.month} {daysOfWeek[0]?.date} - {daysOfWeek[4]?.month} {daysOfWeek[4]?.date}, {daysOfWeek[0]?.year}</span>
+                   
+                    
                 </div>
+                
             </div>
         </div>
     );
