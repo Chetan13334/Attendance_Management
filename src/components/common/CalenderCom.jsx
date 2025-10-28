@@ -188,7 +188,7 @@ const CalenderCom = () => {
 
   return (
     <div>
-      <div className="container mx-auto bg-white rounded shadow overflow-hidden w-full">
+      <div className="container mx-auto ">
         <div className="p-4 flex justify-between items-center">
           <span className="text-lg font-bold">
             {monthNames[currentMonth]} {currentYear}
@@ -198,13 +198,13 @@ const CalenderCom = () => {
               onClick={handlePrevMonth}
               className="p-1 text-gray-500 hover:text-black"
             >
-              ◀
+              Next
             </button>
             <button
               onClick={handleNextMonth}
               className="p-1 text-gray-500 hover:text-black"
             >
-              ▶
+              Prev
             </button>
           </div>
         </div>
@@ -247,17 +247,16 @@ const CalenderCom = () => {
                             {dayEvents.map((ev) => (
                               <div
                                 key={ev.id}
-                                className={`relative group text-white rounded p-1 text-xs mb-1 ${
-                                  ev.event_theme === "blue"
+                                className={`relative group text-white rounded p-1 text-xs mb-1 ${ev.event_theme === "blue"
                                     ? "bg-blue-400"
                                     : ev.event_theme === "red"
-                                    ? "bg-red-400"
-                                    : ev.event_theme === "yellow"
-                                    ? "bg-yellow-400"
-                                    : ev.event_theme === "green"
-                                    ? "bg-green-400"
-                                    : "bg-purple-400"
-                                }`}
+                                      ? "bg-red-400"
+                                      : ev.event_theme === "yellow"
+                                        ? "bg-yellow-400"
+                                        : ev.event_theme === "green"
+                                          ? "bg-green-400"
+                                          : "bg-purple-400"
+                                  }`}
                               >
                                 {ev.event_title}
 
@@ -279,30 +278,42 @@ const CalenderCom = () => {
                             {birthdays.map((b) => (
                               <div
                                 key={b.id}
-                                className="bg-gradient-to-r from-red-400 via-pink-300 to-red-100 border border-yellow-500 rounded-xl p-2.5 shadow-md flex items-center gap-3"
+                                className="
+      p-2.5 rounded-xl shadow-lg border-2 border-pink-100/50 
+      bg-white transition-all duration-300 transform hover:scale-[1.03] 
+      hover:shadow-2xl cursor-pointer 
+      flex items-center gap-3
+    "
+                                style={{ maxWidth: '200px' }} // Added max-width for better control if placed in a list
                               >
-                                <div className="relative">
-                                  <img
-                                    src={
-                                      b.Photo ||
-                                      "https://placehold.co/40x40/ffe08a/000?text=P"
-                                    }
-                                    alt={b.Name}
-                                    className="w-9 h-9 rounded-full object-cover border-2 border-green-500"
-                                  />
-                                  <span className="absolute -bottom-1 -right-1 text-[9px] bg-white text-green-800 rounded-full px-1.5 py-0.5 shadow">
-                                    ✨
+                                {/* Profile Image with Ring and Decorative Frame */}
+                                <div className="relative flex-shrink-0">
+                                  <div className="w-8 h-8 p-[1px] rounded-full bg-gradient-to-br from-yellow-300 to-red-500 shadow-md">
+                                    <img
+                                      src={
+                                        b.Photo ||
+                                        "https://placehold.co/40x40/fbcfe8/000?text=P"
+                                      }
+                                      alt={b.Name}
+                                      className="w-full h-full rounded-full object-cover border-2 border-white"
+                                    />
+                                  </div>
+                                  {/* Celebration Sparkle Badge */}
+                                  <span className="absolute -bottom-[2px] -right-[2px] text-xs bg-purple-500 text-white rounded-full w-4 h-4 flex items-center justify-center font-bold shadow-[2px]">
+                                    *
                                   </span>
                                 </div>
 
-                                <div className="flex flex-col text-left leading-tight">
-                                  <span className="font-semibold text-black text-sm truncate">
+                                {/* Name and Message */}
+                                <div className="flex flex-col text-left leading-snug overflow-hidden">
+                                  <span className="font-extrabold text-gray-800 text-[10px] truncate">
                                     {b.Name}
                                   </span>
-                                  <span className="text-black font-bold text-[11px] italic">
-                                    Happy Birthday 🍫🍯🍩🍰
+                                  <span className="text-pink-600 font-semibold text-[9px] italic tracking-tight">
+                                    Happy B-Day! 🥳
                                   </span>
                                 </div>
+                                {/* Decorative Date/Indicator */}
                               </div>
                             ))}
                           </div>
@@ -370,11 +381,10 @@ const CalenderCom = () => {
               <button
                 onClick={handleAddEvent}
                 disabled={loading}
-                className={`px-5 py-2 rounded-xl font-medium text-white ${
-                  loading
+                className={`px-5 py-2 rounded-xl font-medium text-white ${loading
                     ? "bg-gray-400 cursor-not-allowed"
                     : "bg-gradient-to-r from-blue-400 to-blue-700 hover:from-blue-500 hover:to-blue-800"
-                } transition-all shadow-md`}
+                  } transition-all shadow-md`}
               >
                 {loading ? "Adding..." : "Add Event"}
               </button>

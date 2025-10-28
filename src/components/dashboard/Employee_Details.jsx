@@ -1,21 +1,35 @@
 import React, { useEffect, useState } from "react";
 import { collection, onSnapshot, updateDoc, doc } from "firebase/firestore";
 import { db } from "../../firebase";
+import Pagination from "../common/Pagination.jsx";
 
 const Employee_Details = () => {
   const [employees, setEmployees] = useState([]);
   const [editMode, setEditMode] = useState(false);
   const [editedEmployees, setEditedEmployees] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "Employee_Details"), (snapshot) => {
-      const list = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setEmployees(list);
-      setEditedEmployees(list);
-    });
+    // Real-time listener for Firestore data
+    const unsubscribe = onSnapshot(collection(db, "Employee_Details"), 
+      (snapshot) => {
+        console.log("Employee_Details: Received snapshot");
+        const list = snapshot.docs.map((doc) => {
+          console.log("Employee_Details: Document data:", doc.id, doc.data());
+          return {
+            id: doc.id,
+            ...doc.data(),
+          };
+        });
+        console.log("Employee_Details: Processed list:", list);
+        setEmployees(list);
+        setEditedEmployees(list);
+      },
+      (error) => {
+        console.error("Employee_Details: Error fetching data:", error);
+      }
+    );
 
     return () => unsubscribe();
   }, []);
@@ -51,94 +65,224 @@ const Employee_Details = () => {
     }
   };
 
+  // Calculate pagination values
+  const totalPages = Math.ceil(employees.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const currentEmployees = editedEmployees.slice(startIndex, endIndex);
+
+  // Handle page change
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
+  // Handle page size change
+  const handlePageSizeChange = (newPageSize) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1); // Reset to first page when page size changes
+  };
+
   return (
     <div className="min-h-screen rounded-3xl shadow-2xl bg-white py-10 px-4">
       <h2 className="text-4xl font-extrabold text-gray-800 mb-6 text-center">
         Employee Details
       </h2>
 
-      <div className="max-w-7xl mx-auto bg-white p-8">
+      <div className="max-w-7xl mx-auto bg-white ">
         {employees.length === 0 ? (
           <p className="text-center text-gray-500 text-lg">No employees added yet.</p>
         ) : (
-          <div className="rounded-3xl shadow-2xl border border-gray-200">
-            <table className="w-full table-auto">
-              <thead className="bg-gradient-to-r from-blue-600 to-blue-500 text-white">
-                <tr>
-                  {[
-                    "Photo",
-                    "Employee ID",
-                    "Name",
-                    "Gender",
-                    "Department",
-                    "Role",
-                    "Contact",
-                    "Joining Date",
-                    "Date of Birth",
-                  ].map((header) => (
-                    <th
-                      key={header}
-                      className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-wider whitespace-nowrap"
-                    >
-                      {header}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-
-              <tbody className="bg-white divide-y divide-gray-100">
-                {editedEmployees.map((emp) => (
-                  <tr
-                    key={emp.id}
-                    className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100 transition duration-300"
-                  >
-                    <td className="px-4 py-3">
-                      {emp.Photo ? (
-                        <img
-                          src={emp.Photo}
-                          alt="Profile"
-                          className="w-12 h-12 rounded-full object-cover border-2 border-blue-200 shadow-sm"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-sm">
-                          N/A
-                        </div>
-                      )}
-                    </td>
-
+          <>
+            <div className="rounded-3xl shadow-2xl border border-gray-200">
+              <table className="w-full table-auto">
+                <thead className="bg-gradient-to-r from-blue-600 to-blue-500 text-white">
+                  <tr>
                     {[
-                      "EmployeeID",
+                      "Photo",
+                      "Employee ID",
                       "Name",
                       "Gender",
                       "Department",
                       "Role",
-                      "ContactNumber",
-                      "DateOfJoining",
-                      "DateOfBirth",
-                    ].map((field) => (
-                      <td
-                        key={field}
-                        className="px-4 py-3 text-gray-800 font-medium whitespace-nowrap"
+                      "Contact",
+                      "Joining Date",
+                      "Date of Birth",
+                    ].map((header) => (
+                      <th
+                        key={header}
+                        className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-wider whitespace-nowrap"
                       >
+                        {header}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+
+                <tbody className="bg-white divide-y divide-gray-100">
+                  {currentEmployees.map((emp) => (
+                    <tr
+                      key={emp.id}
+                      className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100 transition duration-300"
+                    >
+                      <td className="px-4 py-3">
+                        {emp.Photo ? (
+                          <img
+                            src={emp.Photo}
+                            alt="Profile"
+                            className="w-12 h-12 rounded-full object-cover border-2 border-blue-200 shadow-sm"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-sm">
+                            N/A
+                          </div>
+                        )}
+                      </td>
+
+                      {/* Employee ID field with fallbacks */}
+                      <td className="px-6 py-4 text-gray-800 font-medium">
                         {editMode ? (
                           <input
                             type="text"
-                            value={emp[field] || ""}
+                            value={emp.EmployeeID || ""}
                             onChange={(e) =>
-                              handleInputChange(emp.id, field, e.target.value)
+                              handleInputChange(emp.id, "EmployeeID", e.target.value)
                             }
                             className="border border-gray-300 rounded px-2 py-1 w-full"
                           />
                         ) : (
-                          emp[field] || "-"
+                          emp.EmployeeID || emp.employeeId || emp.id || "-"
                         )}
                       </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+
+                      {/* Name field with fallbacks */}
+                      <td className="px-6 py-4 text-gray-800 font-medium">
+                        {editMode ? (
+                          <input
+                            type="text"
+                            value={emp.Name || ""}
+                            onChange={(e) =>
+                              handleInputChange(emp.id, "Name", e.target.value)
+                            }
+                            className="border border-gray-300 rounded px-2 py-1 w-full"
+                          />
+                        ) : (
+                          emp.Name || emp.name || emp.displayName || "-"
+                        )}
+                      </td>
+
+                      {/* Gender field with fallbacks */}
+                      <td className="px-6 py-4 text-gray-600">
+                        {editMode ? (
+                          <input
+                            type="text"
+                            value={emp.Gender || ""}
+                            onChange={(e) =>
+                              handleInputChange(emp.id, "Gender", e.target.value)
+                            }
+                            className="border border-gray-300 rounded px-2 py-1 w-full"
+                          />
+                        ) : (
+                          emp.Gender || emp.gender || "-"
+                        )}
+                      </td>
+
+                      {/* Department field with fallbacks */}
+                      <td className="px-6 py-4 text-gray-600">
+                        {editMode ? (
+                          <input
+                            type="text"
+                            value={emp.Department || ""}
+                            onChange={(e) =>
+                              handleInputChange(emp.id, "Department", e.target.value)
+                            }
+                            className="border border-gray-300 rounded px-2 py-1 w-full"
+                          />
+                        ) : (
+                          emp.Department || emp.department || "-"
+                        )}
+                      </td>
+
+                      {/* Role field with fallbacks */}
+                      <td className="px-6 py-4 text-gray-600">
+                        {editMode ? (
+                          <input
+                            type="text"
+                            value={emp.Role || ""}
+                            onChange={(e) =>
+                              handleInputChange(emp.id, "Role", e.target.value)
+                            }
+                            className="border border-gray-300 rounded px-2 py-1 w-full"
+                          />
+                        ) : (
+                          emp.Role || emp.role || "-"
+                        )}
+                      </td>
+
+                      {/* Contact Number field with fallbacks */}
+                      <td className="px-6 py-4 text-gray-600">
+                        {editMode ? (
+                          <input
+                            type="text"
+                            value={emp.ContactNumber || ""}
+                            onChange={(e) =>
+                              handleInputChange(emp.id, "ContactNumber", e.target.value)
+                            }
+                            className="border border-gray-300 rounded px-2 py-1 w-full"
+                          />
+                        ) : (
+                          emp.ContactNumber || emp.contactNumber || emp.phone || "-"
+                        )}
+                      </td>
+
+                      {/* Date of Joining field with fallbacks */}
+                      <td className="px-6 py-4 text-gray-600">
+                        {editMode ? (
+                          <input
+                            type="text"
+                            value={emp.DateOfJoining || ""}
+                            onChange={(e) =>
+                              handleInputChange(emp.id, "DateOfJoining", e.target.value)
+                            }
+                            className="border border-gray-300 rounded px-2 py-1 w-full"
+                          />
+                        ) : (
+                          emp.DateOfJoining || emp.dateOfJoining || "-"
+                        )}
+                      </td>
+
+                      {/* Date of Birth field with fallbacks */}
+                      <td className="px-6 py-4 text-gray-600">
+                        {editMode ? (
+                          <input
+                            type="text"
+                            value={emp.DateOfBirth || ""}
+                            onChange={(e) =>
+                              handleInputChange(emp.id, "DateOfBirth", e.target.value)
+                            }
+                            className="border border-gray-300 rounded px-2 py-1 w-full"
+                          />
+                        ) : (
+                          emp.DateOfBirth || "-"
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Component */}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              pageSize={pageSize}
+              onPageSizeChange={handlePageSizeChange}
+              totalItems={employees.length}
+            />
+          </>
         )}
 
         {/* Action buttons */}
