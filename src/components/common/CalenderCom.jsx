@@ -194,7 +194,7 @@ const CalenderCom = () => {
         <img
           src={Back_Button}
           alt="Back Button"
-          className="h-9 w-9 mt-2 ml-2 bg-white rounded-full hover:scale-105 transition-all duration-300 hover:shadow-lg"
+          className="h-7 w-7 mt-2 ml-2 bg-white rounded-full hover:scale-105 transition-all duration-300 hover:shadow-lg"
           onClick={() => navigate(-1)}
         />
         <div className="p-4 flex justify-between items-center">

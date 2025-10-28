@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useParams, useNavigate } from "react-router-dom";
+import leftArrow from "../assets/left-arrow.png"; // ✅ Added this import
 
 const EditEmployee = () => {
   const { id } = useParams();
@@ -62,7 +63,15 @@ const EditEmployee = () => {
     return <p className="text-center mt-10 text-gray-500">Loading...</p>;
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-white">
+    <div className="relative flex items-center justify-center min-h-screen bg-white">
+      {/* ✅ Back Button (Added only this) */}
+      <button
+        onClick={() => navigate(-1)}
+        className="absolute top-3 left-3 z-10  p-2 hover:scale-105 transition-transform duration-200 "
+      >
+        <img src={leftArrow} alt="Back" className="w-8 h-8" />
+      </button>
+
       <div className="w-full max-w-5xl bg-white rounded-2xl p-10">
         <div className="mb-8 border-b pb-4 border-gray-200">
           <h2 className="text-3xl font-bold text-gray-800">Edit Employee</h2>
@@ -270,22 +279,22 @@ const EditEmployee = () => {
             <button
               type="button"
               onClick={() => navigate("/employee_details")}
-              className="px-6 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 shadow-sm transition duration-150"
+              className="px-6 py-2.5 rounded-xl bg-white text-gray-700 font-medium hover:bg-gray-50 shadow-sm transition duration-150"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-xl  text-green-600 font-medium hover:bg-green-700 hover:text-white shadow-lg transition duration-150"
+              className="px-6 py-2.5 rounded-xl text-green-600 font-medium hover:bg-green-400 hover:text-white shadow-lg transition duration-150"
             >
-               Save Changes
+              Save Changes
             </button>
             <button
               type="button"
               onClick={handleDelete}
-              className="px-6 py-2.5 rounded-xl bg-white text-red-600 font-medium hover:bg-red-700  hover:text-white shadow-lg transition duration-150 border "
+              className="px-6 py-2.5 rounded-xl bg-white text-red-600 font-medium hover:bg-red-400 hover:text-white shadow-lg transition duration-150"
             >
-               Remove
+              Delete Employee
             </button>
           </div>
         </form>
