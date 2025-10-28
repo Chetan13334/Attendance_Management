@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useNavigate } from "react-router-dom";
+import Pagination from "../common/Pagination.jsx";
 
 const Employee_Details = () => {
   const [employees, setEmployees] = useState([]);

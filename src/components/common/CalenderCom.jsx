@@ -260,17 +260,16 @@ const CalenderCom = () => {
                             {dayEvents.map((ev) => (
                               <div
                                 key={ev.id}
-                                className={`relative group text-white rounded p-1 text-xs mb-1 ${
-                                  ev.event_theme === "blue"
+                                className={`relative group text-white rounded p-1 text-xs mb-1 ${ev.event_theme === "blue"
                                     ? "bg-blue-400"
                                     : ev.event_theme === "red"
-                                    ? "bg-red-400"
-                                    : ev.event_theme === "yellow"
-                                    ? "bg-yellow-400"
-                                    : ev.event_theme === "green"
-                                    ? "bg-green-400"
-                                    : "bg-purple-400"
-                                }`}
+                                      ? "bg-red-400"
+                                      : ev.event_theme === "yellow"
+                                        ? "bg-yellow-400"
+                                        : ev.event_theme === "green"
+                                          ? "bg-green-400"
+                                          : "bg-purple-400"
+                                  }`}
                               >
                                 {ev.event_title}
 
@@ -292,53 +291,42 @@ const CalenderCom = () => {
                             {birthdays.map((b) => (
                               <div
                                 key={b.id}
-                                // Richer gradient background, rounded corners, slight shadow
-                                className="relative bg-pink-500 rounded-lg p-2 flex items-center space-x-2.5 shadow-md overflow-hidden
-               transform transition-transform duration-200 hover:scale-[1.02] hover:shadow-lg cursor-pointer"
+                                className="
+      p-2.5 rounded-xl shadow-lg border-2 border-pink-100/50 
+      bg-white transition-all duration-300 transform hover:scale-[1.03] 
+      hover:shadow-2xl cursor-pointer 
+      flex items-center gap-3
+    "
+                                style={{ maxWidth: '200px' }} // Added max-width for better control if placed in a list
                               >
-                                {/* Confetti overlay for a festive look */}
-                                <div
-                                  className="absolute inset-0 opacity-20 pointer-events-none"
-                                  style={{
-                                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.2'%3E%3Cpath fill-rule='evenodd' d='M0 10l9.991-7.07L20 10l-10.009 7.07L0 10zm10 4a4 4 0 100-8 4 4 0 000 8z'/%3E%3C/g%3E%3C/svg%3E")`,
-                                    backgroundSize: "20px 20px",
-                                    backgroundBlendMode: "overlay",
-                                  }}
-                                ></div>
-
-                                <div className="relative flex-shrink-0 z-10">
-                                  {" "}
-                                  {/* Ensure image is above confetti */}
-                                  <img
-                                    src={
-                                      b.Photo ||
-                                      "https://placehold.co/40x40/ffffff/777?text=P" // White placeholder for contrast
-                                    }
-                                    alt={b.Name}
-                                    // Slightly larger avatar with a festive border
-                                    className="w-10 h-10 rounded-full object-cover border-2 border-yellow-300 shadow-sm"
-                                  />
-                                  {/* Balloon icon as a festive badge */}
-                                  <span
-                                    className="absolute -bottom-1 -right-1 text-sm leading-none z-20"
-                                    title="Birthday"
-                                  >
-                                    🎈
+                                {/* Profile Image with Ring and Decorative Frame */}
+                                <div className="relative flex-shrink-0">
+                                  <div className="w-8 h-8 p-[1px] rounded-full bg-gradient-to-br from-yellow-300 to-red-500 shadow-md">
+                                    <img
+                                      src={
+                                        b.Photo ||
+                                        "https://placehold.co/40x40/fbcfe8/000?text=P"
+                                      }
+                                      alt={b.Name}
+                                      className="w-full h-full rounded-full object-cover border-2 border-white"
+                                    />
+                                  </div>
+                                  {/* Celebration Sparkle Badge */}
+                                  <span className="absolute -bottom-[2px] -right-[2px] text-xs bg-purple-500 text-white rounded-full w-4 h-4 flex items-center justify-center font-bold shadow-[2px]">
+                                    *
                                   </span>
                                 </div>
 
-                                <div className="flex flex-col text-left overflow-hidden leading-tight z-10">
-                                  {" "}
-                                  {/* Ensure text is above confetti */}
-                                  {/* Name in white for contrast */}
-                                  <span className="font-bold text-white text-sm truncate">
+                                {/* Name and Message */}
+                                <div className="flex flex-col text-left leading-snug overflow-hidden">
+                                  <span className="font-extrabold text-gray-800 text-[10px] truncate">
                                     {b.Name}
                                   </span>
-                                  {/* "Happy Birthday!" message with a distinct color */}
-                                  <span className="text-yellow-200 text-xs font-semibold">
-                                    Happy Birthday!
+                                  <span className="text-pink-600 font-semibold text-[9px] italic tracking-tight">
+                                    Happy B-Day! 🥳
                                   </span>
                                 </div>
+                                {/* Decorative Date/Indicator */}
                               </div>
                             ))}
                           </div>
@@ -406,11 +394,10 @@ const CalenderCom = () => {
               <button
                 onClick={handleAddEvent}
                 disabled={loading}
-                className={`px-5 py-2 rounded-xl font-medium text-white ${
-                  loading
+                className={`px-5 py-2 rounded-xl font-medium text-white ${loading
                     ? "bg-gray-400 cursor-not-allowed"
                     : "bg-gradient-to-r from-blue-400 to-blue-700 hover:from-blue-500 hover:to-blue-800"
-                } transition-all shadow-md`}
+                  } transition-all shadow-md`}
               >
                 {loading ? "Adding..." : "Add Event"}
               </button>

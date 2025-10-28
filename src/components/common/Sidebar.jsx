@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import imgLogout from "../assets/logout.png";
 
 const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
@@ -11,6 +11,12 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
 
   const toggleAccordion = () => {
     setIsAccordionOpen(!isAccordionOpen);
+  };
+
+  const getLinkClass = ({ isActive }) => {
+    return `flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-hidden ${
+      isActive ? "bg-blue-100 font-semibold" : ""
+    }`;
   };
 
   return (
@@ -75,9 +81,9 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
             >
               <ul className="space-y-1">
                 <li>
-                  <Link
-                  
-                    className="flex items-center gap-x-3.5 py-2 px-2.5 bg-gray-100 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100"
+                  <NavLink
+                    to="/dashboard"
+                    className={getLinkClass}
                   >
                     <svg
                       className="size-4"
@@ -95,13 +101,12 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
                       <polyline points="9 22 9 12 15 12 15 22" />
                     </svg>
                     Dashboard
-                  </Link>
+                  </NavLink>
                 </li>
                 <li>
-                  <Link
+                  <NavLink
                     to="/employee_details"
-                    className="flex items-center gap-x-3.5 py-2 px-2.5 bg-gray-100 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100"
-                    href="#"
+                    className={getLinkClass}
                   >
                     <svg
                       className="size-4"
@@ -121,12 +126,12 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
                       <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                     </svg>
                     Employee
-                  </Link>
+                  </NavLink>
                 </li>
                 <li>
-                  <Link
+                  <NavLink
                     to="/dashboard"
-                    className="flex items-center  gap-x-3.5 py-2 px-2.5 bg-gray-100 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100"
+                    className={getLinkClass}
                   >
                     <svg
                       className="size-4"
@@ -143,16 +148,13 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
                       <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9l2 2 4-4" />
                     </svg>
                     Attendance
-                  </Link>
+                  </NavLink>
                 </li>
 
-                <li className="hs-accordion" id="users-accordion">
-                  <button
-                    type="button"
-                    onClick={toggleAccordion}
-                    className="hs-accordion-toggle w-full text-start flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100"
-                    aria-expanded={isAccordionOpen}
-                    aria-controls="users-accordion-collapse-1"
+                <li>
+                  <NavLink
+                    to="/report"
+                    className={getLinkClass}
                   >
                     <svg
                       className="size-4"
@@ -166,82 +168,24 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     >
-                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                      <circle cx="9" cy="7" r="4" />
-                      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                      <polyline points="14 2 14 8 20 8" />
+                      <path d="M16 13H8" />
+                      <path d="M16 17H8" />
+                      <path d="M10 9H8" />
                     </svg>
                     Report
-                    <svg
-                      className={`ms-auto size-4 text-gray-600 group-hover:text-gray-500 ${
-                        isAccordionOpen ? "block" : "hidden"
-                      }`}
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="m18 15-6-6-6 6" />
-                    </svg>
-                    <svg
-                      className={`ms-auto size-4 text-gray-600 group-hover:text-gray-500 ${
-                        isAccordionOpen ? "hidden" : "block"
-                      }`}
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="m6 9 6 6 6-6" />
-                    </svg>
-                  </button>
-
-                  <div
-                    id="users-accordion-collapse-1"
-                    className={`w-full overflow-hidden transition-[height] duration-300 ${
-                      isAccordionOpen ? "block" : "hidden"
-                    }`}
-                    role="region"
-                    aria-labelledby="users-accordion"
-                  >
-                    <ul
-                      className="hs-accordion-group pt-1 ps-7 space-y-1"
-                      data-hs-accordion-always-open
-                    >
-                      <li>
-                        <a
-                          className="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100"
-                          href="#"
-                        >
-                          Link 1
-                        </a>
-                      </li>
-                      <li>
-                        <a
-                          className="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100"
-                          href="#"
-                        >
-                          Link 2
-                        </a>
-                      </li>
-                    </ul>
-                  </div>
+                  </NavLink>
                 </li>
 
                 <li>
-                  <Link
+                  <NavLink
                     to="/calendar"
-                    className="w-full flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100"
+                    className={({ isActive }) => 
+                      `w-full flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-hidden ${
+                        isActive ? "bg-blue-100 font-semibold" : ""
+                      }`
+                    }
                   >
                     <svg
                       className="size-4"
@@ -264,16 +208,20 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
                     <span className="ms-auto py-0.5 px-1.5 inline-flex items-center gap-x-1.5 text-xs bg-gray-200 text-gray-800 rounded-full">
                       New
                     </span>
-                  </Link>
+                  </NavLink>
                 </li>
 
                 <li className="mt-3 px-2">
-                  <Link
+                  <NavLink
                     to="/add-employee"
-                    className="w-full flex items-center justify-center gap-x-2 py-2 px-3 text-sm font-medium text-white bg-blue-600 rounded-lg shadow hover:bg-blue-800 focus:outline-none transition"
+                    className={({ isActive }) => 
+                      `w-full flex items-center justify-center gap-x-2 py-2 px-3 text-sm font-medium text-white rounded-lg shadow hover:bg-blue-800 focus:outline-none transition ${
+                        isActive ? "bg-blue-700" : "bg-blue-600"
+                      }`
+                    }
                   >
                     + Add Employee
-                  </Link>
+                  </NavLink>
                 </li>
               </ul>
             </div>

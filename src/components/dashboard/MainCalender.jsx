@@ -114,19 +114,31 @@ export default function MainCalender() {
 
     // Fetch students from Firebase Employee_Details collection
     useEffect(() => {
-        const unsubscribe = onSnapshot(collection(db, "Employee_Details"), (snapshot) => {
-            const list = snapshot.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-            }));
-            // Transform Firebase data to match the expected format
-            const transformedStudents = list.map((emp, index) => ({
-                id: emp.id,
-                name: emp.Name || `Employee ${index + 1}`,
-                avatarColor: emp.avatarColor || 'bg-purple-300' // Default color if not provided
-            }));
-            setStudents(transformedStudents);
-        });
+        const unsubscribe = onSnapshot(collection(db, "Employee_Details"), 
+            (snapshot) => {
+                console.log("MainCalender: Received Employee_Details snapshot");
+                const list = snapshot.docs.map((doc) => {
+                    console.log("MainCalender: Document data:", doc.id, doc.data());
+                    return {
+                        id: doc.id,
+                        ...doc.data(),
+                    };
+                });
+                console.log("MainCalender: Processed list:", list);
+                
+                // Transform Firebase data to match the expected format
+                const transformedStudents = list.map((emp, index) => ({
+                    id: emp.id,
+                    name: emp.Name || emp.name || emp.displayName || `Employee ${index + 1}`, // Check multiple possible field names
+                    avatarColor: emp.avatarColor || emp.color || 'bg-purple-300' // Default color if not provided
+                }));
+                console.log("MainCalender: Transformed students:", transformedStudents);
+                setStudents(transformedStudents);
+            },
+            (error) => {
+                console.error("MainCalender: Error fetching Employee_Details:", error);
+            }
+        );
 
         return () => unsubscribe(); // cleanup
     }, []);
