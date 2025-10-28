@@ -1,5 +1,6 @@
 // src/components/dashboard/CalenderCom.jsx
 import React, { useState, useEffect } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { db } from "../../firebase";
 import {
@@ -11,6 +12,7 @@ import {
   deleteDoc,
   doc,
 } from "firebase/firestore";
+import Back_Button from "../assets/left-arrow.png";
 
 const CalenderCom = () => {
   const navigate = useNavigate();
@@ -188,23 +190,34 @@ const CalenderCom = () => {
 
   return (
     <div>
-      <div className="container mx-auto ">
+      <div className="container mx-auto bg-white rounded shadow overflow-hidden w-full">
+        <img
+          src={Back_Button}
+          alt="Back Button"
+          className="h-9 w-9 mt-2 ml-2 bg-white rounded-full hover:scale-105 transition-all duration-300 hover:shadow-lg"
+          onClick={() => navigate(-1)}
+        />
         <div className="p-4 flex justify-between items-center">
           <span className="text-lg font-bold">
             {monthNames[currentMonth]} {currentYear}
           </span>
-          <div className="flex gap-2">
+          <div className="flex items-center justify-center gap-4 mt-4">
+            {/* Previous Month Button */}
             <button
               onClick={handlePrevMonth}
-              className="p-1 text-gray-500 hover:text-black"
+              className="flex items-center gap-2 px-2 py-2 rounded-xl bg-white text-black font-medium shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300"
             >
-              Next
+              <ChevronLeft size={20} />
+              
             </button>
+
+            {/* Next Month Button */}
             <button
               onClick={handleNextMonth}
-              className="p-1 text-gray-500 hover:text-black"
+              className="flex items-center gap-2 px-2 py-2 rounded-xl bg-white  text-black font-medium shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300"
             >
-              Prev
+              
+              <ChevronRight size={20} />
             </button>
           </div>
         </div>
