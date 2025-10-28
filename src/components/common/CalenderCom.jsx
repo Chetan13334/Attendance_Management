@@ -1,5 +1,6 @@
 // src/components/dashboard/CalenderCom.jsx
 import React, { useState, useEffect } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { db } from "../../firebase";
 import {
@@ -11,6 +12,7 @@ import {
   deleteDoc,
   doc,
 } from "firebase/firestore";
+import Back_Button from "../assets/left-arrow.png";
 
 const CalenderCom = () => {
   const navigate = useNavigate();
@@ -189,22 +191,33 @@ const CalenderCom = () => {
   return (
     <div>
       <div className="container mx-auto bg-white rounded shadow overflow-hidden w-full">
+        <img
+          src={Back_Button}
+          alt="Back Button"
+          className="h-9 w-9 mt-2 ml-2 bg-white rounded-full hover:scale-105 transition-all duration-300 hover:shadow-lg"
+          onClick={() => navigate(-1)}
+        />
         <div className="p-4 flex justify-between items-center">
           <span className="text-lg font-bold">
             {monthNames[currentMonth]} {currentYear}
           </span>
-          <div className="flex gap-2">
+          <div className="flex items-center justify-center gap-4 mt-4">
+            {/* Previous Month Button */}
             <button
               onClick={handlePrevMonth}
-              className="p-1 text-gray-500 hover:text-black"
+              className="flex items-center gap-2 px-2 py-2 rounded-xl bg-white text-black font-medium shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300"
             >
-              ◀
+              <ChevronLeft size={20} />
+              
             </button>
+
+            {/* Next Month Button */}
             <button
               onClick={handleNextMonth}
-              className="p-1 text-gray-500 hover:text-black"
+              className="flex items-center gap-2 px-2 py-2 rounded-xl bg-white  text-black font-medium shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300"
             >
-              ▶
+              
+              <ChevronRight size={20} />
             </button>
           </div>
         </div>
@@ -279,28 +292,51 @@ const CalenderCom = () => {
                             {birthdays.map((b) => (
                               <div
                                 key={b.id}
-                                className="bg-gradient-to-r from-red-400 via-pink-300 to-red-100 border border-yellow-500 rounded-xl p-2.5 shadow-md flex items-center gap-3"
+                                // Richer gradient background, rounded corners, slight shadow
+                                className="relative bg-pink-500 rounded-lg p-2 flex items-center space-x-2.5 shadow-md overflow-hidden
+               transform transition-transform duration-200 hover:scale-[1.02] hover:shadow-lg cursor-pointer"
                               >
-                                <div className="relative">
+                                {/* Confetti overlay for a festive look */}
+                                <div
+                                  className="absolute inset-0 opacity-20 pointer-events-none"
+                                  style={{
+                                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.2'%3E%3Cpath fill-rule='evenodd' d='M0 10l9.991-7.07L20 10l-10.009 7.07L0 10zm10 4a4 4 0 100-8 4 4 0 000 8z'/%3E%3C/g%3E%3C/svg%3E")`,
+                                    backgroundSize: "20px 20px",
+                                    backgroundBlendMode: "overlay",
+                                  }}
+                                ></div>
+
+                                <div className="relative flex-shrink-0 z-10">
+                                  {" "}
+                                  {/* Ensure image is above confetti */}
                                   <img
                                     src={
                                       b.Photo ||
-                                      "https://placehold.co/40x40/ffe08a/000?text=P"
+                                      "https://placehold.co/40x40/ffffff/777?text=P" // White placeholder for contrast
                                     }
                                     alt={b.Name}
-                                    className="w-9 h-9 rounded-full object-cover border-2 border-green-500"
+                                    // Slightly larger avatar with a festive border
+                                    className="w-10 h-10 rounded-full object-cover border-2 border-yellow-300 shadow-sm"
                                   />
-                                  <span className="absolute -bottom-1 -right-1 text-[9px] bg-white text-green-800 rounded-full px-1.5 py-0.5 shadow">
-                                    ✨
+                                  {/* Balloon icon as a festive badge */}
+                                  <span
+                                    className="absolute -bottom-1 -right-1 text-sm leading-none z-20"
+                                    title="Birthday"
+                                  >
+                                    🎈
                                   </span>
                                 </div>
 
-                                <div className="flex flex-col text-left leading-tight">
-                                  <span className="font-semibold text-black text-sm truncate">
+                                <div className="flex flex-col text-left overflow-hidden leading-tight z-10">
+                                  {" "}
+                                  {/* Ensure text is above confetti */}
+                                  {/* Name in white for contrast */}
+                                  <span className="font-bold text-white text-sm truncate">
                                     {b.Name}
                                   </span>
-                                  <span className="text-black font-bold text-[11px] italic">
-                                    Happy Birthday 🍫🍯🍩🍰
+                                  {/* "Happy Birthday!" message with a distinct color */}
+                                  <span className="text-yellow-200 text-xs font-semibold">
+                                    Happy Birthday!
                                   </span>
                                 </div>
                               </div>

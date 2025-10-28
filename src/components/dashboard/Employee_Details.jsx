@@ -1,84 +1,58 @@
 import React, { useEffect, useState } from "react";
-import { collection, onSnapshot, updateDoc, doc } from "firebase/firestore";
+import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../../firebase";
+import { useNavigate } from "react-router-dom";
 
 const Employee_Details = () => {
   const [employees, setEmployees] = useState([]);
-  const [editMode, setEditMode] = useState(false);
-  const [editedEmployees, setEditedEmployees] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "Employee_Details"), (snapshot) => {
-      const list = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setEmployees(list);
-      setEditedEmployees(list);
-    });
+    const unsubscribe = onSnapshot(
+      collection(db, "Employee_Details"),
+      (snapshot) => {
+        const list = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setEmployees(list);
+      }
+    );
 
     return () => unsubscribe();
   }, []);
 
-  // Handle input change
-  const handleInputChange = (id, field, value) => {
-    setEditedEmployees((prev) =>
-      prev.map((emp) => (emp.id === id ? { ...emp, [field]: value } : emp))
-    );
-  };
-
-  // Save changes to Firestore
-  const handleSaveChanges = async () => {
-    try {
-      for (let emp of editedEmployees) {
-        const empRef = doc(db, "Employee_Details", emp.id);
-        await updateDoc(empRef, {
-          EmployeeID: emp.EmployeeID,
-          Name: emp.Name,
-          Gender: emp.Gender,
-          Department: emp.Department,
-          Role: emp.Role,
-          ContactNumber: emp.ContactNumber,
-          DateOfJoining: emp.DateOfJoining,
-          DateOfBirth: emp.DateOfBirth,
-        });
-      }
-      setEmployees(editedEmployees);
-      setEditMode(false);
-      alert("✅ Changes saved successfully!");
-    } catch (error) {
-      console.error("Error saving changes:", error);
-    }
-  };
-
   return (
-    <div className="min-h-screen rounded-3xl shadow-2xl bg-white py-10 px-4">
-      <h2 className="text-4xl font-extrabold text-gray-800 mb-6 text-center">
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-50 to-gray-200 text-gray-800 py-10 px-6 overflow-x-hidden">
+      <h2 className="text-4xl font-bold text-center mb-10 bg-clip-text text-transparent bg-gray-500 leading-tight pb-2">
         Employee Details
       </h2>
 
-      <div className="max-w-7xl mx-auto bg-white p-8">
+      <div className="max-w-7xl mx-auto bg-white rounded-3xl shadow-xl border border-gray-200 p-8">
         {employees.length === 0 ? (
-          <p className="text-center text-gray-500 text-lg">No employees added yet.</p>
+          <p className="text-center text-gray-500 text-lg">
+            No employees added yet.
+          </p>
         ) : (
-          <div className="rounded-3xl shadow-2xl border border-gray-200">
-            <table className="w-full table-auto">
-              <thead className="bg-gradient-to-r from-blue-600 to-blue-500 text-white">
+          <div className="rounded-2xl overflow-x-auto">
+            <table className="w-full border-collapse text-[15px] whitespace-nowrap">
+              <thead className="bg-blue-500 text-white">
                 <tr>
                   {[
                     "Photo",
-                    "Employee ID",
+                    "Emp ID",
                     "Name",
                     "Gender",
-                    "Department",
+                    "Dept",
                     "Role",
                     "Contact",
-                    "Joining Date",
-                    "Date of Birth",
+                    "Join Date",
+                    "DOB",
+                    "Action",
                   ].map((header) => (
                     <th
                       key={header}
-                      className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-wider whitespace-nowrap"
+                      className="px-4 py-3 font-semibold text-left uppercase tracking-wider text-[13px]"
                     >
                       {header}
                     </th>
@@ -86,90 +60,65 @@ const Employee_Details = () => {
                 </tr>
               </thead>
 
-              <tbody className="bg-white divide-y divide-gray-100">
-                {editedEmployees.map((emp) => (
+              <tbody className="divide-y divide-gray-100">
+                {employees.map((emp) => (
                   <tr
                     key={emp.id}
-                    className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100 transition duration-300"
+                    className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition duration-200"
                   >
                     <td className="px-4 py-3">
                       {emp.Photo ? (
                         <img
                           src={emp.Photo}
                           alt="Profile"
-                          className="w-12 h-12 rounded-full object-cover border-2 border-blue-200 shadow-sm"
+                          className="w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm"
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-sm">
+                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-xs">
                           N/A
                         </div>
                       )}
                     </td>
 
-                    {[
-                      "EmployeeID",
-                      "Name",
-                      "Gender",
-                      "Department",
-                      "Role",
-                      "ContactNumber",
-                      "DateOfJoining",
-                      "DateOfBirth",
-                    ].map((field) => (
-                      <td
-                        key={field}
-                        className="px-4 py-3 text-gray-800 font-medium whitespace-nowrap"
+                    <td className="px-4 py-3 text-gray-700 font-medium">
+                      {emp.EmployeeID || "-"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-800 font-medium">
+                      {emp.Name || "-"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">
+                      {emp.Gender || "-"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">
+                      {emp.Department || "-"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">
+                      {emp.Role || "-"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">
+                      {emp.ContactNumber || "-"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">
+                      {emp.DateOfJoining || "-"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">
+                      {emp.DateOfBirth || "-"}
+                    </td>
+
+                    <td className="px-4 py-3 text-center">
+                      <button
+                        onClick={() => navigate(`/edit-employee/${emp.id}`)}
+                        className="bg-white text-blue-600 border border-blue-500 text-xs font-medium px-4 py-1.5 rounded-full hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md"
                       >
-                        {editMode ? (
-                          <input
-                            type="text"
-                            value={emp[field] || ""}
-                            onChange={(e) =>
-                              handleInputChange(emp.id, field, e.target.value)
-                            }
-                            className="border border-gray-300 rounded px-2 py-1 w-full"
-                          />
-                        ) : (
-                          emp[field] || "-"
-                        )}
-                      </td>
-                    ))}
+                        Edit
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         )}
-
-        {/* Action buttons */}
-        <div className="flex justify-center gap-4 mt-6">
-          {!editMode ? (
-            <button
-              onClick={() => setEditMode(true)}
-              className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition"
-            >
-              ✏️ Edit
-            </button>
-          ) : (
-            <>
-              <button
-                onClick={handleSaveChanges}
-                className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition"
-              >
-                💾 Save Changes
-              </button>
-              <button
-                onClick={() => {
-                  setEditedEmployees(employees);
-                  setEditMode(false);
-                }}
-                className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600 transition"
-              >
-                ❌ Cancel
-              </button>
-            </>
-          )}
-        </div>
       </div>
     </div>
   );
