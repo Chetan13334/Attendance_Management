@@ -2,12 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
-
 import Sidebar from "../components/common/Sidebar.jsx";
 import Navbar from "../components/common/Navbar.jsx";
-
-
-
 import EditEmployee from "../components/dashboard/EditEmployee.jsx";
 
 
@@ -35,13 +31,13 @@ const EditEmployeePage = () => {
     navigate("/signin");
   };
 
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-gray-600">Loading Dashboard...</div>
-      </div>
-    );
-  }
+  // if (!user) {
+  //   return (
+  //     <div className="min-h-screen flex items-center justify-center bg-gray-100">
+  //       <div className="text-gray-600">Loading Dashboard...</div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="min-h-screen bg-gray-100">
