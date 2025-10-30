@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useParams, useNavigate } from "react-router-dom";
-import leftArrow from "../assets/left-arrow.png"; // ✅ Added this import
+import leftArrow from "../assets/BackButton3.png"; // ✅ Added this import
 
 const EditEmployee = () => {
   const { id } = useParams();

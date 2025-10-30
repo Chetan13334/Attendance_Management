@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { db } from "../../firebase";
 import { collection, addDoc } from "firebase/firestore";
-import Back_Button from "../assets/left-arrow.png";
+import Back_Button from "../assets/BackButton.png";
 import { useNavigate } from "react-router-dom";
 
 const EmployeeForm = () => {

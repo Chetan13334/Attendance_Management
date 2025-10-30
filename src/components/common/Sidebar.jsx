@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import imgLogout from "../assets/logout.png";
 
-const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
+const Sidebar = ({ isOpen, setIsOpen, handleSignOut, isProfileOpen }) => {
   const [isAccordionOpen, setIsAccordionOpen] = useState(false);
+  const location = useLocation();
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
@@ -18,6 +19,9 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
       isActive ? "bg-blue-100 font-semibold" : ""
     }`;
   };
+
+  // Check if we're on a profile-related route or if profile is open
+  const isProfileActive = isProfileOpen;
 
   return (
     <>
@@ -227,21 +231,7 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut }) => {
             </div>
           </nav>
 
-          <footer className="mt-auto p-1 border-t border-gray-200">
-            <div className="hs-dropdown [--strategy:absolute] [--auto-close:inside] relative w-full inline-flex">
-              <button
-                id="hs-sidebar-footer-example-with-dropdown"
-                type="button"
-                onClick={handleSignOut}
-                className="w-full inline-flex shrink-0 items-center gap-x-1 p-2 text-start text-sm text-gray-800 rounded-md hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100"
-                aria-label="Log Out"
-              >
-                <img src={imgLogout} width="15" height="15" alt="" />
-
-                <b>Log Out</b>
-              </button>
-            </div>
-          </footer>
+          
         </div>
       </div>
     </>
