@@ -1,4 +1,3 @@
-// src/components/dashboard/CalenderCom.jsx
 import React, { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -12,7 +11,7 @@ import {
   deleteDoc,
   doc,
 } from "firebase/firestore";
-import Back_Button from "../assets/left-arrow.png";
+import { BackBTN } from "./BackBTN";
 
 const CalenderCom = () => {
   const navigate = useNavigate();
@@ -191,12 +190,7 @@ const CalenderCom = () => {
   return (
     <div>
       <div className="container mx-auto bg-white rounded shadow overflow-hidden w-full">
-        <img
-          src={Back_Button}
-          alt="Back Button"
-          className="h-7 w-7 mt-2 ml-2 bg-white rounded-full hover:scale-105 transition-all duration-300 hover:shadow-lg"
-          onClick={() => navigate(-1)}
-        />
+        <BackBTN />
         <div className="p-4 flex justify-between items-center">
           <span className="text-lg font-bold">
             {monthNames[currentMonth]} {currentYear}
