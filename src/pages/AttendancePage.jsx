@@ -18,11 +18,16 @@ const MOCK_USER = { uid: "mock-user-123", email: "test@user.com" };
 const DashboardPage = () => {
   const [user, setUser] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [eventCount, setEventCount] = useState(0);
   const navigate = useNavigate();
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const setProfileOpenState = (state) => {
+    setIsProfileOpen(state);
   };
 
   useEffect(() => {
@@ -56,13 +61,13 @@ const DashboardPage = () => {
     <div className="min-h-screen bg-gray-100">
       
       {/* Sidebar */}
-      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} handleSignOut={handleSignOut} />
+      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} handleSignOut={handleSignOut} isProfileOpen={isProfileOpen} />
 
       {/* Main content wrapper */}
       <div className="flex-1 lg:ml-64">
        
         {/* Navbar */}
-        <Navbar toggleSidebar={toggleSidebar} handleSignOut={handleSignOut} />
+        <Navbar toggleSidebar={toggleSidebar} handleSignOut={handleSignOut} setIsProfileOpenState={setProfileOpenState} />
 
         
         <main className="pt-20 px-4 sm:px-6 pb-8">

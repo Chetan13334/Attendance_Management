@@ -15,14 +15,14 @@ const SignUpForm = () => {
 
   const navigate = useNavigate();
 
-  // ✅ Handle input change
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  // ✅ Form validation
+
   const validateForm = () => {
     const newErrors = {};
 
@@ -43,7 +43,7 @@ const SignUpForm = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // ✅ Create Account (Email/Password)
+ 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -66,7 +66,7 @@ const SignUpForm = () => {
     }
   };
 
-  // ✅ Google Sign-Up
+  
   const handleGoogleSignUp = async () => {
     setIsLoading(true);
     try {
