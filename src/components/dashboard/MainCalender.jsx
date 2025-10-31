@@ -2,9 +2,12 @@ import React, { useState, useCallback, useEffect } from "react";
 
 import { ChevronDown, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { collection, onSnapshot } from "firebase/firestore";
 
 import LegendBar from "../common/LegendBar";
+import { db } from "../../firebase.js";
+import { setEmployees } from "../../redux/slices/employeeSlice.js";
 
 // --- Mock Data ---
 
@@ -138,21 +141,39 @@ const StudentProfile = ({ student, isSelected, onToggle }) => (
 
 export default function MainCalender() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [selectedStudents, setSelectedStudents] = useState({});
   const [attendance, setAttendance] = useState({});
   const [currentWeekStart, setCurrentWeekStart] = useState(
     new Date(2024, 9, 23)
   ); // Oct 23, 2024
   const [daysOfWeek, setDaysOfWeek] = useState([]);
-  const students = useSelector((state) => state.attendance.records);
+  const employees = useSelector((state) => state.employees.list);
 
-  const formattedStudents = students.map((emp, index) => ({
+  const formattedStudents = employees.map((emp, index) => ({
     id: emp.id,
-    name: emp.name,
+    name: emp.Name || emp.name || "Unknown Employee",
     avatarColor: "bg-purple-300",
   }));
 
-  // Fetch students from Firebase Employee_Details collection
+  // Fetch employees from Firebase Employee_Details collection
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      collection(db, "Employee_Details"),
+      (snapshot) => {
+        const list = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        dispatch(setEmployees(list));
+      },
+      (error) => {
+        console.error("Error fetching employee details:", error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [dispatch]);
 
   // Generate week data (Monday to Friday only)
   useEffect(() => {
@@ -170,6 +191,10 @@ export default function MainCalender() {
         const currentDate = new Date(date);
         currentDate.setDate(date.getDate() + i);
 
+        // Check if it's a weekend (Saturday or Sunday)
+        const dayOfWeek = currentDate.getDay();
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // 0 = Sunday, 6 = Saturday
+
         const dayData = {
           date: currentDate.getDate(),
           day: currentDate.toLocaleDateString("en-US", { weekday: "long" }),
@@ -177,6 +202,8 @@ export default function MainCalender() {
           month: currentDate.toLocaleDateString("en-US", { month: "short" }),
           year: currentDate.getFullYear(),
           index: i + 1,
+          special: isWeekend ? "Holiday" : null,
+          detail: isWeekend ? (dayOfWeek === 0 ? "Sunday" : "Saturday") : null,
         };
 
         days.push(dayData);
@@ -246,6 +273,7 @@ export default function MainCalender() {
   };
 
   const handleOpenCalendarModal = () => {
+    // Navigate to the calendar page instead of showing inline
     navigate("/calendarcom");
   };
 
@@ -294,10 +322,8 @@ export default function MainCalender() {
             </button>
           </div>
 
-          {/* Legend Bar on the right side */}
-          <div className="flex-shrink-0">
-            <LegendBar />
-          </div>
+          {/* Legend Bar */}
+          <LegendBar />
         </div>
 
         {/* --- Header Row --- */}
@@ -351,7 +377,7 @@ export default function MainCalender() {
 
         {/* --- Student Rows (Body) --- */}
         <div className="divide-y divide-gray-100 max-h-[80vh] overflow-y-auto">
-         {formattedStudents.map((student) => {
+          {formattedStudents.map((student) => {
             return (
               <div
                 key={student.id}
