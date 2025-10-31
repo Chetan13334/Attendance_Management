@@ -3,7 +3,7 @@ import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { setAttendance } from "../../redux/slices/attendanceSlice";
+import { setEmployees } from "../../redux/slices/employeeSlice";
 
 // --- Helper function to map roles to specific colors ---
 const getRoleColor = (role) => {
@@ -36,7 +36,7 @@ const RolePill = ({ role }) => {
   return <span className={className}>{role || "N/A"}</span>;
 };
 
-// --- Helper function for Gender color (Male/Female) ---
+// --- Helper function for Gender color ---
 const getGenderColor = (gender) => {
   if (!gender) return "bg-gray-100 text-gray-700";
 
@@ -52,14 +52,12 @@ const getGenderColor = (gender) => {
 };
 
 const GenderPill = ({ gender }) => {
-  // We add 'flex justify-center' here to center the pill inside its cell
   const className = `px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap ${getGenderColor(
     gender
   )}`;
   return <span className={className}>{gender || "N/A"}</span>;
 };
 
-// --- Loading Spinner Component ---
 const LoadingSpinner = () => (
   <div className="flex justify-center items-center py-20">
     <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
@@ -72,7 +70,7 @@ const Employee_Details = () => {
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const employees = useSelector((state) => state.attendance.records);
+  const employees = useSelector((state) => state.employees.list);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(
@@ -82,7 +80,8 @@ const Employee_Details = () => {
           id: doc.id,
           ...doc.data(),
         }));
-       dispatch(setAttendance(list));
+
+        dispatch(setEmployees(list));
         setLoading(false);
       },
       (error) => {
@@ -92,9 +91,8 @@ const Employee_Details = () => {
     );
 
     return () => unsubscribe();
-  }, []);
+  }, [dispatch]);
 
-  // --- Start of Component Return/Render ---
   return (
     <div className="min-h-screen bg-white py-10 px-4 overflow-x-hidden">
       <h2 className="text-2xl font-bold text-gray-800 mb-8 inline-block pb-1">
@@ -118,9 +116,9 @@ const Employee_Details = () => {
                       "Photo",
                       "Emp ID",
                       "Name",
-                      "Gender", // Index 3
+                      "Gender",
                       "Dept",
-                      "Role", // Index 5
+                      "Role",
                       "Contact",
                       "Join Date",
                       "DOB",
@@ -128,14 +126,8 @@ const Employee_Details = () => {
                     ].map((header, index) => (
                       <th
                         key={header}
-                        className={`px-4 py-3 font-medium text-[13px] whitespace-nowrap 
-                        ${index === 0 ? "rounded-tl-lg" : ""} 
-                        ${index === 9 ? "rounded-tr-lg" : ""} 
-                        border-b border-gray-200 
-                        
-                        /* ADDED: Center alignment for Gender and Role headers */
-                        ${index === 3 || index === 5 ? "text-center" : ""} 
-                      `}
+                        className={`px-4 py-3 font-medium text-[13px] whitespace-nowrap border-b border-gray-200 
+                          ${index === 3 || index === 5 ? "text-center" : ""}`}
                       >
                         {header}
                       </th>
@@ -149,7 +141,6 @@ const Employee_Details = () => {
                       key={emp.id}
                       className="text-gray-800 odd:bg-gray-50 hover:bg-gray-100 transition duration-150"
                     >
-                      {/* Photo */}
                       <td className="px-4 py-4">
                         {emp.Photo ? (
                           <img
@@ -164,55 +155,27 @@ const Employee_Details = () => {
                         )}
                       </td>
 
-                      {/* Emp ID */}
-                      <td className="px-4 py-4 text-gray-700 font-medium">
-                        {emp.EmployeeID || "-"}
+                      <td className="px-4 py-4">{emp.EmployeeID || "-"}</td>
+                      <td className="px-4 py-4">{emp.Name || "-"}</td>
+
+                      <td className="px-4 py-4 text-center">
+                        <GenderPill gender={emp.Gender} />
                       </td>
 
-                      {/* Name */}
-                      <td className="px-4 py-4 text-gray-800 font-medium">
-                        {emp.Name || "-"}
+                      <td className="px-4 py-4">{emp.Department || "-"}</td>
+
+                      <td className="px-4 py-4 text-center">
+                        <RolePill role={emp.Role} />
                       </td>
 
-                      {/* Gender - Cell centered to align with header */}
-                      <td className="px-4 py-4 text-gray-600 text-center">
-                        <div className="flex justify-center">
-                          <GenderPill gender={emp.Gender} />
-                        </div>
-                      </td>
+                      <td className="px-4 py-4">{emp.ContactNumber || "-"}</td>
+                      <td className="px-4 py-4">{emp.DateOfJoining || "-"}</td>
+                      <td className="px-4 py-4">{emp.DateOfBirth || "-"}</td>
 
-                      {/* Dept */}
-                      <td className="px-4 py-4 text-gray-600">
-                        {emp.Department || "-"}
-                      </td>
-
-                      {/* Role - Cell centered to align with header */}
-                      <td className="px-4 py-4 text-gray-600 text-center">
-                        <div className="flex justify-center">
-                          <RolePill role={emp.Role} />
-                        </div>
-                      </td>
-
-                      {/* Contact */}
-                      <td className="px-4 py-4 text-gray-600">
-                        {emp.ContactNumber || "-"}
-                      </td>
-
-                      {/* Join Date */}
-                      <td className="px-4 py-4 text-gray-600">
-                        {emp.DateOfJoining || "-"}
-                      </td>
-
-                      {/* DOB */}
-                      <td className="px-4 py-4 text-gray-600">
-                        {emp.DateOfBirth || "-"}
-                      </td>
-
-                      {/* Action (Edit Button) */}
                       <td className="px-4 py-4 text-center">
                         <button
                           onClick={() => navigate(`/edit-employee/${emp.id}`)}
-                          className="text-blue-600 text-sm font-medium hover:text-blue-800 transition duration-150 "
+                          className="text-blue-600 text-sm font-medium hover:text-blue-800"
                         >
                           Edit
                         </button>
