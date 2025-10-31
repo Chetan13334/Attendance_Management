@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../../firebase"; // adjust path
+import { useSelector } from "react-redux";
 
 const DUMMY_RECORDS = [
   { time: "09:05 AM", status: "Present", remarks: "On time" },
@@ -27,23 +28,7 @@ const getStatusClasses = (status) => {
 };
 
 function AttendanceTable() {
-  const [employees, setEmployees] = useState([]);
-
-  useEffect(() => {
-    const unsubscribe = onSnapshot(
-      collection(db, "Employee_Details"),
-      (snapshot) => {
-        const list = snapshot.docs.map((doc) => {
-          const data = doc.data();
-          const name = data.Name?.toString() || "";
-          const id = data.EmployeeID?.toString() || "";
-          return { id, name };
-        });
-        setEmployees(list);
-      }
-    );
-    return () => unsubscribe();
-  }, []);
+  const employees = useSelector((state) => state.attendance.records);
 
   const mergedRecords = employees.map((emp, index) => {
     const dummy = DUMMY_RECORDS[index] || {
@@ -114,7 +99,6 @@ function AttendanceTable() {
               </tr>
             ))}
           </tbody>
-
         </table>
       </div>
     </div>

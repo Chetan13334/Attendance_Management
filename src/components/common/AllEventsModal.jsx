@@ -1,9 +1,12 @@
 import React from "react";
-import { Calendar, Tag, Clock } from "lucide-react"; 
+import { Calendar, Tag, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-// Assume EventCardSkeleton is defined (or imported)
-// ----------------------------------------------------------------------
+// ✅ Redux Imports
+import { useSelector, useDispatch } from "react-redux";
+import { deleteEvent } from "../../redux/slices/eventSlice";
+
+// Skeleton Loader (unchanged)
 const EventCardSkeleton = () => {
     return (
         <div className="relative bg-white p-6 rounded-xl shadow-lg transition-all duration-300">
@@ -31,8 +34,6 @@ const EventCardSkeleton = () => {
         </div>
     );
 };
-// ----------------------------------------------------------------------
-
 
 const getThemeColorClass = (theme) => {
   const t = theme ? theme.toLowerCase() : '';
@@ -48,10 +49,13 @@ const getThemeColorClass = (theme) => {
   return { shadowRgb: '107, 114, 128', text: 'text-gray-700', tagBg: 'bg-gray-50', icon: 'text-gray-500' };
 };
 
-// --- Main Modal Component ---
-
-const AllEventsModal = ({ onClose, events = [] }) => {
+// ✅ No events coming from props now
+const AllEventsModal = ({ onClose }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  // ✅ Get events from Redux
+  const events = useSelector((state) => state.events.list);
 
   const handleClose = () => {
     if (onClose) onClose();
@@ -59,13 +63,11 @@ const AllEventsModal = ({ onClose, events = [] }) => {
 
   const sortedEvents = [...events].sort((a, b) => new Date(b.event_date) - new Date(a.event_date));
   
-  // Display skeleton if no events are passed initially (assuming this means loading)
-  const isLoading = events.length === 0; 
+  const isLoading = !events;
 
   let content;
 
   if (isLoading) {
-    // Display 6 skeletons in the grid while loading
     content = (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {[...Array(6)].map((_, i) => (
@@ -74,8 +76,6 @@ const AllEventsModal = ({ onClose, events = [] }) => {
       </div>
     );
   } else if (events.length === 0) {
-    // This section is now technically unreachable based on the isLoading logic above,
-    // but kept for the "No Events Found" message if events is truly empty post-load.
     content = (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <div className="bg-gray-100 p-5 rounded-2xl mb-4 shadow-inner">
@@ -90,7 +90,6 @@ const AllEventsModal = ({ onClose, events = [] }) => {
       </div>
     );
   } else {
-    // Display the actual event cards
     content = (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {sortedEvents.map((event, index) => {
@@ -121,6 +120,15 @@ const AllEventsModal = ({ onClose, events = [] }) => {
               className={`relative bg-white p-6 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-[1.03]`}
               style={shadowStyle}
             >
+
+              {/* ✅ DELETE BUTTON */}
+              <button
+                onClick={() => dispatch(deleteEvent(event.id))}
+                className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+              >
+                ✕
+              </button>
+
               <div className={`absolute top-0 right-0 m-4 p-2 rounded-full ${colors.tagBg}`}>
                 <Tag className={`h-5 w-5 ${colors.icon}`} />
               </div>
@@ -152,14 +160,11 @@ const AllEventsModal = ({ onClose, events = [] }) => {
       </div>
     );
   }
-  
+
   return (
-    // Full-screen container
     <div className="flex justify-center w-full min-h-screen bg-white">
-        
       <div className="w-full max-w-6xl mx-auto flex flex-col transition-all duration-500">
         
-        {/* Header - Sticky */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-white sticky top-0 z-20 shadow-sm">
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-xl bg-indigo-50 text-indigo-600">
@@ -170,8 +175,7 @@ const AllEventsModal = ({ onClose, events = [] }) => {
                 All Events Overview
               </h2>
               <p className="text-sm text-gray-500">
-                {/* UPDATED LOADING TEXT HERE */}
-                {isLoading ? 'Loading, please wait...' : `${events.length} event${events.length !== 1 ? "s" : ""} scheduled`}
+                {events.length} event{events.length !== 1 ? "s" : ""} scheduled
               </p>
             </div>
           </div>
@@ -198,7 +202,6 @@ const AllEventsModal = ({ onClose, events = [] }) => {
           </button>
         </div>
 
-        {/* Events Grid Section */}
         <div className="p-8 bg-gray-50 flex-grow">
           {content}
         </div>
