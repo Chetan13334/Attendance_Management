@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
-import { db } from "../../firebase"; // adjust path
+import { db } from "../../firebase";
+import { useSelector, useDispatch } from "react-redux";
+import { setAttendance } from "../../redux/slices/attendanceSlice";
 
 const DUMMY_RECORDS = [
   { time: "09:05 AM", status: "Present", remarks: "On time" },
@@ -27,37 +29,62 @@ const getStatusClasses = (status) => {
 };
 
 function AttendanceTable() {
-  const [employees, setEmployees] = useState([]);
+  const dispatch = useDispatch();
+  const attendanceRecords = useSelector((state) => state.attendance.records);
+  const employees = useSelector((state) => state.employees.list);
 
+  // Fetch attendance data from Firebase
   useEffect(() => {
     const unsubscribe = onSnapshot(
-      collection(db, "Employee_Details"),
+      collection(db, "attendance"),
       (snapshot) => {
-        const list = snapshot.docs.map((doc) => {
-          const data = doc.data();
-          const name = data.Name?.toString() || "";
-          const id = data.EmployeeID?.toString() || "";
-          return { id, name };
+        const attendanceData = [];
+        snapshot.forEach((doc) => {
+          attendanceData.push({ id: doc.id, ...doc.data() });
         });
-        setEmployees(list);
+        dispatch(setAttendance(attendanceData));
+      },
+      (error) => {
+        console.error("Error fetching attendance data:", error);
       }
     );
-    return () => unsubscribe();
-  }, []);
 
+    return () => unsubscribe();
+  }, [dispatch]);
+
+  // Merge attendance records with employee data
   const mergedRecords = employees.map((emp, index) => {
+    // Find attendance record for this employee
+    const attendanceRecord = attendanceRecords.find(record => 
+      record.employeeId === emp.id || record.employeeId === emp.EmployeeID
+    ) || {};
+    
+    // Use dummy data if no attendance record exists
     const dummy = DUMMY_RECORDS[index] || {
       time: "-",
       status: "Absent",
       remarks: "Not marked",
     };
+    
     return {
       id: emp.id,
-      name: emp.name,
+      name: emp.Name || emp.name || "Unknown",
+      employeeId: emp.EmployeeID || emp.employeeId || emp.id,
       date: new Date().toLocaleDateString(),
       ...dummy,
+      ...attendanceRecord
     };
   });
+
+  // Show a message if there are no employees
+  if (employees.length === 0) {
+    return (
+      <div className="bg-white rounded-xl shadow-lg mt-8 p-8 text-center">
+        <h3 className="text-xl font-semibold text-gray-800 mb-2">Today's Records</h3>
+        <p className="text-gray-500">No employees found in the database.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-xl shadow-lg mt-8">
@@ -65,6 +92,9 @@ function AttendanceTable() {
         <h3 className="text-xl font-semibold text-gray-800 mb-2 sm:mb-0">
           Today's Records
         </h3>
+        <p className="text-sm text-gray-500">
+          Showing {employees.length} employee{employees.length !== 1 ? 's' : ''}
+        </p>
       </div>
 
       <div className="overflow-x-auto">
@@ -86,35 +116,34 @@ function AttendanceTable() {
 
           <tbody className="bg-white divide-y divide-gray-100">
             {mergedRecords.map((record, index) => (
-              <tr key={record.id || index}>
+              <tr key={record.id || index} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {record.name}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {record.id}
+                  {record.employeeId || record.id}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {record.date}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {record.time}
+                  {record.time || "-"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
                     className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClasses(
-                      record.status
+                      record.status || "Absent"
                     )}`}
                   >
-                    {record.status}
+                    {record.status || "Absent"}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                  {record.remarks}
+                  {record.remarks || "No remarks"}
                 </td>
               </tr>
             ))}
           </tbody>
-
         </table>
       </div>
     </div>

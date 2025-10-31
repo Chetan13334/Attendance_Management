@@ -1,19 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth, db } from "../firebase.js";
-import { signOut } from "firebase/auth";
-import { collection, getDocs } from "firebase/firestore";
+import { signOut, onAuthStateChanged } from "firebase/auth";
+import { collection, getDocs, onSnapshot } from "firebase/firestore";
+import { useDispatch } from "react-redux";
 
 import Sidebar from "../components/common/Sidebar.jsx";
 import Navbar from "../components/common/Navbar.jsx";
 
-import MainDashbord from "../components/dashboard/AttendanceTable.jsx";
-import Statsoverview from "../components/dashboard/Statsoverview.jsx";
-import { UserCheck, UserX, Clock, Calendar } from 'lucide-react';
 import AttendanceTable from "../components/dashboard/AttendanceTable.jsx";
-
-
-const MOCK_USER = { uid: "mock-user-123", email: "test@user.com" };
+import Statsoverview from "../components/dashboard/Statsoverview.jsx";
+import { setEmployees } from "../redux/slices/employeeSlice.js";
+import { UserCheck, UserX, Clock, Calendar } from 'lucide-react';
 
 const DashboardPage = () => {
   const [user, setUser] = useState(null);
@@ -21,6 +19,7 @@ const DashboardPage = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [eventCount, setEventCount] = useState(0);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -31,6 +30,15 @@ const DashboardPage = () => {
   };
 
   useEffect(() => {
+    // Check auth state
+    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+      } else {
+        navigate("/signin");
+      }
+    });
+
     // Fetch event count from Firebase
     const fetchEventCount = async () => {
       try {
@@ -44,19 +52,46 @@ const DashboardPage = () => {
     };
 
     fetchEventCount();
-    
-    setTimeout(() => {
-      setUser(MOCK_USER);
-    }, 500);
-  }, []);
+
+    // Fetch employee data from Firebase
+    const unsubscribeEmployees = onSnapshot(
+      collection(db, "Employee_Details"),
+      (snapshot) => {
+        const list = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        dispatch(setEmployees(list));
+      },
+      (error) => {
+        console.error("Error fetching employee details:", error);
+      }
+    );
+
+    // Cleanup subscriptions
+    return () => {
+      unsubscribeAuth();
+      unsubscribeEmployees();
+    };
+  }, [navigate, dispatch]);
 
   const handleSignOut = () => {
-    console.log("Mock sign out successful.");
     signOut(auth);
     navigate("/signin");
   };
 
- 
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-100">
       
