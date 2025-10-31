@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { auth } from "../../firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { useDispatch, useSelector } from "react-redux";
+import { signInWithEmail, signInWithGoogle, setShowSuccessMessage } from "../../redux/slices/authSlice";
 
 // ✅ Success Toast Component
 const SuccessToast = () => (
@@ -34,15 +34,28 @@ const SuccessToast = () => (
 const SignInForm = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false); // ✅ Toast visibility
 
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { loading, error, showSuccessMessage } = useSelector((state) => state.auth);
+
+  // Redirect to dashboard when login is successful
+  useEffect(() => {
+    if (showSuccessMessage) {
+      const timer = setTimeout(() => {
+        navigate("/dashboard");
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccessMessage, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+    // Clear specific field error when user starts typing
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
   };
 
   const validateForm = () => {
@@ -62,26 +75,33 @@ const SignInForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-    setIsLoading(true);
 
-    try {
-      await signInWithEmailAndPassword(auth, formData.email, formData.password);
+    const result = await dispatch(signInWithEmail({
+      email: formData.email,
+      password: formData.password
+    }));
 
-      // ✅ Show success popup instead of alert
-      setShowSuccessMessage(true);
-
-      // Redirect after a short delay
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 1500);
-    } catch (error) {
-      console.error(error);
-      setErrors({ submit: "Sign In Failed: " + (error.message || "Unknown error") });
-    } finally {
-      // Stop loading after process unless success message is active
-      setTimeout(() => setIsLoading(false), 500);
+    if (signInWithEmail.rejected.match(result)) {
+      setErrors({ submit: "Sign In Failed: " + (result.error.message || "Unknown error") });
     }
   };
+
+  const handleGoogleSignIn = async () => {
+    const result = await dispatch(signInWithGoogle());
+    
+    if (signInWithGoogle.rejected.match(result)) {
+      setErrors({ submit: "Google Sign In Failed: " + (result.error.message || "Unknown error") });
+    }
+  };
+
+  // Reset success message when component unmounts
+  useEffect(() => {
+    return () => {
+      if (showSuccessMessage) {
+        dispatch(setShowSuccessMessage(false));
+      }
+    };
+  }, [showSuccessMessage, dispatch]);
 
   return (
     <div className="relative">
@@ -104,7 +124,7 @@ const SignInForm = () => {
                 : "border-gray-300 focus:ring-blue-500"
             }`}
             placeholder="Enter your email"
-            disabled={isLoading || showSuccessMessage}
+            disabled={loading || showSuccessMessage}
           />
           {errors.email && (
             <p className="mt-1 text-xs text-red-600">{errors.email}</p>
@@ -127,7 +147,7 @@ const SignInForm = () => {
                 : "border-gray-300 focus:ring-blue-500"
             }`}
             placeholder="Enter your password"
-            disabled={isLoading || showSuccessMessage}
+            disabled={loading || showSuccessMessage}
           />
           {errors.password && (
             <p className="mt-1 text-xs text-red-600">{errors.password}</p>
@@ -141,7 +161,7 @@ const SignInForm = () => {
               type="checkbox"
               id="remember"
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              disabled={isLoading || showSuccessMessage}
+              disabled={loading || showSuccessMessage}
             />
             <label
               htmlFor="remember"
@@ -159,18 +179,21 @@ const SignInForm = () => {
         {errors.submit && (
           <p className="text-xs text-red-600 text-center">{errors.submit}</p>
         )}
+        {error && (
+          <p className="text-xs text-red-600 text-center">{error}</p>
+        )}
 
         {/* Submit Button */}
         <button
           type="submit"
-          disabled={isLoading || showSuccessMessage}
+          disabled={loading || showSuccessMessage}
           className={`w-full py-2 px-4 rounded-md text-white font-medium transition duration-200 ${
-            isLoading || showSuccessMessage
+            loading || showSuccessMessage
               ? "bg-blue-400 cursor-not-allowed"
               : "bg-blue-500 hover:bg-blue-600"
           }`}
         >
-          {isLoading ? "Signing in..." : "Sign In"}
+          {loading ? "Signing in..." : "Sign In"}
         </button>
 
         {/* Sign Up Link */}
@@ -183,7 +206,8 @@ const SignInForm = () => {
           {/* Google Button */}
           <button
             type="button"
-            disabled={isLoading || showSuccessMessage}
+            onClick={handleGoogleSignIn}
+            disabled={loading || showSuccessMessage}
             className="w-full flex items-center justify-center gap-5 py-2.5 px-6 text-[15px] font-medium tracking-wide text-slate-900 border border-slate-300 rounded-md bg-slate-50 hover:bg-slate-100 focus:outline-none cursor-pointer mt-3"
           >
             <svg
