@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { auth, provider } from "../../firebase";
-import { createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import { useDispatch, useSelector } from "react-redux";
 
 const SignUpForm = () => {
   const [formData, setFormData] = useState({
@@ -11,17 +10,16 @@ const SignUpForm = () => {
     confirmPassword: "",
   });
   const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
 
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-
+  const { loading, error } = useSelector((state) => state.auth);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
-
 
   const validateForm = () => {
     const newErrors = {};
@@ -43,52 +41,32 @@ const SignUpForm = () => {
     return Object.keys(newErrors).length === 0;
   };
 
- 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
 
-    setIsLoading(true);
-    try {
-      await createUserWithEmailAndPassword(
-        auth,
-        formData.email,
-        formData.password
-      );
+    const result = await dispatch(signUpWithEmail({
+      email: formData.email,
+      password: formData.password,
+      name: formData.name
+    }));
 
+    if (signUpWithEmail.fulfilled.match(result)) {
       alert("Account created successfully! Please sign in.");
       navigate("/signin");
-    } catch (error) {
-      console.error("Sign-Up Error:", error);
-      setErrors({ submit: error.message });
-    } finally {
-      setIsLoading(false);
+    } else if (signUpWithEmail.rejected.match(result)) {
+      setErrors({ submit: result.error.message });
     }
   };
 
-  
   const handleGoogleSignUp = async () => {
-    setIsLoading(true);
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          name: user.displayName,
-          email: user.email,
-          photo: user.photoURL,
-        })
-      );
-
-      alert(`Welcome ${user.displayName}! Please sign in to continue.`);
+    const result = await dispatch(signUpWithGoogle());
+    
+    if (signUpWithGoogle.fulfilled.match(result)) {
+      alert(`Welcome ${result.payload.user.name}! Please sign in to continue.`);
       navigate("/signin");
-    } catch (error) {
-      console.error("Google Sign-Up Error:", error);
+    } else if (signUpWithGoogle.rejected.match(result)) {
       setErrors({ submit: "Google Sign-Up failed. Please try again." });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -110,7 +88,7 @@ const SignUpForm = () => {
               : "border-gray-300 focus:ring-blue-500"
           }`}
           placeholder="Enter your full name"
-          disabled={isLoading}
+          disabled={loading}
         />
         {errors.name && (
           <p className="mt-1 text-xs text-red-600">{errors.name}</p>
@@ -133,7 +111,7 @@ const SignUpForm = () => {
               : "border-gray-300 focus:ring-blue-500"
           }`}
           placeholder="Enter your email"
-          disabled={isLoading}
+          disabled={loading}
         />
         {errors.email && (
           <p className="mt-1 text-xs text-red-600">{errors.email}</p>
@@ -156,7 +134,7 @@ const SignUpForm = () => {
               : "border-gray-300 focus:ring-blue-500"
           }`}
           placeholder="Enter your password"
-          disabled={isLoading}
+          disabled={loading}
         />
         {errors.password && (
           <p className="mt-1 text-xs text-red-600">{errors.password}</p>
@@ -179,7 +157,7 @@ const SignUpForm = () => {
               : "border-gray-300 focus:ring-blue-500"
           }`}
           placeholder="Re-enter your password"
-          disabled={isLoading}
+          disabled={loading}
         />
         {errors.confirmPassword && (
           <p className="mt-1 text-xs text-red-600">{errors.confirmPassword}</p>
@@ -190,18 +168,21 @@ const SignUpForm = () => {
       {errors.submit && (
         <p className="text-xs text-red-600 text-center">{errors.submit}</p>
       )}
+      {error && (
+        <p className="text-xs text-red-600 text-center">{error}</p>
+      )}
 
       {/* Sign-Up Button */}
       <button
         type="submit"
-        disabled={isLoading}
+        disabled={loading}
         className={`w-full py-2 px-4 rounded-md text-white font-medium transition duration-200 ${
-          isLoading
+          loading
             ? "bg-blue-400 cursor-not-allowed"
             : "bg-blue-500 hover:bg-blue-600"
         }`}
       >
-        {isLoading ? "Creating account..." : "Create Account"}
+        {loading ? "Creating account..." : "Create Account"}
       </button>
 
       {/* Divider */}
@@ -213,7 +194,7 @@ const SignUpForm = () => {
       <button
         type="button"
         onClick={handleGoogleSignUp}
-        disabled={isLoading}
+        disabled={loading}
         className="w-full flex items-center justify-center gap-3 py-2.5 px-6 text-[15px] font-medium tracking-wide text-slate-900 border border-slate-300 rounded-md bg-slate-50 hover:bg-slate-100 focus:outline-none cursor-pointer"
       >
         <svg
