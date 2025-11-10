@@ -9,8 +9,6 @@ export const fetchEvents = createAsyncThunk("events/fetchEvents", async () => {
   querySnapshot.forEach((docItem) => {
     const data = docItem.data();
 
-    // 🆕 Conversion Logic: Check if it's a Firebase Timestamp and convert it
-    // The .toDate() method is available on Firebase Timestamp objects.
     const eventDate = data.event_date?.toDate ? data.event_date.toDate().toISOString() : data.event_date;
     const createdAt = data.created_at?.toDate ? data.created_at.toDate().toISOString() : data.created_at;
 

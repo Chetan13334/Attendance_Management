@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react'; 
 import logomain from '../assets/pfizer.png';
-import UserProfileCard from './UserProfile'; // Import the UserProfile component
 import { auth } from '../../firebase'; // Import auth from firebase
 import { onAuthStateChanged } from 'firebase/auth'; // Import onAuthStateChanged
 
-const Navbar = ({ toggleSidebar, handleSignOut, setIsProfileOpenState }) => {
-    const [isProfileOpen, setIsProfileOpen] = useState(false);
+const Navbar = ({ toggleSidebar, handleSignOut }) => {
     const [searchValue, setSearchValue] = useState('');
     const [user, setUser] = useState(null); // State to hold user data
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State for dropdown
 
     // Listen for auth state changes
     useEffect(() => {
@@ -35,23 +34,24 @@ const Navbar = ({ toggleSidebar, handleSignOut, setIsProfileOpenState }) => {
         setSearchValue(e.target.value);
     };
     
-    // Function to handle profile open/close
-    const toggleProfile = () => {
-        const newState = !isProfileOpen;
-        setIsProfileOpen(newState);
-        // Pass the state to parent if callback is provided
-        if (setIsProfileOpenState) {
-            setIsProfileOpenState(newState);
-        }
+    // Toggle dropdown
+    const toggleDropdown = () => {
+        setIsDropdownOpen(!isDropdownOpen);
     };
     
-    // Function to close profile
-    const closeProfile = () => {
-        setIsProfileOpen(false);
-        if (setIsProfileOpenState) {
-            setIsProfileOpenState(false);
-        }
-    };
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (isDropdownOpen && !event.target.closest('.hs-dropdown')) {
+                setIsDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('click', handleClickOutside);
+        return () => {
+            document.removeEventListener('click', handleClickOutside);
+        };
+    }, [isDropdownOpen]);
     
     return (
         <nav className="w-full bg-white shadow-sm fixed top-0 left-0 right-0 z-40 lg:pl-64">
@@ -111,57 +111,55 @@ const Navbar = ({ toggleSidebar, handleSignOut, setIsProfileOpenState }) => {
                 
                 <div className="flex items-center space-x-2 sm:space-x-4 ml-2 flex-shrink-0">
                     
-                
-                    
-                   
-                    <div className="relative">
-                        <button
-                            className="flex items-center space-x-1 sm:space-x-3 p-1 bg-gray-100 rounded-full cursor-pointer hover:bg-gray-250 transition focus:outline-none"
-                            onClick={toggleProfile}
+                    {/* Dropdown menu */}
+                    <div className="hs-dropdown relative inline-flex">
+                        <button 
+                            id="hs-dropdown-custom-trigger" 
+                            type="button" 
+                            className="hs-dropdown-toggle py-1 ps-1 pe-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-full border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
+                            aria-haspopup="menu" 
+                            aria-expanded={isDropdownOpen} 
+                            aria-label="Dropdown"
+                            onClick={toggleDropdown}
                         >
-                            <div className="w-8 h-8 sm:w-9 sm:h-9">
-                                
-                                <img 
-                                    src={user?.photoUrl }
-                                    alt="User Avatar" 
-                                    className="w-full h-full rounded-full object-cover" 
-                                    onError={(e) => { 
-                                        e.target.onerror = null; 
-                                        e.target.src = "https://i.pravatar.cc/150?img=68"; 
-                                    }}
-                                />
-                            </div>
-                            
-                            <div className="hidden sm:block pr-1 text-right">
-                                {/* Show user's name or default */}
-                                <div className="text-sm font-semibold text-gray-800">
-                                    {user?.name || "Guest User"}
-                                </div>
-                                <div className="text-xs text-gray-500">Employee</div>
-                            </div>
-                            
-                            
+                            <img 
+                                className="w-8 h-auto rounded-full" 
+                                src={user?.photoUrl || "https://i.pravatar.cc/150?img=68"} 
+                                alt="Avatar"
+                                onError={(e) => { 
+                                    e.target.onerror = null; 
+                                    e.target.src = "https://i.pravatar.cc/150?img=68"; 
+                                }}
+                            />
+                            <span className="text-gray-600 font-medium truncate max-w-30">
+                                {user?.name || "Guest User"}
+                            </span>
+                            <svg className={`hs-dropdown-open:rotate-180 size-4 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="m6 9 6 6 6-6"/>
+                            </svg>
                         </button>
-                        
-                        {/* Profile Popup */}
-                        {isProfileOpen && (
-                            <div className="fixed inset-0 z-50 flex">
-                                {/* Backdrop with blur */}
-                                <div 
-                                    className="fixed inset-0  bg-opacity-50 backdrop-blur-[1px]"
-                                    onClick={closeProfile}
-                                ></div>
-                                
-                                {/* Profile Card on the left side */}
-                                <div className="relative z-50 ml-0 mt-16 lg:mt-0 lg:ml-64 transition-all duration-300 ease-in-out">
-                                    <UserProfileCard 
-                                        onClose={closeProfile} 
-                                        handleSignOut={handleSignOut} 
-                                    />
+
+                        {isDropdownOpen && (
+                            <div 
+                                className="hs-dropdown-menu transition-[opacity,margin] duration-300 hs-dropdown-open:opacity-100 opacity-100 min-w-30 bg-white shadow-lg rounded-lg mt-2 absolute right-0 z-50 border border-gray-200"
+                                role="menu" 
+                                aria-orientation="vertical" 
+                                aria-labelledby="hs-dropdown-custom-trigger"
+                                style={{ top: '100%', marginTop: '0.5rem' }}
+                            >
+                                <div className="p-1 space-y-0.5">
+                                    <button
+                                        className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-700 hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 w-full text-left transition-colors duration-200"
+                                        onClick={() => {
+                                            setIsDropdownOpen(false);
+                                            handleSignOut();
+                                        }}
+                                    >
+                                        Sign Out
+                                    </button>
                                 </div>
                             </div>
                         )}
-                       
                     </div>
                 </div>
             </div>
