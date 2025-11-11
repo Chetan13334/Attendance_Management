@@ -1,91 +1,107 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { auth, provider } from '../../firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged,
+} from "firebase/auth";
+import { auth, provider } from "../../firebase";
 
-// Async thunk for email/password signup
+const savedUser = JSON.parse(localStorage.getItem("user"));
+
+
+export const listenToAuthState = createAsyncThunk(
+  "auth/listenToAuthState",
+  async (_, { dispatch }) => {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const userData = {
+          uid: user.uid,
+          email: user.email,
+          name: user.displayName || "User",
+          photo: user.photoURL || null,
+        };
+        localStorage.setItem("user", JSON.stringify(userData));
+        dispatch(setUser(userData));
+      } else {
+        localStorage.removeItem("user");
+        dispatch(logout());
+      }
+    });
+  }
+);
+
 export const signUpWithEmail = createAsyncThunk(
-  'auth/signUpWithEmail',
+  "auth/signUpWithEmail",
   async ({ email, password, name }, { rejectWithValue }) => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      
-      // Store user data in localStorage
-      localStorage.setItem(
-        'user',
-        JSON.stringify({
-          name: name,
-          email: user.email,
-        })
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
       );
-      
-      return {
-        user: {
-          uid: user.uid,
-          email: user.email,
-          name: name
-        }
-      };
+      const user = userCredential.user;
+
+      const userData = { uid: user.uid, email, name };
+      localStorage.setItem("user", JSON.stringify(userData));
+
+      return { user: userData };
     } catch (error) {
       return rejectWithValue(error.message);
     }
   }
 );
 
-// Async thunk for email/password signin
 export const signInWithEmail = createAsyncThunk(
-  'auth/signInWithEmail',
+  "auth/signInWithEmail",
   async ({ email, password }, { rejectWithValue }) => {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      
-      // Store user data in localStorage
-      localStorage.setItem(
-        'user',
-        JSON.stringify({
-          email: user.email,
-        })
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
       );
-      
-      return {
-        user: {
-          uid: user.uid,
-          email: user.email
-        }
-      };
+      const user = userCredential.user;
+
+      const userData = { uid: user.uid, email: user.email };
+      localStorage.setItem("user", JSON.stringify(userData));
+
+      return { user: userData };
     } catch (error) {
       return rejectWithValue(error.message);
     }
   }
 );
 
-// Async thunk for Google signup/signin
 export const signInWithGoogle = createAsyncThunk(
-  'auth/signInWithGoogle',
+  "auth/signInWithGoogle",
   async (_, { rejectWithValue }) => {
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-      
-      // Store user data in localStorage
-      localStorage.setItem(
-        'user',
-        JSON.stringify({
-          name: user.displayName,
-          email: user.email,
-          photo: user.photoURL,
-        })
-      );
-      
-      return {
-        user: {
-          uid: user.uid,
-          email: user.email,
-          name: user.displayName,
-          photo: user.photoURL
-        }
+
+      const userData = {
+        uid: user.uid,
+        email: user.email,
+        name: user.displayName,
+        photo: user.photoURL,
       };
+      localStorage.setItem("user", JSON.stringify(userData));
+
+      return { user: userData };
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const signOutUser = createAsyncThunk(
+  "auth/signOutUser",
+  async (_, { rejectWithValue }) => {
+    try {
+      await signOut(auth);
+      localStorage.removeItem("user");
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -93,13 +109,13 @@ export const signInWithGoogle = createAsyncThunk(
 );
 
 const authSlice = createSlice({
-  name: 'auth',
+  name: "auth",
   initialState: {
-    user: null,
+    user: savedUser || null,
     loading: false,
     error: null,
-    isAuthenticated: false,
-    showSuccessMessage: false
+    isAuthenticated: !!savedUser,
+    showSuccessMessage: false,
   },
   reducers: {
     clearError: (state) => {
@@ -109,7 +125,7 @@ const authSlice = createSlice({
       state.user = null;
       state.isAuthenticated = false;
       state.showSuccessMessage = false;
-      localStorage.removeItem('user');
+      localStorage.removeItem("user");
     },
     setUser: (state, action) => {
       state.user = action.payload;
@@ -117,11 +133,10 @@ const authSlice = createSlice({
     },
     setShowSuccessMessage: (state, action) => {
       state.showSuccessMessage = action.payload;
-    }
+    },
   },
   extraReducers: (builder) => {
     builder
-      // Email signup cases
       .addCase(signUpWithEmail.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -136,7 +151,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // Email signin cases
+
       .addCase(signInWithEmail.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -145,14 +160,13 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = action.payload.user;
         state.isAuthenticated = true;
-        state.error = null;
         state.showSuccessMessage = true;
       })
       .addCase(signInWithEmail.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
-      // Google signin/signup cases
+
       .addCase(signInWithGoogle.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -161,15 +175,25 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = action.payload.user;
         state.isAuthenticated = true;
-        state.error = null;
         state.showSuccessMessage = true;
       })
       .addCase(signInWithGoogle.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      .addCase(signOutUser.fulfilled, (state) => {
+        state.user = null;
+        state.isAuthenticated = false;
+        state.showSuccessMessage = false;
+      })
+      .addCase(signOutUser.rejected, (state, action) => {
+        state.error = action.payload;
+        state.user = null;
+        state.isAuthenticated = false;
       });
-  }
+  },
 });
 
-export const { clearError, logout, setUser, setShowSuccessMessage } = authSlice.actions;
+export const { clearError, logout, setUser, setShowSuccessMessage } =
+  authSlice.actions;
 export default authSlice.reducer;
