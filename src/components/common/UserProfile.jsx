@@ -1,58 +1,39 @@
-import React, { useState, useRef, useEffect } from "react";
-import { auth } from "../../firebase";
-import { onAuthStateChanged } from "firebase/auth";
+import React, { useState, useRef } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { logout } from "../../redux/slices/authSlice"; // Adjust path if needed
 import { Mail, User, LogOut, Camera } from "lucide-react";
 
 const UserProfileCard = ({ onClose, handleSignOut }) => {
-  const [user, setUser] = useState({
-    name: "Loading...",
-    email: "Loading...",
-    photoUrl: "https://placehold.co/120x120/4F46E5/ffffff?text=U",
-  });
-
+  const [localPhotoUrl, setLocalPhotoUrl] = useState(null);
   const fileInputRef = useRef(null);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser({
-          name:
-            currentUser.displayName ||
-            currentUser.email.split("@")[0] ||
-            "User",
-          email: currentUser.email || "No email provided",
-          photoUrl:
-            currentUser.photoURL ||
-            "https://placehold.co/120x120/4F46E5/ffffff?text=U",
-        });
-      } else {
-        setUser({
-          name: "Guest",
-          email: "Not logged in",
-          photoUrl: "https://placehold.co/120x120/4F46E5/ffffff?text=G",
-        });
-      }
-    });
+  // Get user from Redux
+  const user = useSelector((state) => state.auth.user) || {
+    name: "Guest",
+    email: "Not logged in",
+    photoUrl: "https://placehold.co/120x120/4F46E5/ffffff?text=G",
+  };
 
-    return () => unsubscribe();
-  }, []);
+  const dispatch = useDispatch();
+
+  const displayPhoto = localPhotoUrl || user.photoUrl || "https://placehold.co/120x120/4F46E5/ffffff?text=U";
+  const displayName = user.name || user.email?.split("@")[0] || "Guest";
+  const displayEmail = user.email || "No email provided";
 
   const handleLogout = () => {
-    if (handleSignOut) handleSignOut();
-    if (onClose) onClose();
+    dispatch(logout());           // Redux logout
+    handleSignOut?.();            // Keep parent callback
+    onClose?.();
   };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (user.photoUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(user.photoUrl);
+      if (localPhotoUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(localPhotoUrl);
       }
       const newPhotoUrl = URL.createObjectURL(file);
-      setUser((prev) => ({
-        ...prev,
-        photoUrl: newPhotoUrl,
-      }));
+      setLocalPhotoUrl(newPhotoUrl);
     }
   };
 
@@ -73,13 +54,12 @@ const UserProfileCard = ({ onClose, handleSignOut }) => {
           <div className="absolute -bottom-10">
             <div className="relative group">
               <img
-                src={user.photoUrl}
+                src={displayPhoto}
                 alt="Profile"
                 className="w-24 h-24 object-cover rounded-full border-4 border-white shadow-md transition-all duration-300"
                 onError={(e) => {
                   e.target.onerror = null;
-                  e.target.src =
-                    "https://placehold.co/128x128/4F46E5/ffffff?text=U";
+                  e.target.src = "https://placehold.co/128x128/4F46E5/ffffff?text=U";
                 }}
               />
               {/* Camera Button */}
@@ -96,10 +76,10 @@ const UserProfileCard = ({ onClose, handleSignOut }) => {
 
         {/* Content Section */}
         <div className="pt-16 pb-6 px-6 text-center">
-          <h2 className="text-xl font-semibold text-gray-900">{user.name}</h2>
+          <h2 className="text-xl font-semibold text-gray-900">{displayName}</h2>
           <p className="flex items-center justify-center gap-2 text-sm text-gray-500 mt-1">
             <Mail className="w-4 h-4 text-indigo-500" />
-            {user.email}
+            {displayEmail}
           </p>
 
           {/* Divider */}
@@ -114,9 +94,7 @@ const UserProfileCard = ({ onClose, handleSignOut }) => {
               <p className="text-xs font-medium text-indigo-800 uppercase tracking-wide">
                 Account Type
               </p>
-              <p className="text-sm font-semibold text-indigo-900">
-                Member
-              </p>
+              <p className="text-sm font-semibold text-indigo-900">Member</p>
             </div>
           </div>
 

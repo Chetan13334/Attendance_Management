@@ -1,55 +1,119 @@
+// src/redux/slices/eventSlice.js (COMPLETE AND CORRECTED)
+
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  serverTimestamp,
+} from "firebase/firestore";
 import { db } from "../../firebase";
 
-// ✅ Fetch Events from Firestore (UPDATED FOR DATE CONVERSION)
-export const fetchEvents = createAsyncThunk("events/fetchEvents", async () => {
-  const querySnapshot = await getDocs(collection(db, "Events"));
-  let eventsList = [];
-  querySnapshot.forEach((docItem) => {
-    const data = docItem.data();
+let unsubscribe = null;
 
-    const eventDate = data.event_date?.toDate ? data.event_date.toDate().toISOString() : data.event_date;
-    const createdAt = data.created_at?.toDate ? data.created_at.toDate().toISOString() : data.created_at;
+/* -------------------------------------------------
+    LISTEN TO EVENTS (real-time & serializable)
+    ------------------------------------------------- */
+export const listenToEvents = createAsyncThunk(
+  "events/listenToEvents",
+  async (_, { dispatch }) => {
+    // stop previous listener if any
+    if (unsubscribe) unsubscribe();
 
-    eventsList.push({ 
-      id: docItem.id, 
-      ...data, 
-      event_date: eventDate,
-      created_at: createdAt,
+    const colRef = collection(db, "Events");
+    
+    return new Promise((resolve, reject) => {
+        unsubscribe = onSnapshot(colRef, 
+            (snapshot) => {
+                const list = snapshot.docs.map((d) => {
+                    const data = d.data();
+                    
+                    // 🚨 CRITICAL FIX: Convert Firestore Timestamps to JavaScript Date Objects
+                    const event_date = data.event_date?.toDate ? data.event_date.toDate() : data.event_date;
+                    const created_at = data.created_at?.toDate ? data.created_at.toDate() : data.created_at;
+
+                    return {
+                        id: d.id,
+                        ...data,
+                        event_date: event_date, // Now a serializable JS Date
+                        created_at: created_at, // Now a serializable JS Date
+                    };
+                });
+                
+                // Dispatch the clean, serializable list to the reducer
+                dispatch(setEvents(list));
+                
+                // Resolve the promise once the initial data is fetched to complete the thunk lifecycle
+                if (snapshot.docChanges().length > 0 || list.length > 0) {
+                    resolve();
+                }
+            },
+            (error) => {
+                console.error("Firebase listener error:", error);
+                reject(error);
+            }
+        );
     });
-  });
-  return eventsList;
-});
+  }
+);
 
-// ✅ Delete Event (No Change)
-export const deleteEvent = createAsyncThunk("events/deleteEvent", async (id) => {
-  await deleteDoc(doc(db, "Events", id));
-  return id;
-});
+/* -------------------------------------------------
+    CREATE EVENT
+    ------------------------------------------------- */
+export const createEvent = createAsyncThunk(
+  "events/createEvent",
+  async ({ event_title, event_theme, event_date }) => {
+    const colRef = collection(db, "Events");
+    const docRef = await addDoc(colRef, {
+      event_title,
+      event_theme,
+      event_date,
+      created_at: serverTimestamp(),
+    });
+    return { id: docRef.id, event_title, event_theme, event_date };
+  }
+);
 
+/* -------------------------------------------------
+    DELETE EVENT
+    ------------------------------------------------- */
+export const deleteEvent = createAsyncThunk(
+  "events/deleteEvent",
+  async (id) => {
+    await deleteDoc(doc(db, "Events", id));
+    return id;
+  }
+);
+
+/* -------------------------------------------------
+    SLICE
+    ------------------------------------------------- */
 const eventSlice = createSlice({
   name: "events",
   initialState: {
     list: [],
     loading: false,
-    // You might want to add an error state here: error: null
   },
-  reducers: {},
+  reducers: {
+    setEvents(state, action) {
+      state.list = action.payload;
+      state.loading = false; // Reset loading when data is successfully received
+    },
+  },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchEvents.pending, (state) => {
-        state.loading = true;
+      .addCase(listenToEvents.pending, (state) => {
+        state.loading = true; // Set loading when we start listening
       })
-      .addCase(fetchEvents.fulfilled, (state, action) => {
-        state.list = action.payload;
-        state.loading = false;
-      })
+      // Optional: Optimistic update for deletion
       .addCase(deleteEvent.fulfilled, (state, action) => {
-        state.list = state.list.filter((event) => event.id !== action.payload);
-      });
-      // 💡 Suggestion: Consider adding .addCase(fetchEvents.rejected, ...) to handle errors
+          state.list = state.list.filter(event => event.id !== action.payload);
+      })
   },
+  
 });
 
+export const { setEvents } = eventSlice.actions;
 export default eventSlice.reducer;

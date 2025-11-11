@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 // ✅ Import the fetchEmployees thunk (we no longer need setEmployees)
-import { fetchEmployees } from "../../redux/slices/employeeSlice"; 
+import { listenToEmployees } from "../../redux/slices/employeeSlice"; 
 // Note: We don't import firebase or firestore functions here anymore!
 
 // --- Helper functions (UNCHANGED) ---
@@ -77,7 +77,7 @@ const Employee_Details = () => {
 
   useEffect(() => {
     // ✅ Dispatch the asynchronous thunk to fetch data
-    dispatch(fetchEmployees());
+    dispatch(listenToEmployees());
     // Note: Since this is a one-time fetch, you can decide if you want to refetch 
     // whenever the component mounts, or only once at application start.
     // For simplicity and robustness, refetching here is common.

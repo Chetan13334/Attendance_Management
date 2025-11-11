@@ -1,9 +1,6 @@
-// Import Firebase functions
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-
-// Firebase config (replace with your actual values)
 const firebaseConfig = {
   apiKey: "AIzaSyAG2qC9-Addcoz1S8QnH6CObpqZnFVE4sY",
   authDomain: "attendance-management-b58f5.firebaseapp.com",

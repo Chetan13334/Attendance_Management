@@ -1,21 +1,41 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { collection, onSnapshot } from "firebase/firestore";
+import { db } from "../../firebase";
+
+export const listenToAttendance = createAsyncThunk(
+  "attendance/listenToAttendance",
+  async (_, { dispatch, rejectWithValue }) => {
+    try {
+      onSnapshot(collection(db, "attendance"), (snapshot) => {
+        const data = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        dispatch(setAttendance(data));
+      });
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
 
 const attendanceSlice = createSlice({
   name: "attendance",
   initialState: {
-    records: [],   // list of attendance entries
+    list: [],
+    loading: false,
+    error: null,
   },
   reducers: {
     setAttendance(state, action) {
-      state.records = action.payload;
+      state.list = action.payload;
     },
-    updateRecord(state, action) {
-      const { id, data } = action.payload;
-      const index = state.records.findIndex(r => r.id === id);
-      if (index !== -1) state.records[index] = { ...state.records[index], ...data };
+    clearAttendance(state) {
+      state.list = [];
+      state.error = null;
     },
   },
 });
 
-export const { setAttendance, updateRecord } = attendanceSlice.actions;
+export const { setAttendance, clearAttendance } = attendanceSlice.actions;
 export default attendanceSlice.reducer;

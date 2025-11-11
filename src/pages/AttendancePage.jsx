@@ -1,122 +1,101 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { auth, db } from "../firebase.js";
-import { signOut, onAuthStateChanged } from "firebase/auth";
-import { collection, getDocs, onSnapshot } from "firebase/firestore";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+
+// ✅ Import Redux thunks instead of Firebase directly
+import { listenToEmployees } from "../redux/slices/employeeSlice";
+import { listenToEvents } from "../redux/slices/eventSlice";
+import { signOutUser } from "../redux/slices/authSlice";
 
 import Sidebar from "../components/common/Sidebar.jsx";
 import Navbar from "../components/common/Navbar.jsx";
-
 import AttendanceTable from "../components/dashboard/AttendanceTable.jsx";
 import Statsoverview from "../components/dashboard/Statsoverview.jsx";
-import { setEmployees } from "../redux/slices/employeeSlice.js";
-import { UserCheck, UserX, Clock, Calendar } from 'lucide-react';
+import EventsListContent from "../components/common/EventListContent.jsx";
 
 const DashboardPage = () => {
-  const [user, setUser] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [eventCount, setEventCount] = useState(0);
+  const [showEvents, setShowEvents] = useState(false); // Toggle between Attendance and Events
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
+  const user = useSelector((state) => state.auth.user);
+  const eventCount = useSelector((state) => state.events.list.length); // ✅ pulled from Redux
 
-  const setProfileOpenState = (state) => {
-    setIsProfileOpen(state);
-  };
+  const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+  const setProfileOpenState = (state) => setIsProfileOpen(state);
 
+  /* ───────────────────────────── */
+  /* 🔁 Fetch Data from Redux     */
+  /* ───────────────────────────── */
   useEffect(() => {
-    // Check auth state
-    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-      } else {
-        navigate("/signin");
-      }
-    });
+    if (!user) {
+      navigate("/signin", { replace: true });
+      return;
+    }
 
-    // Fetch event count from Firebase
-    const fetchEventCount = async () => {
-      try {
-        const eventsRef = collection(db, 'Events');
-        const snapshot = await getDocs(eventsRef);
-        setEventCount(snapshot.size);
-      } catch (error) {
-        console.error('Error fetching event count:', error);
-        setEventCount(0);
-      }
-    };
+    // ✅ Fetch data using Redux thunks
+    dispatch(listenToEmployees());
+    dispatch(listenToEvents());
+  }, [user, navigate, dispatch]);
 
-    fetchEventCount();
-
-    // Fetch employee data from Firebase
-    const unsubscribeEmployees = onSnapshot(
-      collection(db, "Employee_Details"),
-      (snapshot) => {
-        const list = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-
-        dispatch(setEmployees(list));
-      },
-      (error) => {
-        console.error("Error fetching employee details:", error);
-      }
-    );
-
-    // Cleanup subscriptions
-    return () => {
-      unsubscribeAuth();
-      unsubscribeEmployees();
-    };
-  }, [navigate, dispatch]);
-
-  const handleSignOut = () => {
-    signOut(auth);
+  /* ───────────────────────────── */
+  /* 🚪 Logout (via Redux)        */
+  /* ───────────────────────────── */
+  const handleSignOut = async () => {
+    await dispatch(signOutUser());
     navigate("/signin");
   };
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
+  if (!user) return null;
 
+  /* ───────────────────────────── */
+  /* 🧭 Render                     */
+  /* ───────────────────────────── */
   return (
     <div className="min-h-screen bg-gray-100">
-      
       {/* Sidebar */}
-      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} handleSignOut={handleSignOut} isProfileOpen={isProfileOpen} />
+      <Sidebar
+        isOpen={isSidebarOpen}
+        setIsOpen={setIsSidebarOpen}
+        handleSignOut={handleSignOut}
+        isProfileOpen={isProfileOpen}
+      />
 
-      {/* Main content wrapper */}
+      {/* Main Layout */}
       <div className="flex-1 lg:ml-64">
-       
-        {/* Navbar */}
-        <Navbar toggleSidebar={toggleSidebar} handleSignOut={handleSignOut} setIsProfileOpenState={setProfileOpenState} />
+        <Navbar
+          toggleSidebar={toggleSidebar}
+          handleSignOut={handleSignOut}
+          setIsProfileOpenState={setProfileOpenState}
+        />
 
-        
-        <main className="pt-20 px-4 sm:px-6 pb-8">
-
+        <main className="pt-20 px-4 sm:px-6 pb-8 transition-all duration-300">
+          {/* 📊 Stats Overview */}
           <div className="mt-8 bg-white p-6 rounded-lg shadow">
-            <Statsoverview stats={[
-              { title: "Active Users", value: 1200, icon: UserCheck, color: "green" },
-              { title: "Inactive Users", value: 80, icon: UserX, color: "red" },
-              { title: "Clocked Hours", value: 56, icon: Clock, color: "blue" },
-              { title: "Events", value: eventCount, icon: Calendar, color: "yellow" },
-            ]} />
+            {/* ✅ Pass eventCount as prop (optional, if Statsoverview uses Redux already then fine) */}
+            <Statsoverview
+              onEventsClick={() => setShowEvents(true)}
+              eventCount={eventCount}
+            />
           </div>
-          <div className="mt-4">
-            <AttendanceTable />
+
+          {/* 🗓️ Below Section (Attendance ↔ Events) */}
+          <div className="mt-4 transition-all duration-500">
+            {!showEvents ? (
+              <div className="bg-white p-6 rounded-lg shadow transition-all duration-500">
+                <AttendanceTable />
+              </div>
+            ) : (
+              <div className="bg-white p-6 rounded-lg shadow transition-all duration-700 ease-in-out">
+                <EventsListContent
+                  isModal={false}
+                  onClose={() => setShowEvents(false)}
+                />
+              </div>
+            )}
           </div>
         </main>
       </div>
