@@ -1,0 +1,56 @@
+import React from "react";
+import { UserCheck, UserX, Clock, Calendar } from "lucide-react";
+
+const StatCardUI = ({ title, value, icon: Icon, color, onClick }) => {
+  // Create classes dynamically instead of using template literals with variables
+  const getShadowColorClass = (color) => {
+    switch (color) {
+      case "green": return "shadow-green-100";
+      case "red": return "shadow-red-100";
+      case "blue": return "shadow-blue-100";
+      case "yellow": return "shadow-yellow-100";
+      default: return "shadow-gray-100";
+    }
+  };
+
+  const getGradientBgClass = (color) => {
+    switch (color) {
+      case "green": return "from-green-200 to-green-100";
+      case "red": return "from-red-200 to-red-100";
+      case "blue": return "from-blue-200 to-blue-100";
+      case "yellow": return "from-yellow-100 to-yellow-50";
+      default: return "from-gray-400 to-gray-600";
+    }
+  };
+
+  return (
+    <div
+      className={`p-6 bg-white rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl flex items-center justify-between border border-gray-100 hover:border-${color}-200 cursor-pointer transform hover:-translate-y-1 ${getShadowColorClass(color)}`}
+      onClick={onClick}
+    >
+      <div>
+        <p className="text-sm font-medium text-gray-500">{title}</p>
+        <p className="mt-1 text-3xl font-bold text-gray-900">
+          {value === "..." ? "..." : value}
+        </p>
+      </div>
+      <div
+        className={`p-3 rounded-xl bg-gradient-to-br ${getGradientBgClass(color)} text-white shadow-md`}
+      >
+        {Icon && <Icon className="w-6 h-6" />}
+      </div>
+    </div>
+  );
+};
+
+const StatsUI = ({ currentStats }) => {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {currentStats.map((stat, index) => (
+        <StatCardUI key={index} {...stat} />
+      ))}
+    </div>
+  );
+};
+
+export default StatsUI;

@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { signOutUser } from "../redux/slices/authSlice"; // ✅ Redux logout
 
 import Sidebar from "../components/common/Sidebar.jsx";
-import Navbar from "../components/common/Navbar.jsx";
-import Calender from "../components/dashboard/MainCalender.jsx";
+import Navbar from "../components/common/navbar/Navbar.jsx";
+import MainCalender from "../components/dashboard/calendar/MainCalender.jsx";
 
 const CalenderPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -14,13 +14,6 @@ const CalenderPage = () => {
 
   const { user, isAuthenticated } = useSelector((state) => state.auth);
 
-  // 🚫 Redirect if not logged in
-  useEffect(() => {
-    if (!isAuthenticated || !user) {
-      navigate("/signin", { replace: true });
-    }
-  }, [isAuthenticated, user, navigate]);
-
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
   const handleSignOut = () => {
@@ -28,10 +21,16 @@ const CalenderPage = () => {
     navigate("/signin");
   };
 
-  if (!isAuthenticated || !user) return null;
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-gray-600">Loading Calendar...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 flex">
       {/* Sidebar */}
       <Sidebar
         isOpen={isSidebarOpen}
@@ -44,9 +43,10 @@ const CalenderPage = () => {
         {/* Navbar */}
         <Navbar toggleSidebar={toggleSidebar} handleSignOut={handleSignOut} />
 
-        {/* ----------- This is the main calendar page ---------- */}
-        <br />
-        <Calender />
+        {/* Calendar Content */}
+        <main className="pt-20 px-4 sm:px-6 pb-8">
+          <MainCalender />
+        </main>
       </div>
     </div>
   );

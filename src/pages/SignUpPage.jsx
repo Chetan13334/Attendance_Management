@@ -1,5 +1,5 @@
 import React from 'react';
-import SignUpForm from '../components/auth/SignUpForm';
+import SignUpForm from '../components/auth/signup/SignUpForm';
 import AttendifyLogo from '../components/Logo/Attendify';
 
 const SignUpPage = () => {

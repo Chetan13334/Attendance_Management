@@ -1,5 +1,5 @@
 import React from 'react';
-import SignInForm from '../components/auth/SignInForm';
+import SignInForm from '../components/auth/signin/SignInForm';
 import AttendifyLogo from '../components/Logo/Attendify';
 
 const SignInPage = () => {

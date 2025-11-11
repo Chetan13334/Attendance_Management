@@ -107,6 +107,9 @@ const eventSlice = createSlice({
       .addCase(listenToEvents.pending, (state) => {
         state.loading = true; // Set loading when we start listening
       })
+      .addCase(listenToEvents.fulfilled, (state) => {
+        state.loading = false; // Reset loading when data is successfully received
+      })
       // Optional: Optimistic update for deletion
       .addCase(deleteEvent.fulfilled, (state, action) => {
           state.list = state.list.filter(event => event.id !== action.payload);

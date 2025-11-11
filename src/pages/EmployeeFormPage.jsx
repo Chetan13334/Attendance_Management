@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { signOutUser } from "../redux/slices/authSlice"; // ✅ Redux logout
 
 import Sidebar from "../components/common/Sidebar.jsx";
-import Navbar from "../components/common/Navbar.jsx";
-import EmployeeForm from "../components/dashboard/EmployeeForm.jsx";
+import Navbar from "../components/common/navbar/Navbar.jsx";
+import EmployeeForm from "../components/dashboard/employee/EmployeeForm.jsx";
 
 const EmployeeFormPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -13,13 +13,6 @@ const EmployeeFormPage = () => {
   const dispatch = useDispatch();
 
   const { user, isAuthenticated } = useSelector((state) => state.auth);
-
-  // 🚫 Redirect to SignIn if user not authenticated
-  useEffect(() => {
-    if (!isAuthenticated || !user) {
-      navigate("/signin", { replace: true });
-    }
-  }, [isAuthenticated, user, navigate]);
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
@@ -31,13 +24,13 @@ const EmployeeFormPage = () => {
   if (!isAuthenticated || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-gray-600">Loading Dashboard...</div>
+        <div className="text-gray-600">Loading Employee Form...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 flex">
       {/* Sidebar */}
       <Sidebar
         isOpen={isSidebarOpen}
@@ -50,10 +43,9 @@ const EmployeeFormPage = () => {
         {/* Navbar */}
         <Navbar toggleSidebar={toggleSidebar} handleSignOut={handleSignOut} />
 
+        {/* Employee Form Content */}
         <main className="pt-20 px-4 sm:px-6 pb-8">
-          <div>
-            <EmployeeForm />
-          </div>
+          <EmployeeForm />
         </main>
       </div>
     </div>

@@ -1,0 +1,146 @@
+import React from "react";
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import LegendBar from "../../../components/common/LegendBar";
+import AttendanceCellUI from "./AttendanceCell.ui";
+import StudentProfileUI from "./StudentProfile.ui";
+
+const CalendarUI = ({
+  selectedStudents,
+  attendance,
+  currentWeekStart,
+  daysOfWeek,
+  formattedStudents,
+  handleToggleSelect,
+  handleCellClick,
+  handlePreviousWeek,
+  handleNextWeek,
+  handleToday,
+  handleOpenCalendarModal,
+  attendanceStatuses
+}) => {
+  const gridColsClass = "grid grid-cols-[300px_repeat(5,minmax(0,1fr))]";
+
+  return (
+    <div className="mt-15 p-8 md:p-0 min-h-screen bg-gray-100 font-sans">
+      <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="flex items-center justify-between p-4 bg-gray-50 border-b border-gray-200">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleOpenCalendarModal}
+              className="px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm font-medium"
+            >
+              Show Calendar
+            </button>
+
+            <button
+              onClick={handleToday}
+              className="px-3 py-1.5 bg-green-500 text-white rounded-md hover:bg-green-700 text-sm font-medium"
+            >
+              Today
+            </button>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handlePreviousWeek}
+              className="p-2 rounded-md hover:bg-gray-200 transition-colors"
+              title="Previous Week"
+            >
+              <ChevronLeft className="w-5 h-5 text-gray-600" />
+            </button>
+
+            <div className="text-sm font-semibold text-gray-700">
+              {daysOfWeek[0]?.month} {daysOfWeek[0]?.date} - {daysOfWeek[4]?.month} {daysOfWeek[4]?.date}, {daysOfWeek[0]?.year}
+            </div>
+
+            <button
+              onClick={handleNextWeek}
+              className="p-2 rounded-md hover:bg-gray-200 transition-colors"
+              title="Next Week"
+            >
+              <ChevronRight className="w-5 h-5 text-gray-600" />
+            </button>
+          </div>
+
+          <LegendBar />
+        </div>
+
+        <div className={`${gridColsClass} border-b border-gray-200 text-gray-800 font-semibold text-center`}>
+          <div className="flex items-center justify-start p-4 text-sm font-bold border-r border-gray-200">
+            <span className="mr-1">Employee Profile</span>
+            <ChevronDown className="w-4 h-4 text-gray-400 cursor-pointer" />
+          </div>
+
+          {daysOfWeek.map((day, index) => {
+            const isToday = new Date().toISOString().split("T")[0] === day.fullDate;
+            return (
+              <div
+                key={day.fullDate}
+                className={`p-3 border-r border-gray-200 text-sm flex flex-col justify-center transition-colors
+                  ${day.special === "Holiday" ? "bg-gray-100 text-gray-500" : "text-gray-500"}
+                  ${isToday ? "bg-blue-50" : ""}
+                  ${index === 4 ? "border-r-0" : ""}
+                `}
+              >
+                <span className={`text-lg font-bold ${isToday ? "text-blue-600" : "text-gray-700"}`}>
+                  {day.date}
+                </span>
+                <span className={`text-xs font-medium uppercase mt-0.5 ${isToday ? "text-blue-600" : ""}`}>
+                  {day.day.substring(0, 3)}
+                </span>
+                <span className="text-[10px] text-gray-400 mt-0.5">{day.month}</span>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="divide-y divide-gray-100 max-h-[80vh] overflow-y-auto">
+          {formattedStudents.map((student) => (
+            <div key={student.id} className={`${gridColsClass} hover:bg-red-50/20`}>
+              <StudentProfileUI
+                student={student}
+                isSelected={!!selectedStudents[student.id]}
+                onToggle={handleToggleSelect}
+              />
+
+              {daysOfWeek.map((day) => {
+                const statusKey = attendance[student.id]?.[day.date] || "on-time";
+                const isHoliday = day.special === "Holiday";
+                const holidayDetail = day.detail || null;
+
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const cellDate = new Date(day.fullDate);
+                cellDate.setHours(0, 0, 0, 0);
+                const isFuture = cellDate > today;
+
+                return (
+                  <AttendanceCellUI
+                    key={day.fullDate}
+                    studentId={student.id}
+                    date={day.date}
+                    statusKey={statusKey}
+                    isHoliday={isHoliday}
+                    isFuture={isFuture}
+                    holidayDetail={holidayDetail}
+                    onClick={handleCellClick}
+                    attendanceStatuses={attendanceStatuses}
+                  />
+                );
+              })}
+            </div>
+          ))}
+        </div>
+
+        <div className="p-4 border-t border-gray-200 text-sm text-gray-500 flex justify-between items-center">
+          <span className="font-medium">Total Employees: {formattedStudents.length}</span>
+          <span>
+            Week of {daysOfWeek[0]?.month} {daysOfWeek[0]?.date} - {daysOfWeek[4]?.month} {daysOfWeek[4]?.date}, {daysOfWeek[0]?.year}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CalendarUI;

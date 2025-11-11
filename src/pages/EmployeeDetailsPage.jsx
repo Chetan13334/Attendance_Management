@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { signOutUser } from "../redux/slices/authSlice"; // ✅ Redux logout
 
 import Sidebar from "../components/common/Sidebar.jsx";
-import Navbar from "../components/common/Navbar.jsx";
-import Employee_Details from "../components/dashboard/Employee_Details.jsx";
+import Navbar from "../components/common/navbar/Navbar.jsx";
+import Employee_Details from "../components/dashboard/employee/Employee_Details.jsx";
 
 const EmployeeDetailsPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -14,13 +14,6 @@ const EmployeeDetailsPage = () => {
 
   const { user, isAuthenticated } = useSelector((state) => state.auth);
 
-  // 🚫 Redirect to SignIn if user not authenticated
-  useEffect(() => {
-    if (!isAuthenticated || !user) {
-      navigate("/signin", { replace: true });
-    }
-  }, [isAuthenticated, user, navigate]);
-
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
   const handleSignOut = () => {
@@ -28,10 +21,16 @@ const EmployeeDetailsPage = () => {
     navigate("/signin");
   };
 
-  if (!isAuthenticated || !user) return null;
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-gray-600">Loading Employee Details...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 flex">
       {/* Sidebar */}
       <Sidebar
         isOpen={isSidebarOpen}
@@ -44,10 +43,9 @@ const EmployeeDetailsPage = () => {
         {/* Navbar */}
         <Navbar toggleSidebar={toggleSidebar} handleSignOut={handleSignOut} />
 
+        {/* Employee Details Content */}
         <main className="pt-20 px-4 sm:px-6 pb-8">
-          <div>
-            <Employee_Details />
-          </div>
+          <Employee_Details />
         </main>
       </div>
     </div>

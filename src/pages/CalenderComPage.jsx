@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { signOutUser } from "../redux/slices/authSlice"; // ✅ Redux sign-out
+import { signOutUser } from "../redux/slices/authSlice"; // ✅ Redux logout
 
 import Sidebar from "../components/common/Sidebar.jsx";
-import Navbar from "../components/common/Navbar.jsx";
-import CalenderCom from "../components/common/CalenderCom.jsx";
+import Navbar from "../components/common/navbar/Navbar.jsx";
+import CalenderCom from "../components/common/calendarcom/CalenderCom.jsx";
 
 const CalenderComPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -14,13 +14,6 @@ const CalenderComPage = () => {
 
   const { user, isAuthenticated } = useSelector((state) => state.auth);
 
-  // Redirect if not logged in
-  useEffect(() => {
-    if (!isAuthenticated || !user) {
-      navigate("/signin", { replace: true });
-    }
-  }, [isAuthenticated, user, navigate]);
-
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
   const handleSignOut = () => {
@@ -28,18 +21,30 @@ const CalenderComPage = () => {
     navigate("/signin");
   };
 
-  if (!isAuthenticated || !user) return null;
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-gray-600">Loading Calendar...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 flex">
+      {/* Sidebar */}
       <Sidebar
         isOpen={isSidebarOpen}
         setIsOpen={setIsSidebarOpen}
         handleSignOut={handleSignOut}
       />
+
+      {/* Main content wrapper */}
       <div className="flex-1 lg:ml-64">
+        {/* Navbar */}
         <Navbar toggleSidebar={toggleSidebar} handleSignOut={handleSignOut} />
-        <main className="pt-20 px-4">
+
+        {/* Calendar Content */}
+        <main className="pt-20 px-4 sm:px-6 pb-8">
           <CalenderCom />
         </main>
       </div>

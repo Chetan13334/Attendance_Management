@@ -13,7 +13,6 @@ import { listenToAuthState } from "../redux/slices/authSlice"; // ✅ sync Redux
 import SignInPage from "../pages/SignInPage";
 import SignUpPage from "../pages/SignUpPage";
 import DashboardPage from "../pages/AttendancePage";
-import ReportPage from "../pages/ReportPage";
 import CalenderPage from "../pages/CalenderPage";
 import EmployeeFormPage from "../pages/EmployeeFormPage";
 import EmployeeDetailsPage from "../pages/EmployeeDetailsPage";
@@ -62,14 +61,6 @@ const AppRouter = () => {
           element={
             <ProtectedRoute>
               <DashboardPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/report"
-          element={
-            <ProtectedRoute>
-              <ReportPage />
             </ProtectedRoute>
           }
         />
