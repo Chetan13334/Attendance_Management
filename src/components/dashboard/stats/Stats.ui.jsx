@@ -1,5 +1,6 @@
 import React from "react";
 import { UserCheck, UserX, Clock, Calendar } from "lucide-react";
+import { SkeletonLoader } from "../../common/skeleton/Skeleton";
 
 const StatCardUI = ({ title, value, icon: Icon, color, onClick }) => {
   // Create classes dynamically instead of using template literals with variables
@@ -43,7 +44,25 @@ const StatCardUI = ({ title, value, icon: Icon, color, onClick }) => {
   );
 };
 
+// Skeleton version of StatCardUI
+const StatCardSkeleton = () => (
+  <SkeletonLoader type="card" />
+);
+
 const StatsUI = ({ currentStats }) => {
+  // Check if we're in loading state (values are "...")
+  const isLoading = currentStats.some(stat => stat.value === "...");
+  
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[...Array(4)].map((_, index) => (
+          <StatCardSkeleton key={index} />
+        ))}
+      </div>
+    );
+  }
+  
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {currentStats.map((stat, index) => (

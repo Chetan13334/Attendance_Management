@@ -1,5 +1,6 @@
 import React from "react";
 import { getRoleColor, getGenderColor } from "./useEmployeeDetailsData";
+import { SkeletonLoader } from "../../common/skeleton/Skeleton";
 
 // --- Helper components (MOVED FROM MAIN COMPONENT) ---
 
@@ -17,16 +18,25 @@ const GenderPill = ({ gender }) => {
   return <span className={className}>{gender || "N/A"}</span>;
 };
 
-const LoadingSpinner = () => (
-  <div className="flex justify-center items-center py-20">
-    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
-    <p className="text-lg text-gray-500 ml-4">Loading employee data...</p>
+const LoadingSkeleton = () => (
+  <div className="min-h-screen bg-white py-10 px-4 overflow-x-hidden">
+    <h2 className="text-2xl font-bold text-gray-800 mb-8 inline-block pb-1">
+      Employee Details
+    </h2>
+    
+    <div className="max-w-7xl mx-auto bg-white rounded-lg shadow-none">
+      <div className="rounded-lg border border-gray-200">
+        <div className="overflow-x-auto">
+          <SkeletonLoader type="table" rows={8} />
+        </div>
+      </div>
+    </div>
   </div>
 );
 
 const EmployeeDetailsUI = ({ employees, loading, error, navigate }) => {
   if (loading) 
-    return <LoadingSpinner />;
+    return <LoadingSkeleton />;
 
   if (error)
     return <p className="text-center mt-10 text-red-500">Error fetching data: {error}</p>;

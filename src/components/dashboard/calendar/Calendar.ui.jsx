@@ -57,7 +57,8 @@ const CalendarUI = ({
             </button>
           </div>
 
-          <LegendBar />
+          <LegendBar attendanceData={attendance} />
+
         </div>
 
         <div className={`${gridColsClass} border-b border-gray-200 text-gray-800 font-semibold text-center`}>

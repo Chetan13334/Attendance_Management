@@ -37,15 +37,15 @@ const getInitials = (name) =>
 export const attendanceStatuses = {
   "on-time": {
     label: "On time",
-    classes: "bg-green-50 text-green-800 border-l-green-900", 
+    classes: "bg-green-50 text-green-800 border-l-4 border-l-green-500", 
   },
   late: {
     label: "Late",
-    classes: "bg-yellow-50 text-yellow-800 border-l-yellow-400",
+    classes: "bg-yellow-50 text-yellow-800 border-l-4 border-l-yellow-400",
   },
   absent: {
     label: "Absent",
-    classes: "bg-red-50 text-red-800 border-l-red-500",
+    classes: "bg-red-50 text-red-800 border-l-4 border-l-red-500",
   },
 };
 

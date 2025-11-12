@@ -1,8 +1,28 @@
 // src/components/dashboard/attendance/AttendanceTable.ui.jsx
 
 import React from "react";
+import { SkeletonLoader } from "../../common/skeleton/Skeleton";
 
-const AttendanceTableUI = ({ mergedRecords, getStatusClasses }) => {
+const AttendanceTableUI = ({ mergedRecords, getStatusClasses, loading }) => {
+  // Show skeleton loader when loading
+  if (loading) {
+    return (
+      <div className="bg-white rounded-xl shadow-lg mt-8">
+        {/* Header */}
+        <div className="p-4 sm:p-6 border-b border-gray-100">
+          <h3 className="text-xl font-semibold text-gray-800">
+            Attendance Records
+          </h3>
+        </div>
+
+        {/* Table Skeleton */}
+        <div className="overflow-x-auto">
+          <SkeletonLoader type="table" rows={8} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-xl shadow-lg mt-8">
       {/* Header */}
@@ -96,4 +116,3 @@ const AttendanceTableUI = ({ mergedRecords, getStatusClasses }) => {
 };
 
 export default AttendanceTableUI;
-  

@@ -18,7 +18,7 @@ const attendanceStatuses = {
   "on-time": {
     label: "On time",
     detail: null,
-    classes: "bg-green-50 text-green-800 border-l-green-500",
+    classes: "bg-green-200 text-green-800 border-l-green-500",
   },
   "absent": {
     label: "Absent",

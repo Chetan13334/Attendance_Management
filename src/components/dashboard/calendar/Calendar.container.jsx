@@ -1,14 +1,19 @@
 import React from "react";
 import CalendarUI from "./Calendar.ui";
 import { useCalendarData } from "./useCalendarData";
+import SkeletonLoader from "../../common/skeleton/SkeletonLoader";
 
 const CalendarContainer = () => {
   const data = useCalendarData();
 
   if (!data || data.loading) {
     return (
-      <div className="flex items-center justify-center h-[70vh] text-gray-500 text-sm">
-        Loading calendar data...
+      <div className="p-8 md:p-0 min-h-screen bg-gray-100 font-sans">
+        <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
+          <div className="flex-grow">
+            <SkeletonLoader type="calendar" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -32,7 +37,7 @@ const CalendarContainer = () => {
   if (!formattedStudentsWithInitials?.length) {
     return (
       <div className="flex items-center justify-center h-[70vh] text-gray-500 text-sm">
-        No employee data found.
+        Oops ! No employee data found.
       </div>
     );
   }

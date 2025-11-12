@@ -69,16 +69,30 @@ const CalendarUI = ({
                 {week.map((date, di) => {
                   const dayEvents = getEventsForDate(date);
                   const birthdays = getBirthdaysForDate(date);
+                  
+                  // Check if this date is today
+                  const isToday = date && 
+                    date.getDate() === new Date().getDate() &&
+                    date.getMonth() === new Date().getMonth() &&
+                    date.getFullYear() === new Date().getFullYear();
 
                   return (
                     <td
                       key={di}
                       onClick={() => date && handleDayClick(date)}
-                      className="border border-gray-200 p-1 h-32 sm:h-40 overflow-hidden cursor-pointer align-top hover:bg-gray-100"
+                      className={`border border-gray-200 p-1 h-32 sm:h-40 overflow-hidden cursor-pointer align-top ${
+                        isToday 
+                          ? "bg-gray-200 text-white hover:bg-gray-300" 
+                          : "hover:bg-gray-100"
+                      }`}
                     >
                       {date ? (
                         <div className="flex flex-col h-full">
-                          <div className="text-gray-500 text-sm text-center">
+                          <div className={`text-sm text-center rounded-full w-7 h-7 flex items-center justify-center mx-auto ${
+                            isToday 
+                              ? "bg-white text-blue-600 font-bold" 
+                              : "text-gray-500"
+                          }`}>
                             {date.getDate()}
                           </div>
 

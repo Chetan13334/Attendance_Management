@@ -1,65 +1,95 @@
 import React from 'react';
 
-// Data for the legend bar, including colors for the dot and text.
-const legendData = [
-  {
-    label: 'Holiday',
-    value: null, // No percentage for Holiday
-    dotColor: 'bg-gray-600',
-    textColor: 'text-gray-800',
-  },
-  {
-    label: 'On time',
-    value: '82%',
-    dotColor: 'bg-pink-400', // Using pink to approximate the light purple/pink dot
-    textColor: 'text-gray-800',
-  },
-  {
-    label: 'Late',
-    value: '10%',
-    dotColor: 'bg-yellow-400',
-    textColor: 'text-gray-800',
-  },
-  {
-    label: 'Absent',
-    value: '8%',
-    dotColor: 'bg-red-500',
-    textColor: 'text-gray-800',
-  },
-];
+const LegendBar = ({ attendanceData = {} }) => {
+  // Check if we have attendance data
+  const hasData = Object.keys(attendanceData).length > 0;
+  
+  // Calculate percentages based on real attendance data
+  const calculatePercentages = () => {
+    let totalCells = 0;
+    let onTimeCount = 0;
+    let lateCount = 0;
+    let absentCount = 0;
+    
+    // Iterate through all attendance data to count statuses
+    Object.values(attendanceData).forEach(employee => {
+      Object.values(employee).forEach(status => {
+        totalCells++;
+        if (status === 'on-time') onTimeCount++;
+        else if (status === 'late') lateCount++;
+        else if (status === 'absent') absentCount++;
+      });
+    });
+    
+    // Calculate percentages
+    const onTimePercent = totalCells > 0 ? Math.round((onTimeCount / totalCells) * 100) : 0;
+    const latePercent = totalCells > 0 ? Math.round((lateCount / totalCells) * 100) : 0;
+    const absentPercent = totalCells > 0 ? Math.round((absentCount / totalCells) * 100) : 0;
+    
+    return { onTimePercent, latePercent, absentPercent };
+  };
+  
+  // Add error handling for the calculation
+  let percentages = { onTimePercent: 0, latePercent: 0, absentPercent: 0 };
+  try {
+    percentages = calculatePercentages();
+  } catch (error) {
+    console.error("Error calculating percentages:", error);
+  }
+  
+  const { onTimePercent, latePercent, absentPercent } = percentages;
 
-/**
- * Individual Legend Item Component (the "pill")
- */
-const LegendItem = ({ label, value, dotColor, textColor }) => (
-  <div
-    className="flex items-center cursor-pointer transition duration-150 ease-in-out
-               hover:scale-[1.03] hover: px-2 py-1 "
-  >
-    {/* Colored Dot */}
-    <span
-      className={`w-2.5 h-2.5 rounded-full mr-2 ${dotColor} flex-shrink-0`}
-      aria-hidden="true"
-    ></span>
+  const legendData = [
+    {
+      label: 'Holiday',
+      value: null, 
+      dotColor: 'bg-gray-600',
+      textColor: 'text-gray-800',
+    },
+    {
+      label: 'On time',
+      value: hasData ? `${onTimePercent}%` : '--%',
+      dotColor: 'bg-green-500', 
+      textColor: 'text-gray-800',
+    },
+    {
+      label: 'Late',
+      value: hasData ? `${latePercent}%` : '--%',
+      dotColor: 'bg-yellow-400',
+      textColor: 'text-gray-800',
+    },
+    {
+      label: 'Absent',
+      value: hasData ? `${absentPercent}%` : '--%',
+      dotColor: 'bg-red-500',
+      textColor: 'text-gray-800',
+    },
+  ];
 
-    {/* Label and Value */}
-    <span className={`text-sm font-medium ${textColor}`}>
-      {label}
-      {/* Conditionally display the value if it exists */}
-      {value && <span className="ml-1 font-semibold">{value}</span>}
-    </span>
-  </div>
-);
+  const LegendItem = ({ label, value, dotColor, textColor }) => (
+    <div
+      className="flex items-center cursor-pointer transition duration-150 ease-in-out
+                 hover:scale-[1.03] hover: px-2 py-1 "
+    >
+    
+      <span
+        className={`w-2.5 h-2.5 rounded-full mr-2 ${dotColor} flex-shrink-0`}
+        aria-hidden="true"
+      ></span>
 
-/**
- * Main App Component: Renders the entire Legend Bar
- */
-const LegendBar = () => {
+    
+      <span className={`text-sm font-medium ${textColor}`}>
+        {label}
+       
+        {value && <span className="ml-1 font-semibold">{value}</span>}
+      </span>
+    </div>
+  );
+
   return (
     <div className="  flex items-center justify-center p-0">
       <div className="max-w-full">
         
-        {/* The main container for the legend bar, featuring the pill-shaped background and shadow */}
         <div
           className="flex flex-wrap items-center justify-center p-1 bg-white
                      rounded-[32px] shadow-xl space-x-2 sm:space-x-4 border border-gray-100"
