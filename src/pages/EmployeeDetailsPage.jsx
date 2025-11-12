@@ -5,7 +5,7 @@ import { signOutUser } from "../redux/slices/authSlice"; // ✅ Redux logout
 
 import Sidebar from "../components/common/Sidebar.jsx";
 import Navbar from "../components/common/navbar/Navbar.jsx";
-import Employee_Details from "../components/dashboard/employee/Employee_Details.jsx";
+import Employee_Details from "../components/dashboard/employeeDetails/Employee_Details.jsx";
 
 const EmployeeDetailsPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);

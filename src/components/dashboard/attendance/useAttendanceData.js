@@ -1,6 +1,8 @@
+// src/components/dashboard/attendance/useAttendanceData.js
+
 import { useSelector } from "react-redux";
 
-// DUMMY_RECORDS moved here from UI component
+// Dummy data to simulate attendance records
 const DUMMY_RECORDS = [
   { time: "09:05 AM", status: "Present", remarks: "On time" },
   { time: "09:12 AM", status: "Late", remarks: "5 min late" },
@@ -19,8 +21,7 @@ const DUMMY_RECORDS = [
 ];
 
 export const useAttendanceData = () => {
-  // Use Redux selector instead of direct Firebase access
-  const employees = useSelector(state => state.employees.list);
+  const employees = useSelector((state) => state.employees.list);
 
   const mergedRecords = employees.map((emp, index) => {
     const dummy = DUMMY_RECORDS[index] || {
@@ -28,21 +29,21 @@ export const useAttendanceData = () => {
       status: "Absent",
       remarks: "Not marked",
     };
+
     return {
       id: emp.id || emp.EmployeeID || "",
       employeeId: emp.EmployeeID || emp.employeeId || "",
-      name: emp.name || emp.Name || "",
+      name: emp.Name || emp.name || "",
+      photo: emp.Photo || "", // ✅ New field for Cloudinary image
       date: new Date().toLocaleDateString(),
       ...dummy,
     };
   });
 
-  return {
-    mergedRecords
-  };
+  return { mergedRecords };
 };
 
-// getStatusClasses moved here from UI component
+// ✅ Helper for status color badges
 export const getStatusClasses = (status) => {
   if (status === "Present") return "bg-green-100 text-green-800";
   if (status === "Absent") return "bg-red-100 text-red-800";
