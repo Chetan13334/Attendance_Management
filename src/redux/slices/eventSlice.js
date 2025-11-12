@@ -30,15 +30,17 @@ export const listenToEvents = createAsyncThunk(
                 const list = snapshot.docs.map((d) => {
                     const data = d.data();
                     
-                    // 🚨 CRITICAL FIX: Convert Firestore Timestamps to JavaScript Date Objects
-                    const event_date = data.event_date?.toDate ? data.event_date.toDate() : data.event_date;
-                    const created_at = data.created_at?.toDate ? data.created_at.toDate() : data.created_at;
+                    // ✅ FIXED: Convert Firestore Timestamps to ISO strings for Redux serialization
+                    const event_date = data.event_date?.toDate ? data.event_date.toDate().toISOString() : 
+                                     data.event_date ? new Date(data.event_date).toISOString() : null;
+                    const created_at = data.created_at?.toDate ? data.created_at.toDate().toISOString() : 
+                                     data.created_at ? new Date(data.created_at).toISOString() : null;
 
                     return {
                         id: d.id,
                         ...data,
-                        event_date: event_date, // Now a serializable JS Date
-                        created_at: created_at, // Now a serializable JS Date
+                        event_date: event_date, // Now a serializable ISO string
+                        created_at: created_at, // Now a serializable ISO string
                     };
                 });
                 
@@ -69,10 +71,16 @@ export const createEvent = createAsyncThunk(
     const docRef = await addDoc(colRef, {
       event_title,
       event_theme,
-      event_date,
+      event_date, // This can be a Date object, Firestore will handle it
       created_at: serverTimestamp(),
     });
-    return { id: docRef.id, event_title, event_theme, event_date };
+    // ✅ Return ISO string for Redux
+    return { 
+      id: docRef.id, 
+      event_title, 
+      event_theme, 
+      event_date: event_date instanceof Date ? event_date.toISOString() : event_date 
+    };
   }
 );
 

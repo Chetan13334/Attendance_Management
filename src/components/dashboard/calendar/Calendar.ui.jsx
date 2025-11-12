@@ -32,12 +32,7 @@ const CalendarUI = ({
               Show Calendar
             </button>
 
-            <button
-              onClick={handleToday}
-              className="px-3 py-1.5 bg-green-500 text-white rounded-md hover:bg-green-700 text-sm font-medium"
-            >
-              Today
-            </button>
+           
           </div>
 
           <div className="flex items-center gap-4">
@@ -104,7 +99,8 @@ const CalendarUI = ({
               />
 
               {daysOfWeek.map((day) => {
-                const statusKey = attendance[student.id]?.[day.date] || "on-time";
+                // Get attendance status, use fullDate as key
+                const statusKey = attendance[student.id]?.[day.fullDate] ?? "absent";
                 const isHoliday = day.special === "Holiday";
                 const holidayDetail = day.detail || null;
 
@@ -118,7 +114,7 @@ const CalendarUI = ({
                   <AttendanceCellUI
                     key={day.fullDate}
                     studentId={student.id}
-                    date={day.date}
+                    date={day.fullDate} // Pass fullDate instead of just date
                     statusKey={statusKey}
                     isHoliday={isHoliday}
                     isFuture={isFuture}
@@ -132,12 +128,7 @@ const CalendarUI = ({
           ))}
         </div>
 
-        <div className="p-4 border-t border-gray-200 text-sm text-gray-500 flex justify-between items-center sticky bottom-0 bg-white">
-          <span className="font-medium">Total Employees: {formattedStudents.length}</span>
-          <span>
-            Week of {daysOfWeek[0]?.month} {daysOfWeek[0]?.date} - {daysOfWeek[4]?.month} {daysOfWeek[4]?.date}, {daysOfWeek[0]?.year}
-          </span>
-        </div>
+       
       </div>
     </div>
   );
