@@ -1,13 +1,10 @@
-// src/components/common/AllEventsModal.jsx (Updated)
-
 import React from "react";
 import { createPortal } from "react-dom";
-import { Calendar } from "lucide-react";
 import { useSelector } from "react-redux";
 // Import the refactored content component
-import EventsListContent from "./EventListContent";
+import EventListContentContainer from "../eventlistcontent/EventListContent.container";
 
-const AllEventsModal = ({ onClose }) => {
+const AllEventsModalContainer = ({ onClose }) => {
   // Use selector only for the count for the header
   const { list: events = [] } = useSelector((state) => state.events);
 
@@ -17,7 +14,6 @@ const AllEventsModal = ({ onClose }) => {
         {/* Modal Header */}
         <div className="p-6 border-b bg-gradient-to-r from-indigo-50 to-purple-50 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <Calendar className="h-7 w-7 text-indigo-600" />
             <div>
               <h2 className="text-xl font-bold">All Events</h2>
               <p className="text-sm text-gray-600">{events.length} events</p>
@@ -29,11 +25,11 @@ const AllEventsModal = ({ onClose }) => {
         </div>
 
         {/* Modal Body: Use the core content component */}
-        <EventsListContent isModal={true} /> 
+        <EventListContentContainer isModal={true} onClose={onClose} /> 
       </div>
     </div>,
     document.body
   );
 };
 
-export default AllEventsModal;
+export default AllEventsModalContainer;

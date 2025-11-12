@@ -21,8 +21,8 @@ const CalendarUI = ({
   const gridColsClass = "grid grid-cols-[300px_repeat(5,minmax(0,1fr))]";
 
   return (
-    <div className="mt-15 p-8 md:p-0 min-h-screen bg-gray-100 font-sans">
-      <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+    <div className="p-8 md:p-0 min-h-screen bg-gray-100 font-sans">
+      <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
         <div className="flex items-center justify-between p-4 bg-gray-50 border-b border-gray-200">
           <div className="flex items-center gap-2">
             <button
@@ -94,7 +94,7 @@ const CalendarUI = ({
           })}
         </div>
 
-        <div className="divide-y divide-gray-100 max-h-[80vh] overflow-y-auto">
+        <div className="divide-y divide-gray-100 flex-grow overflow-y-auto">
           {formattedStudents.map((student) => (
             <div key={student.id} className={`${gridColsClass} hover:bg-red-50/20`}>
               <StudentProfileUI
@@ -132,7 +132,7 @@ const CalendarUI = ({
           ))}
         </div>
 
-        <div className="p-4 border-t border-gray-200 text-sm text-gray-500 flex justify-between items-center">
+        <div className="p-4 border-t border-gray-200 text-sm text-gray-500 flex justify-between items-center sticky bottom-0 bg-white">
           <span className="font-medium">Total Employees: {formattedStudents.length}</span>
           <span>
             Week of {daysOfWeek[0]?.month} {daysOfWeek[0]?.date} - {daysOfWeek[4]?.month} {daysOfWeek[4]?.date}, {daysOfWeek[0]?.year}

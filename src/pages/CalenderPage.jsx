@@ -44,7 +44,7 @@ const CalenderPage = () => {
         <Navbar toggleSidebar={toggleSidebar} handleSignOut={handleSignOut} />
 
         {/* Calendar Content */}
-        <main className="pt-20 px-4 sm:px-6 pb-8">
+        <main className="pt-20">
           <MainCalender />
         </main>
       </div>

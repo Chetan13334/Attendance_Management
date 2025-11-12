@@ -1,10 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Calendar, Tag, X } from "lucide-react";
-import { useDispatch, useSelector } from "react-redux";
-import { listenToEvents } from "../../redux/slices/eventSlice";
 
-/* ───────────── Event Card ───────────── */
-const EventCard = ({ event, index }) => {
+// Event Card Component
+export const EventCard = ({ event, index }) => {
   const colors = {
     blue: { bg: "bg-blue-50", icon: "text-blue-600", shadow: "59,130,246" },
     red: { bg: "bg-red-50", icon: "text-red-600", shadow: "239,68,68" },
@@ -52,8 +50,8 @@ const EventCard = ({ event, index }) => {
   );
 };
 
-/* ───────────── Skeleton Loader ───────────── */
-const EventSkeleton = () => (
+// Skeleton Loader for Events
+export const EventSkeleton = () => (
   <div className="p-5 rounded-xl bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 animate-pulse space-y-3 transition-all duration-700 ease-in-out">
     <div className="h-4 w-24 bg-gray-300 rounded"></div>
     <div className="h-5 w-3/4 bg-gray-300 rounded"></div>
@@ -61,19 +59,7 @@ const EventSkeleton = () => (
   </div>
 );
 
-/* ───────────── Main Component ───────────── */
-const EventsListContent = ({ isModal = false, onClose }) => {
-  const dispatch = useDispatch();
-  const { list: events = [], loading } = useSelector((state) => state.events);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    dispatch(listenToEvents()).then(() => {
-      // Add a slight delay to show skeleton → data transition
-      setTimeout(() => setLoaded(true), 300);
-    });
-  }, [dispatch]);
-
+const EventListContentUI = ({ events, loading, loaded, isModal = false, onClose }) => {
   return (
     <div
       className={`relative transition-all duration-700 ease-in-out transform overflow-y-auto`}
@@ -91,16 +77,17 @@ const EventsListContent = ({ isModal = false, onClose }) => {
             <Calendar className="w-5 h-5 text-indigo-600" />
             <h2 className="text-lg font-semibold text-gray-800">Events</h2>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100 transition"
-            title="Close"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          {isModal && (
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100 transition"
+              title="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
         {/* Subtle gradient fade */}
-        
       </div>
 
       {/* Content Section */}
@@ -119,23 +106,4 @@ const EventsListContent = ({ isModal = false, onClose }) => {
   );
 };
 
-export default EventsListContent;
-
-/* ───────────── Animations ───────────── */
-const style = document.createElement("style");
-style.innerHTML = `
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.animate-fade-in {
-  animation: fade-in 0.6s ease-out forwards;
-}
-`;
-document.head.appendChild(style);
+export default EventListContentUI;
