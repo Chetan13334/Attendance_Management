@@ -1,32 +1,9 @@
 import React from "react";
+import { getRoleColor, getGenderColor } from "./useEmployeeDetailsData";
 
 // --- Helper components (MOVED FROM MAIN COMPONENT) ---
 
 const RolePill = ({ role }) => {
-  // We'll need to import getRoleColor or pass it as a prop
-  const getRoleColor = (role) => {
-    if (!role) return "bg-gray-100 text-gray-700";
-
-    const lowerCaseRole = role.toLowerCase().trim();
-
-    if (lowerCaseRole.includes("frontend")) {
-      return "bg-yellow-100 text-yellow-700";
-    } else if (lowerCaseRole.includes("backend")) {
-      return "bg-red-100 text-red-700";
-    } else if (lowerCaseRole.includes("fullstack")) {
-      return "bg-purple-100 text-purple-700";
-    } else if (
-      lowerCaseRole.includes("software developer") ||
-      lowerCaseRole.includes("developer")
-    ) {
-      return "bg-green-100 text-green-700";
-    } else if (lowerCaseRole.includes("manager")) {
-      return "bg-blue-100 text-blue-700";
-    } else {
-      return "bg-indigo-100 text-indigo-700";
-    }
-  };
-
   const className = `px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap ${getRoleColor(
     role
   )}`;
@@ -34,21 +11,6 @@ const RolePill = ({ role }) => {
 };
 
 const GenderPill = ({ gender }) => {
-  // We'll need to import getGenderColor or pass it as a prop
-  const getGenderColor = (gender) => {
-    if (!gender) return "bg-gray-100 text-gray-700";
-
-    const lowerCaseGender = gender.toLowerCase().trim();
-
-    if (lowerCaseGender === "male") {
-      return "bg-sky-100 text-sky-700";
-    } else if (lowerCaseGender === "female") {
-      return "bg-pink-100 text-pink-700";
-    } else {
-      return "bg-gray-200 text-gray-700";
-    }
-  };
-
   const className = `px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap ${getGenderColor(
     gender
   )}`;
