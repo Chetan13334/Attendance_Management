@@ -1,20 +1,23 @@
+// src/components/dashboard/attendance/AttendanceTable.ui.jsx
+
 import React from "react";
 
-// UI component only - receives all data and functions as props
 const AttendanceTableUI = ({ mergedRecords, getStatusClasses }) => {
   return (
     <div className="bg-white rounded-xl shadow-lg mt-8">
+      {/* Header */}
       <div className="p-4 sm:p-6 border-b border-gray-100">
         <h3 className="text-xl font-semibold text-gray-800">
           Attendance Records
         </h3>
       </div>
 
+      {/* Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              {["Name", "Employee Id", "Date", "Time", "Status", "Remarks"].map(
+              {["Photo", "Employee Id", "Name", "Date", "Time", "Status", "Remarks"].map(
                 (header) => (
                   <th
                     key={header}
@@ -29,19 +32,46 @@ const AttendanceTableUI = ({ mergedRecords, getStatusClasses }) => {
 
           <tbody className="bg-white divide-y divide-gray-100">
             {mergedRecords.map((record, index) => (
-              <tr key={record.id || index} className="transition duration-150 select-none">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {record.name}
+              <tr
+                key={record.id || index}
+                className="transition duration-150 select-none hover:bg-gray-50"
+              >
+                {/* ✅ Photo */}
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {record.photo ? (
+                    <img
+                      src={record.photo}
+                      alt={record.name}
+                      className="w-10 h-10 rounded-full object-cover shadow-sm hover:scale-105 transition-transform duration-150"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-semibold">
+                      P
+                    </div>
+                  )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+
+                {/* ✅ Employee ID */}
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-medium">
                   {record.employeeId}
                 </td>
+
+                {/* ✅ Name */}
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                  {record.name}
+                </td>
+
+                {/* ✅ Date */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {record.date}
                 </td>
+
+                {/* ✅ Time */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {record.time}
                 </td>
+
+                {/* ✅ Status */}
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
                     className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClasses(
@@ -51,6 +81,8 @@ const AttendanceTableUI = ({ mergedRecords, getStatusClasses }) => {
                     {record.status}
                   </span>
                 </td>
+
+                {/* ✅ Remarks */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                   {record.remarks}
                 </td>
@@ -64,3 +96,4 @@ const AttendanceTableUI = ({ mergedRecords, getStatusClasses }) => {
 };
 
 export default AttendanceTableUI;
+  
