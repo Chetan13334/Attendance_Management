@@ -12,11 +12,6 @@ const AttendanceCellUI = ({
 }) => {
   const status = attendanceStatuses[statusKey] || attendanceStatuses["on-time"];
 
-  const handleClick = useCallback(() => {
-    if (!isFuture && !isHoliday) {
-      onClick(studentId, date, statusKey);
-    }
-  }, [studentId, date, statusKey, onClick, isFuture, isHoliday]);
 
   if (isFuture) {
     return (
@@ -40,12 +35,11 @@ const AttendanceCellUI = ({
   return (
     <div
       className={`
-        flex flex-col justify-center items-center p-0 text-xs font-medium h-full cursor-pointer
+        flex flex-col justify-center items-center p-0 text-xs font-medium h-full
         border-r border-gray-100 transition duration-100 ease-in-out
         ${status.classes}
-        ${statusKey !== "on-time" ? "border-l-4" : "border-l-transparent"}
       `}
-      onClick={handleClick}
+      
     >
       <span className="leading-tight">{status.label}</span>
       {status.detail && (

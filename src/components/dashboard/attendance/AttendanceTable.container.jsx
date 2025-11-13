@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import AttendanceTableUI from "./AttendanceTable.ui";
 import { useAttendanceData, getStatusClasses } from "./useAttendanceData";
 import { listenToEmployees } from "../../../redux/slices/employeeSlice";
@@ -8,6 +8,10 @@ import { listenToEmployees } from "../../../redux/slices/employeeSlice";
 const AttendanceTableContainer = () => {
   const dispatch = useDispatch();
   const { mergedRecords } = useAttendanceData();
+  
+  // Check if employees data is loading
+  const employees = useSelector((state) => state.employees.list);
+  const loading = !employees || employees.length === 0;
 
   useEffect(() => {
     dispatch(listenToEmployees());
@@ -17,6 +21,7 @@ const AttendanceTableContainer = () => {
     <AttendanceTableUI 
       mergedRecords={mergedRecords}
       getStatusClasses={getStatusClasses}
+      loading={loading}
     />
   );
 };

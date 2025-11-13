@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import { Calendar, Tag, X } from "lucide-react";
 import StatsOverview from "../stats/Statsoverview";
 import AttendanceTable from "../attendance/AttendanceTable";
+import { SkeletonLoader } from "../../common/skeleton/Skeleton";
 
 // Event Card Component
 const EventCard = ({ event, index }) => {
@@ -55,16 +56,16 @@ const EventCard = ({ event, index }) => {
 
 // Skeleton Loader for Events
 const EventSkeleton = () => (
-  <div className="p-5 rounded-xl bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 animate-pulse space-y-3 transition-all duration-700 ease-in-out">
-    <div className="h-4 w-24 bg-gray-300 rounded"></div>
-    <div className="h-5 w-3/4 bg-gray-300 rounded"></div>
-    <div className="h-4 w-1/2 bg-gray-200 rounded"></div>
-  </div>
+  <SkeletonLoader type="card" />
 );
 
 const MainContent = () => {
   const [showEvents, setShowEvents] = useState(false);
   const events = useSelector((state) => state.events.list);
+  const employees = useSelector((state) => state.employees.list);
+  
+  // Check if data is loading
+  const isLoading = !employees || employees.length === 0;
 
   // Add CSS animation styles
   useEffect(() => {
@@ -125,7 +126,13 @@ const MainContent = () => {
             </button>
           </div>
           <div className="pt-3 pb-6">
-            {sortedEvents.length > 0 ? (
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[...Array(4)].map((_, i) => (
+                  <EventSkeleton key={i} />
+                ))}
+              </div>
+            ) : sortedEvents.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {sortedEvents.map((event, i) => (
                   <EventCard key={event.id} event={event} index={i} />
