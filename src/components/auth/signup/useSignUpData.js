@@ -11,6 +11,7 @@ export const useSignUpData = () => {
     confirmPassword: "",
   });
   const [errors, setErrors] = useState({});
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -53,8 +54,11 @@ export const useSignUpData = () => {
     }));
 
     if (signUpWithEmail.fulfilled.match(result)) {
-      alert("Account created successfully! Please sign in.");
-      navigate("/signin");
+      setShowSuccessMessage(true);
+      // Redirect to signin after showing success message
+      setTimeout(() => {
+        navigate("/signin");
+      }, 2000);
     } else if (signUpWithEmail.rejected.match(result)) {
       setErrors({ submit: result.error.message });
     }
@@ -66,11 +70,13 @@ export const useSignUpData = () => {
     errors,
     loading,
     error,
+    showSuccessMessage,
     
     // Functions
     setFormData,
     setErrors,
     handleChange,
     handleSubmit,
+    setShowSuccessMessage,
   };
 };

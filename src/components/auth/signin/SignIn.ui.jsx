@@ -3,27 +3,31 @@ import { Link } from "react-router-dom";
 
 // ✅ Success Toast Component
 const SuccessToast = () => (
-  <div
-    className="fixed top-4 left-1/2 -translate-x-1/2 z-50 p-4 w-11/12 max-w-sm rounded-xl bg-green-50 text-green-800 shadow-2xl border border-green-200 transition-all duration-500 ease-in-out transform scale-100 opacity-100"
-    role="alert"
-  >
-    <div className="flex items-center">
-      <svg
-        className="h-6 w-6 text-green-500 flex-shrink-0 mr-3"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
-      </svg>
-      <div>
-        <h3 className="text-lg font-semibold">Login Successful!</h3>
-        <p className="text-sm">You will be redirected shortly.</p>
+  <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-fade-in-down">
+    <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl shadow-2xl p-5 max-w-sm w-full transform transition-all duration-300 hover:scale-105">
+      <div className="flex items-start">
+        <div className="flex-shrink-0">
+          <svg
+            className="h-8 w-8 text-white"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        </div>
+        <div className="ml-4">
+          <h3 className="text-lg font-bold">Welcome Back!</h3>
+          <p className="text-blue-100 mt-1">Login successful. Redirecting to dashboard...</p>
+          <div className="mt-3 w-full bg-blue-400 rounded-full h-1.5">
+            <div className="bg-white h-1.5 rounded-full animate-progress-bar" style={{width: '100%'}}></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
