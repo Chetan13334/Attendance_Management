@@ -7,7 +7,7 @@ const getInitials = (name) =>
     .map((n) => n[0])
     .join("");
 
-const StudentProfileUI = ({ student, isSelected, onToggle }) => (
+const StudentProfileUI = ({ student, isSelected, onToggle, onNameClick }) => (
   <div className="flex items-center p-3 text-sm font-medium border-r border-gray-200">
     <input
       type="checkbox"
@@ -20,7 +20,9 @@ const StudentProfileUI = ({ student, isSelected, onToggle }) => (
     >
       {getInitials(student.name)}
     </div>
-    <span className="text-gray-800">{student.name}</span>
+    <span className="text-gray-800 cursor-pointer hover:text-blue-600" onClick={() => onNameClick(student.id)}>
+      {student.name}
+    </span>
   </div>
 );
 

@@ -1,5 +1,6 @@
 import React from "react";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import LegendBar from "../../../components/common/LegendBar";
 import AttendanceCellUI from "./AttendanceCell.ui";
 import StudentProfileUI from "./StudentProfile.ui";
@@ -18,6 +19,11 @@ const CalendarUI = ({
   handleOpenCalendarModal,
   attendanceStatuses
 }) => {
+  const navigate = useNavigate();
+  
+  const handleNameClick = (studentId) => {
+    navigate(`/employee-calendarcom?employeeId=${studentId}`);
+  };
   const gridColsClass = "grid grid-cols-[300px_repeat(5,minmax(0,1fr))]";
 
   return (
@@ -97,6 +103,7 @@ const CalendarUI = ({
                 student={student}
                 isSelected={!!selectedStudents[student.id]}
                 onToggle={handleToggleSelect}
+                onNameClick={handleNameClick}
               />
 
               {daysOfWeek.map((day) => {

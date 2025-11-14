@@ -18,15 +18,16 @@ import EmployeeFormPage from "../pages/EmployeeFormPage";
 import EmployeeDetailsPage from "../pages/EmployeeDetailsPage";
 import CalenderComPage from "../pages/CalenderComPage";
 import EditEmployeePage from "../pages/EditEmployeePage";
+import EmployeeCalendarComPage from "../pages/EmployeeCalendarComPage";
 
-// ✅ Route Wrappers
+
 import ProtectedRoute from "./ProtectedRoute";
 import PublicRoute from "./PublicRoute";
 
 const AppRouter = () => {
   const dispatch = useDispatch();
 
-  // 🧠 Start listening to Firebase auth state on mount
+ 
   useEffect(() => {
     dispatch(listenToAuthState());
   }, [dispatch]);
@@ -34,10 +35,10 @@ const AppRouter = () => {
   return (
     <Router>
       <Routes>
-        {/* Default redirect */}
+        
         <Route path="/" element={<Navigate to="/signin" replace />} />
 
-        {/* Public Routes (for non-authenticated users only) */}
+      
         <Route
           path="/signin"
           element={
@@ -104,6 +105,16 @@ const AppRouter = () => {
             </ProtectedRoute>
           }
         />
+       
+        <Route
+          path="/employee-calendarcom"
+          element={
+            <ProtectedRoute>
+              <EmployeeCalendarComPage />
+            </ProtectedRoute>
+          }
+        />
+
 
         {/* Catch-all Route */}
         <Route path="*" element={<Navigate to="/signin" replace />} />
