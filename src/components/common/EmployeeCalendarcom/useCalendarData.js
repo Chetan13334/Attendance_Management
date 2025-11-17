@@ -288,13 +288,42 @@ export const useCalendarData = (employeeId) => {
   }, [currentMonth]);
 
   const handleNextMonth = useCallback(() => {
-    if (currentMonth === 11) {
-      setCurrentMonth(0);
-      setCurrentYear((y) => y + 1);
-    } else {
-      setCurrentMonth((m) => m + 1);
-    }
-  }, [currentMonth]);
+  const today = new Date();
+
+  const thisYear = today.getFullYear();
+  const thisMonth = today.getMonth(); // 0-based
+
+  // Prevent navigating to future months
+  if (
+    currentYear > thisYear ||
+    (currentYear === thisYear && currentMonth >= thisMonth)
+  ) {
+    return; // Stop navigation
+  }
+
+  // Otherwise allow month change
+  if (currentMonth === 11) {
+    setCurrentMonth(0);
+    setCurrentYear((y) => y + 1);
+  } else {
+    setCurrentMonth((m) => m + 1);
+  }
+}, [currentMonth, currentYear]);
+
+
+// Disable next-month button if trying to move into the future
+const isNextDisabled = (() => {
+  const today = new Date();
+  const thisYear = today.getFullYear();
+  const thisMonth = today.getMonth(); // 0-based index
+
+  // If current page month is ahead of today's month → disable next
+  return (
+    currentYear > thisYear ||
+    (currentYear === thisYear && currentMonth >= thisMonth)
+  );
+})();
+
 
   // --- Modal ---
   const handleDayClick = useCallback((date) => {
@@ -357,6 +386,9 @@ export const useCalendarData = (employeeId) => {
     employeeAttendance,
     selectedEmployee,
     getAttendanceStatusForDate,
+
+    // ADD THIS ↓↓↓
+    isNextDisabled,
     
     // Functions
     setCurrentMonth,
@@ -370,5 +402,5 @@ export const useCalendarData = (employeeId) => {
     handleDayClick,
     handleAddEvent,
     handleDeleteEvent,
-  };
+};
 };

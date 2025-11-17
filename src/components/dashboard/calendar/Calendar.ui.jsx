@@ -17,10 +17,12 @@ const CalendarUI = ({
   handleNextWeek,
   handleToday,
   handleOpenCalendarModal,
-  attendanceStatuses
+  attendanceStatuses,
+  isNextWeekDisabled,  // <-- ADD THIS
 }) => {
+
   const navigate = useNavigate();
-  
+
   const handleNameClick = (studentId) => {
     navigate(`/employee-calendarcom?employeeId=${studentId}`);
   };
@@ -37,8 +39,6 @@ const CalendarUI = ({
             >
               Show Calendar
             </button>
-
-           
           </div>
 
           <div className="flex items-center gap-4">
@@ -51,46 +51,69 @@ const CalendarUI = ({
             </button>
 
             <div className="text-sm font-semibold text-gray-700">
-              {daysOfWeek[0]?.month} {daysOfWeek[0]?.date} - {daysOfWeek[4]?.month} {daysOfWeek[4]?.date}, {daysOfWeek[0]?.year}
+              {daysOfWeek[0]?.month} {daysOfWeek[0]?.date} -{" "}
+              {daysOfWeek[4]?.month} {daysOfWeek[4]?.date},{" "}
+              {daysOfWeek[0]?.year}
             </div>
 
             <button
               onClick={handleNextWeek}
-              className="p-2 rounded-md hover:bg-gray-200 transition-colors"
+              disabled={isNextWeekDisabled} // <-- new prop
+              className={`p-2 rounded-md transition-colors ${
+                isNextWeekDisabled
+                  ? "cursor-not-allowed text-gray-300"
+                  : "hover:bg-gray-200 text-gray-600"
+              }`}
               title="Next Week"
             >
-              <ChevronRight className="w-5 h-5 text-gray-600" />
+              <ChevronRight className="w-5 h-5" />
             </button>
           </div>
 
           <LegendBar attendanceData={attendance} />
-
         </div>
 
-        <div className={`${gridColsClass} border-b border-gray-200 text-gray-800 font-semibold text-center`}>
+        <div
+          className={`${gridColsClass} border-b border-gray-200 text-gray-800 font-semibold text-center`}
+        >
           <div className="flex items-center justify-start p-4 text-sm font-bold border-r border-gray-200">
             <span className="mr-1">Employee Profile</span>
             <ChevronDown className="w-4 h-4 text-gray-400 cursor-pointer" />
           </div>
 
           {daysOfWeek.map((day, index) => {
-            const isToday = new Date().toISOString().split("T")[0] === day.fullDate;
+            const isToday =
+              new Date().toISOString().split("T")[0] === day.fullDate;
             return (
               <div
                 key={day.fullDate}
                 className={`p-3 border-r border-gray-200 text-sm flex flex-col justify-center transition-colors
-                  ${day.special === "Holiday" ? "bg-gray-100 text-gray-500" : "text-gray-500"}
+                  ${
+                    day.special === "Holiday"
+                      ? "bg-gray-100 text-gray-500"
+                      : "text-gray-500"
+                  }
                   ${isToday ? "bg-blue-50" : ""}
                   ${index === 4 ? "border-r-0" : ""}
                 `}
               >
-                <span className={`text-lg font-bold ${isToday ? "text-blue-600" : "text-gray-700"}`}>
+                <span
+                  className={`text-lg font-bold ${
+                    isToday ? "text-blue-600" : "text-gray-700"
+                  }`}
+                >
                   {day.date}
                 </span>
-                <span className={`text-xs font-medium uppercase mt-0.5 ${isToday ? "text-blue-600" : ""}`}>
+                <span
+                  className={`text-xs font-medium uppercase mt-0.5 ${
+                    isToday ? "text-blue-600" : ""
+                  }`}
+                >
                   {day.day.substring(0, 3)}
                 </span>
-                <span className="text-[10px] text-gray-400 mt-0.5">{day.month}</span>
+                <span className="text-[10px] text-gray-400 mt-0.5">
+                  {day.month}
+                </span>
               </div>
             );
           })}
@@ -98,7 +121,10 @@ const CalendarUI = ({
 
         <div className="divide-y divide-gray-100 flex-grow overflow-y-auto">
           {formattedStudents.map((student) => (
-            <div key={student.id} className={`${gridColsClass} hover:bg-red-50/20`}>
+            <div
+              key={student.id}
+              className={`${gridColsClass} hover:bg-red-50/20`}
+            >
               <StudentProfileUI
                 student={student}
                 isSelected={!!selectedStudents[student.id]}
@@ -108,7 +134,8 @@ const CalendarUI = ({
 
               {daysOfWeek.map((day) => {
                 // Get attendance status, use fullDate as key
-                const statusKey = attendance[student.id]?.[day.fullDate] ?? "absent";
+                const statusKey =
+                  attendance[student.id]?.[day.fullDate] ?? "absent";
                 const isHoliday = day.special === "Holiday";
                 const holidayDetail = day.detail || null;
 
@@ -135,8 +162,6 @@ const CalendarUI = ({
             </div>
           ))}
         </div>
-
-       
       </div>
     </div>
   );

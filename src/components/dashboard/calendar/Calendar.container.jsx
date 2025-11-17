@@ -30,7 +30,9 @@ const CalendarContainer = () => {
     handleToday,
     handleOpenCalendarModal,
     attendanceStatuses,
-  } = data;
+    isNextWeekDisabled,   // <-- ADD THIS LINE
+} = data;
+
 
   const formattedStudentsWithInitials = formattedStudents; // Already formatted in the hook
 
@@ -63,6 +65,7 @@ const CalendarContainer = () => {
       handleToday={handleToday}
       handleOpenCalendarModal={handleOpenCalendarModal}
       attendanceStatuses={attendanceStatuses}
+      isNextWeekDisabled={isNextWeekDisabled}
     />
   );
 };
