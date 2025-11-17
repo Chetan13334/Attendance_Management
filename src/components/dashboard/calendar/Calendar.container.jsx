@@ -6,6 +6,7 @@ import SkeletonLoader from "../../common/skeleton/SkeletonLoader";
 const CalendarContainer = () => {
   const data = useCalendarData();
 
+  // Show skeleton when loading (during initial load/refresh)
   if (!data || data.loading) {
     return (
       <div className="p-8 md:p-0 min-h-screen bg-gray-100 font-sans">
@@ -36,7 +37,7 @@ const CalendarContainer = () => {
 
   const formattedStudentsWithInitials = formattedStudents; // Already formatted in the hook
 
-  if (!formattedStudentsWithInitials?.length) {
+  if (formattedStudentsWithInitials && !formattedStudentsWithInitials.length) {
     return (
       <div className="flex items-center justify-center h-[70vh] text-gray-500 text-sm">
         Oops ! No employee data found.

@@ -1,17 +1,20 @@
 import React from 'react';
 
 const LegendBar = ({ attendanceData = {} }) => {
-  // Check if we have attendance data
-  const hasData = Object.keys(attendanceData).length > 0;
+
   
-  // Calculate percentages based on real attendance data
+  const hasData = Object.keys(attendanceData).length > 0 && 
+    Object.values(attendanceData).some(employee => 
+      Object.keys(employee).length > 0
+    );
+
   const calculatePercentages = () => {
     let totalCells = 0;
     let onTimeCount = 0;
     let lateCount = 0;
     let absentCount = 0;
     
-    // Iterate through all attendance data to count statuses
+    
     Object.values(attendanceData).forEach(employee => {
       Object.values(employee).forEach(status => {
         totalCells++;
@@ -21,7 +24,7 @@ const LegendBar = ({ attendanceData = {} }) => {
       });
     });
     
-    // Calculate percentages
+   
     const onTimePercent = totalCells > 0 ? Math.round((onTimeCount / totalCells) * 100) : 0;
     const latePercent = totalCells > 0 ? Math.round((lateCount / totalCells) * 100) : 0;
     const absentPercent = totalCells > 0 ? Math.round((absentCount / totalCells) * 100) : 0;
@@ -29,7 +32,6 @@ const LegendBar = ({ attendanceData = {} }) => {
     return { onTimePercent, latePercent, absentPercent };
   };
   
-  // Add error handling for the calculation
   let percentages = { onTimePercent: 0, latePercent: 0, absentPercent: 0 };
   try {
     percentages = calculatePercentages();
@@ -40,12 +42,12 @@ const LegendBar = ({ attendanceData = {} }) => {
   const { onTimePercent, latePercent, absentPercent } = percentages;
 
   const legendData = [
-    {
-      label: 'Holiday',
-      value: null, 
-      dotColor: 'bg-gray-600',
-      textColor: 'text-gray-800',
-    },
+    // {
+    //   label: 'Holiday',
+    //   value: null, 
+    //   dotColor: 'bg-gray-600',
+    //   textColor: 'text-gray-800',
+    // },
     {
       label: 'On time',
       value: hasData ? `${onTimePercent}%` : '--%',

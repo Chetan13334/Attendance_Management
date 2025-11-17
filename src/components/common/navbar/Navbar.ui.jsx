@@ -54,7 +54,7 @@ const NavbarUI = ({
                 onClick={handleClear}
                 className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500 hover:text-gray-700"
               >
-                <X className="w-4 h-4" />
+                {/* <X className="w-4 h-4" /> */}
               </button>
             )}
           </div>
