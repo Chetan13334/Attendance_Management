@@ -47,6 +47,20 @@ const CalendarUI = ({
     </div>
   );
 
+  // Add a safety check for required props
+  if (!attendanceStatuses || !daysOfWeek || !formattedStudents) {
+    console.warn("CalendarUI: Missing required props", { attendanceStatuses, daysOfWeek, formattedStudents });
+    return (
+      <div className="p-8 md:p-0 min-h-screen bg-gray-100 font-sans">
+        <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
+          <div className="flex items-center justify-center p-4 bg-gray-50 border-b border-gray-200">
+            <div className="text-red-500 font-medium">Error: Missing required data for calendar display</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-8 md:p-0 min-h-screen bg-gray-100 font-sans">
       <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
@@ -118,19 +132,40 @@ const CalendarUI = ({
         </div>
 
         <div className="divide-y divide-gray-100 flex-grow overflow-y-auto">
-          {formattedStudents && formattedStudents.length > 0 ? (
+          {/* Show skeleton loaders when data is loading or when there are no students */}
+          {(!formattedStudents || formattedStudents.length === 0) ? (
+            [...Array(8)].map((_, index) => (
+              <StudentRowSkeleton key={index} />
+            ))
+          ) : (
             formattedStudents.map((student) => (
               <div key={student.id} className={`${gridColsClass} hover:bg-red-50/20`}>
                 <StudentProfileUI
                   student={student}
-                  isSelected={!!selectedStudents[student.id]}
+                  isSelected={!!selectedStudents?.[student.id]}
                   onToggle={handleToggleSelect}
                   onNameClick={handleNameClick}
                 />
 
                 {daysOfWeek.map((day) => {
-                  // Get attendance status, use fullDate as key
-                  const statusKey = attendance[student.id]?.[day.fullDate] ?? "absent";
+                  // Ensure we have a valid attendance status
+                  let statusKey = "absent"; // Default to absent
+                  
+                  try {
+                    // Safely access attendance data
+                    if (attendance && typeof attendance === 'object') {
+                      const studentAttendance = attendance[student.id];
+                      if (studentAttendance && typeof studentAttendance === 'object') {
+                        if (studentAttendance[day.fullDate] !== undefined) {
+                          statusKey = studentAttendance[day.fullDate];
+                        }
+                      }
+                    }
+                  } catch (error) {
+                    console.warn("Error accessing attendance data:", error);
+                    statusKey = "absent"; // Fallback to absent on error
+                  }
+                  
                   const isHoliday = day.special === "Holiday";
                   const holidayDetail = day.detail || null;
 
@@ -142,9 +177,9 @@ const CalendarUI = ({
 
                   return (
                     <AttendanceCellUI
-                      key={day.fullDate}
+                      key={`${student.id}-${day.fullDate}`} // More unique key
                       studentId={student.id}
-                      date={day.fullDate} // Pass fullDate instead of just date
+                      date={day.fullDate}
                       statusKey={statusKey}
                       isHoliday={isHoliday}
                       isFuture={isFuture}
@@ -155,11 +190,6 @@ const CalendarUI = ({
                   );
                 })}
               </div>
-            ))
-          ) : (
-            // Show skeleton loaders when data is loading
-            [...Array(8)].map((_, index) => (
-              <StudentRowSkeleton key={index} />
             ))
           )}
         </div>

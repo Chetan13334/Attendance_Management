@@ -33,9 +33,27 @@ const CalendarContainer = () => {
     attendanceStatuses,
   } = data;
 
-  const formattedStudentsWithInitials = formattedStudents; // Already formatted in the hook
+  // Ensure we have valid data before rendering the UI
+  const safeSelectedStudents = selectedStudents || {};
+  const safeAttendance = attendance || {};
+  const safeDaysOfWeek = Array.isArray(daysOfWeek) ? daysOfWeek : [];
+  const safeFormattedStudents = Array.isArray(formattedStudents) ? formattedStudents : [];
+  const safeAttendanceStatuses = attendanceStatuses || {
+    "on-time": {
+      label: "On time",
+      classes: "bg-green-50 text-green-800 border-l-4 border-l-green-500", 
+    },
+    late: {
+      label: "Late",
+      classes: "bg-yellow-50 text-yellow-800 border-l-4 border-l-yellow-400",
+    },
+    absent: {
+      label: "Absent",
+      classes: "bg-red-50 text-red-800 border-l-4 border-l-red-500",
+    },
+  };
 
-  if (formattedStudentsWithInitials && !formattedStudentsWithInitials.length) {
+  if (safeFormattedStudents.length === 0) {
     return (
       <div className="flex items-center justify-center h-[70vh] text-gray-500 text-sm">
         Oops ! No employee data found.
@@ -43,7 +61,7 @@ const CalendarContainer = () => {
     );
   }
 
-  if (!daysOfWeek?.length) {
+  if (safeDaysOfWeek.length === 0) {
     return (
       <div className="flex items-center justify-center h-[70vh] text-gray-500 text-sm">
         Loading week view...
@@ -53,17 +71,18 @@ const CalendarContainer = () => {
 
   return (
     <CalendarUI
-      selectedStudents={selectedStudents || {}}
-      attendance={attendance || {}}
+      selectedStudents={safeSelectedStudents}
+      attendance={safeAttendance}
       currentWeekStart={currentWeekStart}
-      daysOfWeek={daysOfWeek}
-      formattedStudents={formattedStudentsWithInitials}
+      daysOfWeek={safeDaysOfWeek}
+      formattedStudents={safeFormattedStudents}
+      handleToggleSelect={() => {}} // Add missing prop
       handleCellClick={handleCellClick}
       handlePreviousWeek={handlePreviousWeek}
       handleNextWeek={handleNextWeek}
       handleToday={handleToday}
       handleOpenCalendarModal={handleOpenCalendarModal}
-      attendanceStatuses={attendanceStatuses}
+      attendanceStatuses={safeAttendanceStatuses}
     />
   );
 };
