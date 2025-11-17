@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   listenToEvents,
@@ -28,17 +28,18 @@ export const useCalendarData = () => {
 
   // --- Start real-time listeners ---
   useEffect(() => {
-    dispatch(listenToEvents());
-    dispatch(listenToEmployees());
+    const unsubscribeEvents = dispatch(listenToEvents());
+    const unsubscribeEmployees = dispatch(listenToEmployees());
+    
+    // Cleanup function to unsubscribe when component unmounts
+    return () => {
+      if (typeof unsubscribeEvents === 'function') unsubscribeEvents();
+      if (typeof unsubscribeEmployees === 'function') unsubscribeEmployees();
+    };
   }, [dispatch]);
 
-  // --- DEBUG: Log raw & parsed events ---
-  useEffect(() => {
-    console.log("Raw Events from Redux:", events);
-  }, [events]);
-
   // --- Parse events safely (Handles ISO string OR Firebase Timestamp) ---
-  const getParsedEvents = () => {
+  const getParsedEvents = useMemo(() => {
     return events
       .map((ev) => {
         let eventDate = null;
@@ -62,12 +63,12 @@ export const useCalendarData = () => {
         return { ...ev, event_date: eventDate };
       })
       .filter(Boolean); // Remove nulls
-  };
+  }, [events]);
 
-  const parsedEvents = getParsedEvents();
+  const parsedEvents = getParsedEvents;
 
   // --- Parse employees ---
-  const getParsedEmployees = () => {
+  const getParsedEmployees = useMemo(() => {
     return employees.map((emp) => ({
       ...emp,
       DateOfBirth: emp.DateOfBirth
@@ -78,12 +79,12 @@ export const useCalendarData = () => {
           : emp.DateOfBirth
         : null,
     }));
-  };
+  }, [employees]);
 
-  const parsedEmployees = getParsedEmployees();
+  const parsedEmployees = getParsedEmployees;
 
   // --- Calendar days ---
-  const getCalendarDays = () => {
+  const getCalendarDays = useMemo(() => {
     const firstDay = new Date(currentYear, currentMonth, 1);
     const lastDay = new Date(currentYear, currentMonth + 1, 0);
     const days = [];
@@ -91,38 +92,45 @@ export const useCalendarData = () => {
     for (let d = 1; d <= lastDay.getDate(); d++)
       days.push(new Date(currentYear, currentMonth, d));
     return days;
-  };
+  }, [currentMonth, currentYear]);
 
-  const calendarDays = getCalendarDays();
-  const weeks = [];
-  for (let i = 0; i < calendarDays.length; i += 7)
-    weeks.push(calendarDays.slice(i, i + 7));
+  const calendarDays = getCalendarDays;
+  const weeks = useMemo(() => {
+    const result = [];
+    for (let i = 0; i < calendarDays.length; i += 7)
+      result.push(calendarDays.slice(i, i + 7));
+    return result;
+  }, [calendarDays]);
 
   // --- Birthdays ---
-  const getBirthdaysForDate = (date) => {
-    if (!date) return [];
-    return parsedEmployees.filter((emp) => {
-      if (!emp.DateOfBirth) return false;
-      return (
-        emp.DateOfBirth.getDate() === date.getDate() &&
-        emp.DateOfBirth.getMonth() === date.getMonth()
-      );
-    });
-  };
+  const getBirthdaysForDate = useMemo(() => {
+    return (date) => {
+      if (!date) return [];
+      return parsedEmployees.filter((emp) => {
+        if (!emp.DateOfBirth) return false;
+        return (
+          emp.DateOfBirth.getDate() === date.getDate() &&
+          emp.DateOfBirth.getMonth() === date.getMonth()
+        );
+      });
+    };
+  }, [parsedEmployees]);
 
   // --- Events for date ---
-  const getEventsForDate = (date) => {
-    if (!date) return [];
-    const target = new Date(date);
-    target.setHours(0, 0, 0, 0);
+  const getEventsForDate = useMemo(() => {
+    return (date) => {
+      if (!date) return [];
+      const target = new Date(date);
+      target.setHours(0, 0, 0, 0);
 
-    return parsedEvents.filter((ev) => {
-      if (!ev.event_date) return false;
-      const evDate = new Date(ev.event_date);
-      evDate.setHours(0, 0, 0, 0);
-      return evDate.getTime() === target.getTime();
-    });
-  };
+      return parsedEvents.filter((ev) => {
+        if (!ev.event_date) return false;
+        const evDate = new Date(ev.event_date);
+        evDate.setHours(0, 0, 0, 0);
+        return evDate.getTime() === target.getTime();
+      });
+    };
+  }, [parsedEvents]);
 
   // --- Navigation ---
   const handlePrevMonth = () => {

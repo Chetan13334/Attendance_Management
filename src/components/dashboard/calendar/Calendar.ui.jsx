@@ -25,6 +25,27 @@ const CalendarUI = ({
     navigate(`/employee-calendarcom?employeeId=${studentId}`);
   };
   const gridColsClass = "grid grid-cols-[300px_repeat(5,minmax(0,1fr))]";
+  
+  // Skeleton loader component for student rows
+  const StudentRowSkeleton = () => (
+    <div className={`${gridColsClass} hover:bg-red-50/20 py-4`}>
+      {/* Student profile skeleton */}
+      <div className="flex items-center p-4 border-r border-gray-200">
+        <div className="rounded-full bg-gray-200 animate-pulse w-10 h-10 mr-3"></div>
+        <div className="flex-1">
+          <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4 mb-2"></div>
+          <div className="h-3 bg-gray-200 rounded animate-pulse w-1/2"></div>
+        </div>
+      </div>
+      
+      {/* Attendance cell skeletons */}
+      {[...Array(5)].map((_, index) => (
+        <div key={index} className="p-4 border-r border-gray-200 last:border-r-0 flex items-center justify-center">
+          <div className="h-6 w-16 bg-gray-200 rounded animate-pulse"></div>
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <div className="p-8 md:p-0 min-h-screen bg-gray-100 font-sans">
@@ -97,43 +118,50 @@ const CalendarUI = ({
         </div>
 
         <div className="divide-y divide-gray-100 flex-grow overflow-y-auto">
-          {formattedStudents.map((student) => (
-            <div key={student.id} className={`${gridColsClass} hover:bg-red-50/20`}>
-              <StudentProfileUI
-                student={student}
-                isSelected={!!selectedStudents[student.id]}
-                onToggle={handleToggleSelect}
-                onNameClick={handleNameClick}
-              />
+          {formattedStudents && formattedStudents.length > 0 ? (
+            formattedStudents.map((student) => (
+              <div key={student.id} className={`${gridColsClass} hover:bg-red-50/20`}>
+                <StudentProfileUI
+                  student={student}
+                  isSelected={!!selectedStudents[student.id]}
+                  onToggle={handleToggleSelect}
+                  onNameClick={handleNameClick}
+                />
 
-              {daysOfWeek.map((day) => {
-                // Get attendance status, use fullDate as key
-                const statusKey = attendance[student.id]?.[day.fullDate] ?? "absent";
-                const isHoliday = day.special === "Holiday";
-                const holidayDetail = day.detail || null;
+                {daysOfWeek.map((day) => {
+                  // Get attendance status, use fullDate as key
+                  const statusKey = attendance[student.id]?.[day.fullDate] ?? "absent";
+                  const isHoliday = day.special === "Holiday";
+                  const holidayDetail = day.detail || null;
 
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const cellDate = new Date(day.fullDate);
-                cellDate.setHours(0, 0, 0, 0);
-                const isFuture = cellDate > today;
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  const cellDate = new Date(day.fullDate);
+                  cellDate.setHours(0, 0, 0, 0);
+                  const isFuture = cellDate > today;
 
-                return (
-                  <AttendanceCellUI
-                    key={day.fullDate}
-                    studentId={student.id}
-                    date={day.fullDate} // Pass fullDate instead of just date
-                    statusKey={statusKey}
-                    isHoliday={isHoliday}
-                    isFuture={isFuture}
-                    holidayDetail={holidayDetail}
-                    onClick={handleCellClick}
-                    attendanceStatuses={attendanceStatuses}
-                  />
-                );
-              })}
-            </div>
-          ))}
+                  return (
+                    <AttendanceCellUI
+                      key={day.fullDate}
+                      studentId={student.id}
+                      date={day.fullDate} // Pass fullDate instead of just date
+                      statusKey={statusKey}
+                      isHoliday={isHoliday}
+                      isFuture={isFuture}
+                      holidayDetail={holidayDetail}
+                      onClick={handleCellClick}
+                      attendanceStatuses={attendanceStatuses}
+                    />
+                  );
+                })}
+              </div>
+            ))
+          ) : (
+            // Show skeleton loaders when data is loading
+            [...Array(8)].map((_, index) => (
+              <StudentRowSkeleton key={index} />
+            ))
+          )}
         </div>
 
        

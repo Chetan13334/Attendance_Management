@@ -53,16 +53,16 @@ export const useSignInData = () => {
       password: formData.password
     }));
 
-    if (signInWithEmail.rejected.match(result)) {
-      setErrors({ submit: "Sign In Failed: " + (result.error.message || "Unknown error") });
+    if (result.meta.requestStatus === 'rejected') {
+      setErrors({ submit: "Sign In Failed: " + (result.payload || "Invalid email or password") });
     }
   };
 
   const handleGoogleSignIn = async () => {
     const result = await dispatch(signInWithGoogle());
     
-    if (signInWithGoogle.rejected.match(result)) {
-      setErrors({ submit: "Google Sign In Failed: " + (result.error.message || "Unknown error") });
+    if (result.meta.requestStatus === 'rejected') {
+      setErrors({ submit: "Google Sign In Failed: " + (result.payload || "Unknown error") });
     }
   };
 
