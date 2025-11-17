@@ -1,13 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  collection,
-  doc,
-  getDocs,
-} from "firebase/firestore";
-import { db } from "../../../firebase";
 import { listenToEmployees } from "../../../redux/slices/employeeSlice";
+import { listenToAttendance, fetchCalendarAttendance } from "../../../redux/slices/attendanceSlice";
 
 const getLocalDateKey = (date) => {
   const y = date.getFullYear();
@@ -50,11 +45,13 @@ export const useCalendarData = () => {
 
   // Use Redux data
   const employeeState = useSelector((state) => state.employees);
+  const attendanceState = useSelector((state) => state.attendance);
   
   useEffect(() => {
     // Only dispatch the listener once
     if (!hasDispatchedListener) {
       dispatch(listenToEmployees());
+      dispatch(listenToAttendance());
       setHasDispatchedListener(true);
     }
     
@@ -62,8 +59,14 @@ export const useCalendarData = () => {
     if (employeeState.list && employeeState.list.length > 0) {
       console.log("Loaded Employees from Redux:", employeeState.list);
     }
+    
+    // Use attendance data from Redux
+    if (attendanceState.list) {
+      console.log("Loaded Attendance from Redux:", attendanceState.list);
+    }
+    
     setLoading(false);
-  }, [dispatch, employeeState.list, hasDispatchedListener]);
+  }, [dispatch, employeeState.list, attendanceState.list, hasDispatchedListener]);
 
   const generateWeek = useCallback((start) => {
     const days = [];
@@ -90,13 +93,6 @@ export const useCalendarData = () => {
     setDaysOfWeek(generateWeek(currentWeekStart));
   }, [currentWeekStart, generateWeek]);
 
-  // Helper: convert Firestore Timestamp → Date
-  const toDate = useCallback((ts) => {
-    if (!ts) return null;
-    if (typeof ts.toDate === "function") return ts.toDate();
-    return new Date(ts);
-  }, []);
-
   // Helper function to determine status based on check-in time
   const determineStatus = useCallback((checkIn) => {
     let status = "absent";
@@ -108,135 +104,134 @@ export const useCalendarData = () => {
       const onTimeThreshold = 10 * 60; // 10:00 AM
       const lateThreshold = 10 * 60 + 15; // 10:15 AM
       
-      // On time if check-in is between 10:00 AM and 10:15 AM (inclusive)
-      // Also on time if check-in is before 10:00 AM
-      if (totalMins >= onTimeThreshold && totalMins <= lateThreshold) {
+      // On time if check-in is before or at 10:15 AM
+      if (totalMins <= lateThreshold) {
         status = "on-time";
       } 
       // Late if check-in is after 10:15 AM
       else if (totalMins > lateThreshold) {
         status = "late";
       }
-      // On time if check-in is before 10:00 AM
-      else if (totalMins < onTimeThreshold) {
-        status = "on-time";
-      }
     }
     
     return status;
   }, []);
 
-  const fetchAttendanceForWeek = useCallback(async () => {
-    if (!employeeState.list || !employeeState.list.length || !daysOfWeek.length) return;
+  // Memoize the date keys to avoid unnecessary recalculations
+  const dateKeys = useMemo(() => {
+    if (!daysOfWeek.length) return [];
+    
+    // Filter out future dates - only process dates up to today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const pastAndCurrentDays = daysOfWeek.filter(day => {
+      const dayDate = new Date(day.fullDate);
+      dayDate.setHours(0, 0, 0, 0);
+      return dayDate <= today;
+    });
+    
+    return pastAndCurrentDays.map(day => day.fullDate);
+  }, [daysOfWeek]);
+
+  const processAttendanceData = useCallback(async () => {
+    if (!employeeState.list || !employeeState.list.length || !dateKeys.length) return;
 
     // Create a unique key for the current week that includes the date range
-    const weekKey = daysOfWeek.map(day => day.fullDate).join('-');
+    const weekKey = dateKeys.join('-');
     if (lastLoadedWeek === weekKey) {
       return;
     }
 
-    setLoading(true);
-    const newAttendance = {};
-
     try {
-      // Filter out future dates - only process dates up to today
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      const pastAndCurrentDays = daysOfWeek.filter(day => {
-        const dayDate = new Date(day.fullDate);
-        dayDate.setHours(0, 0, 0, 0);
-        return dayDate <= today;
-      });
-
-      console.log("Processing attendance for days up to today:", pastAndCurrentDays.map(d => d.fullDate));
-      
-      // Initialize attendance data for all employees - this ensures every employee has an entry
+      // Set all cells to loading state initially
+      const loadingAttendance = {};
       employeeState.list.forEach(employee => {
-        newAttendance[employee.id] = {};
-        // Initialize all past and current days as "absent" for each employee
-        pastAndCurrentDays.forEach(day => {
-          newAttendance[employee.id][day.fullDate] = "absent";
+        loadingAttendance[employee.id] = {};
+        dateKeys.forEach(dateKey => {
+          loadingAttendance[employee.id][dateKey] = "loading";
         });
       });
+      setAttendance(loadingAttendance);
       
-      // Process each date to fetch attendance data
-      const fetchPromises = pastAndCurrentDays.map(async (day) => {
-        const dateKey = day.fullDate;
-        console.log("Checking attendance for date:", dateKey);
-        
-        try {
-          // Create date document reference
-          const dateDocRef = doc(db, "Employee_CheckIn_CheckOut", dateKey);
-          const empRecColRef = collection(dateDocRef, "employee_records");
-
-          // Get all employee records for this date
-          const empSnap = await getDocs(empRecColRef);
-          console.log(`Found ${empSnap.size} employee records for ${dateKey}`);
-
-          // Process each employee record for this date
-          empSnap.forEach((empDoc) => {
-            const empIdFromDoc = empDoc.id;
-            const data = empDoc.data();
-            console.log("Processing employee record:", empIdFromDoc, data);
-
-            const checkIn = toDate(data?.CheckIn);
-            console.log("CheckIn time:", checkIn);
-
-            // Try to find the employee in our employee list using multiple matching strategies
-            let employee = null;
-            
-            // Try to match by empId field
-            if (!employee) {
-              employee = employeeState.list.find((e) => e.empId === empIdFromDoc);
-            }
-            
-            // Try to match by document ID
-            if (!employee) {
-              employee = employeeState.list.find((e) => e.id === empIdFromDoc);
-            }
-            
-            // Try to match by EmployeeID field
-            if (!employee && data.EmployeeID) {
-              employee = employeeState.list.find((e) => String(e.EmployeeID) === String(data.EmployeeID));
-            }
-            
-            if (employee) {
-              const status = determineStatus(checkIn);
-              console.log("Determined status:", status, "for employee:", employee.name);
-              
-              // Update the status for this date
-              newAttendance[employee.id][dateKey] = status;
-            } else {
-              console.log("Could not find employee for ID:", empIdFromDoc);
-            }
-          });
-        } catch (dateError) {
-          console.warn(`Error fetching attendance for ${dateKey}:`, dateError);
-        }
-      });
-
-      // Wait for all fetches to complete
-      await Promise.all(fetchPromises);
-
-      console.log("Final attendance data:", newAttendance);
-      setAttendance(newAttendance);
+      // Fetch attendance data for these dates
+      await dispatch(fetchCalendarAttendance(dateKeys)).unwrap();
+      
+      // Set last loaded week to prevent unnecessary refetching
       setLastLoadedWeek(weekKey);
     } catch (error) {
-      console.error("Error fetching attendance data:", error);
-    } finally {
-      setLoading(false);
+      console.error("Error processing attendance data:", error);
+      // Set all cells back to absent on error
+      const errorAttendance = {};
+      employeeState.list.forEach(employee => {
+        errorAttendance[employee.id] = {};
+        dateKeys.forEach(dateKey => {
+          errorAttendance[employee.id][dateKey] = "absent";
+        });
+      });
+      setAttendance(errorAttendance);
     }
-  }, [employeeState.list, daysOfWeek, lastLoadedWeek, toDate, determineStatus]);
+  }, [employeeState.list, dateKeys, lastLoadedWeek, dispatch]);
 
-  // Run once employees + week are ready
+  // Process attendance data when employees or date keys change
   useEffect(() => {
-    if (employeeState.list && employeeState.list.length && daysOfWeek.length) {
-      fetchAttendanceForWeek();
-    } else {
-      setLoading(false);
+    if (employeeState.list && employeeState.list.length && dateKeys.length) {
+      processAttendanceData();
     }
-  }, [employeeState.list, daysOfWeek, fetchAttendanceForWeek]);
+  }, [employeeState.list, dateKeys, processAttendanceData]);
+
+  // Process the attendance data when it changes in Redux
+  useEffect(() => {
+    if (!employeeState.list || !employeeState.list.length || !dateKeys.length) {
+      return;
+    }
+
+    const newAttendance = {};
+    
+    // Initialize attendance data for all employees - this ensures every employee has an entry
+    employeeState.list.forEach(employee => {
+      newAttendance[employee.id] = {};
+      // Initialize all past and current days as "absent" for each employee
+      dateKeys.forEach(dateKey => {
+        newAttendance[employee.id][dateKey] = "absent";
+      });
+    });
+    
+    // Process attendance data from Redux
+    const calendarAttendance = attendanceState.calendarData || {};
+    
+    // For each employee in the calendar data
+    Object.keys(calendarAttendance).forEach(empId => {
+      // Find the employee in our employee list using multiple matching strategies
+      const employee = employeeState.list.find(e => 
+        e.id === empId || e.empId === empId || e.EmployeeID === empId
+      );
+      
+      if (employee) {
+        // For each date in this employee's attendance data
+        Object.keys(calendarAttendance[empId]).forEach(dateKey => {
+          // Check if this date is within our current week
+          if (dateKeys.includes(dateKey)) {
+            // Get the raw attendance data for this date
+            const rawData = calendarAttendance[empId][dateKey];
+            
+            // Determine status based on check-in time
+            // Convert ISO string back to Date object for processing
+            const checkIn = rawData?.CheckIn ? new Date(rawData.CheckIn) : null;
+            const status = determineStatus(checkIn);
+            
+            console.log("Processing attendance record:", employee.name, dateKey, status);
+            
+            // Update the status for this date
+            newAttendance[employee.id][dateKey] = status;
+          }
+        });
+      }
+    });
+
+    console.log("Final attendance data:", newAttendance);
+    setAttendance(newAttendance);
+  }, [employeeState.list, attendanceState.calendarData, dateKeys, determineStatus]);
 
   /* ----------------------------------------------------------
      Navigation helpers
@@ -245,12 +240,16 @@ export const useCalendarData = () => {
     const prev = new Date(currentWeekStart);
     prev.setDate(prev.getDate() - 7);
     setCurrentWeekStart(prev);
+    // Reset last loaded week to force refetch
+    setLastLoadedWeek(null);
   };
   
   const handleNextWeek = () => {
     const next = new Date(currentWeekStart);
     next.setDate(next.getDate() + 7);
     setCurrentWeekStart(next);
+    // Reset last loaded week to force refetch
+    setLastLoadedWeek(null);
   };
   
   const handleToday = () => {
@@ -260,6 +259,8 @@ export const useCalendarData = () => {
     const monday = new Date(today);
     monday.setDate(today.getDate() + mondayOffset);
     setCurrentWeekStart(monday);
+    // Reset last loaded week to force refetch
+    setLastLoadedWeek(null);
   };
 
   const handleCellClick = useCallback(
@@ -283,13 +284,15 @@ export const useCalendarData = () => {
      Return everything the UI needs
      ---------------------------------------------------------- */
   // Format employees with avatar initials
-  const formattedStudents = (employeeState.list || []).map((emp) => ({
-    ...emp,
-    initials: getInitials(emp.name),
-  }));
+  const formattedStudents = useMemo(() => {
+    return (employeeState.list || []).map((emp) => ({
+      ...emp,
+      initials: getInitials(emp.name),
+    }));
+  }, [employeeState.list]);
 
-  // Only show loading state when we're actively fetching data
-  const showLoading = loading && (!employeeState.list || employeeState.list.length === 0);
+  // Show loading state when we're actively fetching data
+  const showLoading = loading || attendanceState.calendarLoading;
 
   return {
     loading: showLoading,
