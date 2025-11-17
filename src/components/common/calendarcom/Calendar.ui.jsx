@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { BackBTN } from "../BackBTN";
 
@@ -179,6 +179,28 @@ const CalendarUI = ({
   setIsModalOpen,
   setEventForm,
 }) => {
+  // Memoize the events and birthdays for each day to prevent unnecessary re-renders
+  const memoizedDaysData = useMemo(() => {
+    return weeks.map(week => 
+      week.map(date => {
+        if (!date) return { dayEvents: [], birthdays: [] };
+        return {
+          dayEvents: getEventsForDate(date),
+          birthdays: getBirthdaysForDate(date)
+        };
+      })
+    );
+  }, [weeks, getEventsForDate, getBirthdaysForDate, parsedEvents, parsedEmployees]);
+
+  // Check if today for highlighting
+  const isToday = (date) => {
+    if (!date) return false;
+    const today = new Date();
+    return date.getDate() === today.getDate() &&
+           date.getMonth() === today.getMonth() &&
+           date.getFullYear() === today.getFullYear();
+  };
+
   return (
     <div>
       <div className="container mx-auto bg-white rounded shadow w-full">
@@ -217,30 +239,24 @@ const CalendarUI = ({
           </thead>
 
           <tbody>
-            {weeks.map((week, wi) => (
+            {memoizedDaysData.map((week, wi) => (
               <tr key={wi} className="text-center">
-                {week.map((date, di) => {
-                  const dayEvents = getEventsForDate(date);
-                  const birthdays = getBirthdaysForDate(date);
-
-                  // Check if this date is today
-                  const isToday = date &&
-                    date.getDate() === new Date().getDate() &&
-                    date.getMonth() === new Date().getMonth() &&
-                    date.getFullYear() === new Date().getFullYear();
+                {week.map((dayData, di) => {
+                  const date = weeks[wi][di];
+                  const { dayEvents, birthdays } = dayData;
 
                   return (
                     <td
                       key={di}
                       onClick={() => date && handleDayClick(date)}
-                      className={`border border-gray-200 p-1 h-32 sm:h-40 overflow-hidden cursor-pointer align-top ${isToday
+                      className={`border border-gray-200 p-1 h-32 sm:h-40 overflow-hidden cursor-pointer align-top ${isToday(date)
                           ? "bg-gray-200 text-white hover:bg-gray-300"
                           : "hover:bg-gray-100"
                         }`}
                     >
                       {date ? (
                         <div className="flex flex-col h-full">
-                          <div className={`text-sm text-center rounded-full w-7 h-7 flex items-center justify-center mx-auto ${isToday
+                          <div className={`text-sm text-center rounded-full w-7 h-7 flex items-center justify-center mx-auto ${isToday(date)
                               ? "bg-white text-blue-600 font-bold"
                               : "text-gray-500"
                             }`}>
