@@ -28,6 +28,8 @@ export const listenToEmployees = createAsyncThunk(
 
             return {
               id: d.id,
+              empId: String(data?.EmployeeID ?? data?.employeeId ?? d.id), // Use EmployeeID field or fallback to document ID
+              name: data?.Name ?? data?.name ?? "Unknown",
               ...data,
 
               // ✅ Safely convert timestamps to ISO string

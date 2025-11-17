@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from "react-router-dom";
-import Back_Button from "../assets/BackButton3.png";
+import Back_Button from "../assets/Backbutton2.png";
 
 export const BackBTN = () => {
   const navigate = useNavigate();
@@ -11,6 +11,9 @@ export const BackBTN = () => {
       onClick={() => navigate(-1)}
     >
       <img src={Back_Button} alt="Back Button" className="h-full w-full rounded-full" />
+      {/* <span className='h-5 w-5 mt-2 ml-1 '>Back</span> */}
     </button>
+    
+    
   )
 }

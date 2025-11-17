@@ -167,7 +167,7 @@ const CalendarUI = ({
   monthNames,
   parsedEvents,
   parsedEmployees,
-  
+
   // Functions
   handlePrevMonth,
   handleNextMonth,
@@ -222,9 +222,9 @@ const CalendarUI = ({
                 {week.map((date, di) => {
                   const dayEvents = getEventsForDate(date);
                   const birthdays = getBirthdaysForDate(date);
-                  
+
                   // Check if this date is today
-                  const isToday = date && 
+                  const isToday = date &&
                     date.getDate() === new Date().getDate() &&
                     date.getMonth() === new Date().getMonth() &&
                     date.getFullYear() === new Date().getFullYear();
@@ -233,20 +233,17 @@ const CalendarUI = ({
                     <td
                       key={di}
                       onClick={() => date && handleDayClick(date)}
-                      className={`border border-gray-200 p-1 h-32 sm:h-40 cursor-pointer align-top relative ${
-                        isToday 
-                          ? "bg-gray-200 text-white hover:bg-gray-300" 
+                      className={`border border-gray-200 p-1 h-32 sm:h-40 overflow-hidden cursor-pointer align-top ${isToday
+                          ? "bg-gray-200 text-white hover:bg-gray-300"
                           : "hover:bg-gray-100"
-                      }`}
-                      style={{ overflow: "visible" }}
+                        }`}
                     >
                       {date ? (
-                        <div className="flex flex-col h-full" style={{ overflow: "visible" }}>
-                          <div className={`text-sm text-center rounded-full w-7 h-7 flex items-center justify-center mx-auto ${
-                            isToday 
-                              ? "bg-white text-blue-600 font-bold" 
+                        <div className="flex flex-col h-full">
+                          <div className={`text-sm text-center rounded-full w-7 h-7 flex items-center justify-center mx-auto ${isToday
+                              ? "bg-white text-blue-600 font-bold"
                               : "text-gray-500"
-                          }`}>
+                            }`}>
                             {date.getDate()}
                           </div>
 
@@ -255,17 +252,16 @@ const CalendarUI = ({
                             {dayEvents.map((ev) => (
                               <div
                                 key={ev.id}
-                                className={`relative group text-white rounded p-1 text-xs mb-1 ${
-                                  ev.event_theme === "blue"
+                                className={`relative group text-white rounded p-1 text-xs mb-1 ${ev.event_theme === "blue"
                                     ? "bg-blue-400"
                                     : ev.event_theme === "red"
-                                    ? "bg-red-400"
-                                    : ev.event_theme === "yellow"
-                                    ? "bg-yellow-400"
-                                    : ev.event_theme === "green"
-                                    ? "bg-green-400"
-                                    : "bg-purple-400"
-                                }`}
+                                      ? "bg-red-400"
+                                      : ev.event_theme === "yellow"
+                                        ? "bg-yellow-400"
+                                        : ev.event_theme === "green"
+                                          ? "bg-green-400"
+                                          : "bg-purple-400"
+                                  }`}
                               >
                                 {ev.event_title}
                                 <button
@@ -310,100 +306,99 @@ const CalendarUI = ({
       </div>
 
       {/* Modal */}
-{isModalOpen && (
-  // 1. Backdrop: Keep the strong backdrop blur
-  <div className="fixed inset-0 flex justify-end items-stretch backdrop-blur-md bg-black/20 z-50">
-    
-    {/* 2. Side Sheet Container: Fixes to the right, full height, no corners on the right edge, subtle drop shadow */}
-    <div className="bg-white w-full max-w-sm relative shadow-2xl p-8 transform transition-transform duration-300 ease-out translate-x-0">
-      
-      {/* Close Button: Positioned cleanly, using subtle hover effect */}
-      <button
-        onClick={() => setIsModalOpen(false)}
-        className="absolute top-6 right-6 text-gray-500 hover:text-gray-900 p-1 transition-colors"
-        aria-label="Close"
-      >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-      </button>
+      {isModalOpen && (
+        // 1. Backdrop: Keep the strong backdrop blur
+        <div className="fixed inset-0 flex justify-end items-stretch backdrop-blur-md bg-black/20 z-50">
 
-      {/* Header */}
-      <h2 className="text-3xl font-bold mb-1 text-gray-900 mt-2">Schedule Event</h2>
-      <p className="text-md font-medium text-indigo-600 mb-8">
-        {selectedDate?.toDateString()}
-      </p>
+          {/* 2. Side Sheet Container: Fixes to the right, full height, no corners on the right edge, subtle drop shadow */}
+          <div className="bg-white w-full max-w-sm relative shadow-2xl p-8 transform transition-transform duration-300 ease-out translate-x-0">
 
-      {/* Input Field */}
-      <div className="mb-6">
-        <label htmlFor="event-title" className="text-sm font-semibold text-gray-700 block mb-2">Title</label>
-        <input
-          id="event-title"
-          type="text"
-          placeholder="Event Title"
-          value={eventForm.title}
-          onChange={(e) =>
-            setEventForm((s) => ({ ...s, title: e.target.value }))
-          }
-          // 3. Input Styling: Minimalist, just a bottom border, sharp focus
-          className="w-full p-2 border-b-2 border-gray-300 focus:border-indigo-600 outline-none transition-all text-lg placeholder-gray-400 bg-transparent"
-        />
-      </div>
+            {/* Close Button: Positioned cleanly, using subtle hover effect */}
+            <button
+              onClick={() => setIsModalOpen(false)}
+              className="absolute top-6 right-6 text-gray-500 hover:text-gray-900 p-1 transition-colors"
+              aria-label="Close"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+
+            {/* Header */}
+            <h2 className="text-3xl font-bold mb-1 text-gray-900 mt-2">Schedule Event</h2>
+            <p className="text-md font-medium text-indigo-600 mb-8">
+              {selectedDate?.toDateString()}
+            </p>
+
+            {/* Input Field */}
+            <div className="mb-6">
+              <label htmlFor="event-title" className="text-sm font-semibold text-gray-700 block mb-2">Title</label>
+              <input
+                id="event-title"
+                type="text"
+                placeholder="Event Title"
+                value={eventForm.title}
+                onChange={(e) =>
+                  setEventForm((s) => ({ ...s, title: e.target.value }))
+                }
+                // 3. Input Styling: Minimalist, just a bottom border, sharp focus
+                className="w-full p-2 border-b-2 border-gray-300 focus:border-indigo-600 outline-none transition-all text-lg placeholder-gray-400 bg-transparent"
+              />
+            </div>
 
 
-      {/* Select Field */}
-      <div className="mb-10">
-        <label htmlFor="event-theme" className="text-sm font-semibold text-gray-700 block mb-2">Category</label>
-        <div className="relative">
-          <select
-            id="event-theme"
-            value={eventForm.theme}
-            onChange={(e) =>
-              setEventForm((s) => ({ ...s, theme: e.target.value }))
-            }
-            // 4. Select Styling: Consistent with input, clean look
-            className="w-full p-2 border-b-2 border-gray-300 focus:border-indigo-600 outline-none transition-all cursor-pointer appearance-none bg-transparent text-lg"
-          >
-            <option value="indigo" className="text-gray-700">Meeting (Indigo)</option>
-            <option value="red" className="text-gray-700">Urgent (Red)</option>
-            <option value="yellow" className="text-gray-700">Personal (Yellow)</option>
-            <option value="green" className="text-gray-700">Task (Green)</option>
-            <option value="purple" className="text-gray-700">Holiday (Purple)</option>
-          </select>
-          {/* Custom Arrow Icon for Select */}
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-gray-500">
-            <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
+            {/* Select Field */}
+            <div className="mb-10">
+              <label htmlFor="event-theme" className="text-sm font-semibold text-gray-700 block mb-2">Category</label>
+              <div className="relative">
+                <select
+                  id="event-theme"
+                  value={eventForm.theme}
+                  onChange={(e) =>
+                    setEventForm((s) => ({ ...s, theme: e.target.value }))
+                  }
+                  // 4. Select Styling: Consistent with input, clean look
+                  className="w-full p-2 border-b-2 border-gray-300 focus:border-indigo-600 outline-none transition-all cursor-pointer appearance-none bg-transparent text-lg"
+                >
+                  <option value="indigo" className="text-gray-700">Meeting (Indigo)</option>
+                  <option value="red" className="text-gray-700">Urgent (Red)</option>
+                  <option value="yellow" className="text-gray-700">Personal (Yellow)</option>
+                  <option value="green" className="text-gray-700">Task (Green)</option>
+                  <option value="purple" className="text-gray-700">Holiday (Purple)</option>
+                </select>
+                {/* Custom Arrow Icon for Select */}
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-gray-500">
+                  <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="absolute bottom-0 left-0 right-0 p-8 border-t border-gray-100 bg-white/95 backdrop-blur-sm flex justify-end gap-4">
+
+              {/* Cancel Button (Ghost Style) */}
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="px-6 py-3 rounded-full text-gray-600 font-semibold hover:bg-gray-100 transition-all"
+              >
+                Cancel
+              </button>
+
+              {/* Primary Button (Pill shape, Indigo focus) */}
+              <button
+                onClick={handleAddEvent}
+                disabled={loading}
+                className={`px-6 py-3 rounded-full font-bold text-white shadow-md transition-all ${loading
+                    ? "bg-indigo-300 cursor-not-allowed shadow-none"
+                    : "bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 shadow-indigo-500/50"
+                  }`}
+              >
+                {loading ? "Saving..." : "Save Event"}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-      
-      {/* Action Buttons */}
-      <div className="absolute bottom-0 left-0 right-0 p-8 border-t border-gray-100 bg-white/95 backdrop-blur-sm flex justify-end gap-4">
-        
-        {/* Cancel Button (Ghost Style) */}
-        <button
-          onClick={() => setIsModalOpen(false)}
-          className="px-6 py-3 rounded-full text-gray-600 font-semibold hover:bg-gray-100 transition-all"
-        >
-          Cancel
-        </button>
-        
-        {/* Primary Button (Pill shape, Indigo focus) */}
-        <button
-          onClick={handleAddEvent}
-          disabled={loading}
-          className={`px-6 py-3 rounded-full font-bold text-white shadow-md transition-all ${
-            loading
-              ? "bg-indigo-300 cursor-not-allowed shadow-none"
-              : "bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 shadow-indigo-500/50"
-          }`}
-        >
-          {loading ? "Saving..." : "Save Event"}
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+      )}
     </div>
   );
 };
