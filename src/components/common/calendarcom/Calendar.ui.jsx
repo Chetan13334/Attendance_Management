@@ -1,6 +1,158 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { BackBTN } from "../BackBTN";
+
+const BirthdayTooltip = ({ birthday }) => {
+  const avatarRef = useRef(null);
+  const tooltipRef = useRef(null);
+  const [isHovered, setIsHovered] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const timeoutRef = useRef(null);
+
+  useEffect(() => {
+    if (isHovered && avatarRef.current && tooltipRef.current) {
+      const avatarRect = avatarRef.current.getBoundingClientRect();
+      const tooltipRect = tooltipRef.current.getBoundingClientRect();
+      
+      const left = avatarRect.left + (avatarRect.width / 2) - (tooltipRect.width / 2);
+      const top = avatarRect.top - tooltipRect.height - 12;
+      
+      const adjustedLeft = Math.max(10, left);
+      
+      const maxLeft = window.innerWidth - tooltipRect.width - 10;
+      const finalLeft = Math.min(adjustedLeft, maxLeft);
+      
+      setPosition({ top, left: finalLeft });
+    }
+  }, [isHovered, showTooltip]);
+
+  const handleMouseEnter = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    setIsHovered(true);
+    timeoutRef.current = setTimeout(() => {
+      setShowTooltip(true);
+    }, 100);
+  };
+
+  const handleMouseLeave = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    setShowTooltip(false);
+    timeoutRef.current = setTimeout(() => {
+      setIsHovered(false);
+    }, 200);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  return (
+    <div className="inline-block w-fit">
+      {/* Avatar Only (Default) */}
+      <div 
+        ref={avatarRef}
+        className="relative flex-shrink-0 cursor-pointer transition-all duration-300 hover:scale-110 hover:z-50"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <div className="w-8 h-8 p-[1px] rounded-full bg-gradient-to-br from-yellow-300 to-red-500 shadow-md 
+          transition-all duration-300 hover:shadow-lg hover:shadow-yellow-300/50 ring-2 ring-white">
+          <img
+            src={
+              birthday.Photo ||
+              "https://placehold.co/40x40/fbcfe8/000?text=P"
+            }
+            alt={birthday.Name}
+            className="w-full h-full rounded-full object-cover border-2 border-white"
+          />
+        </div>
+      </div>
+
+      {/* Tooltip Birthday Card (Hover) - Fixed Position */}
+      {isHovered && (
+        <div 
+          ref={tooltipRef}
+          className="fixed transition-all duration-300 ease-out"
+          style={{ 
+            top: `${position.top}px`,
+            left: `${position.left}px`,
+            zIndex: 999999,
+            opacity: showTooltip && position.top > 0 ? 1 : 0,
+            transform: showTooltip && position.top > 0 
+              ? 'translateY(0) scale(1)' 
+              : 'translateY(10px) scale(0.9)',
+            pointerEvents: 'none'
+          }}
+        >
+          <div className="px-3 py-2 rounded-lg shadow-2xl border-2 border-pink-200
+            bg-gradient-to-br from-pink-50 via-white to-pink-50 backdrop-blur-sm whitespace-nowrap
+            transform transition-all duration-300">
+            <div className="flex items-center gap-2.5">
+              <div className="relative flex-shrink-0">
+                <div className="w-7 h-7 p-[1px] rounded-full bg-gradient-to-br from-yellow-300 via-orange-400 to-red-500 shadow-md">
+                  <img
+                    src={
+                      birthday.Photo ||
+                      "https://placehold.co/40x40/fbcfe8/000?text=P"
+                    }
+                    alt={birthday.Name}
+                    className="w-full h-full rounded-full object-cover border border-white"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col text-left leading-tight">
+                <span className="font-bold text-gray-800 text-xs">
+                  {birthday.Name}
+                </span>
+                <span className="text-pink-600 font-semibold text-[10px] italic flex items-center gap-1">
+                  <span className="animate-bounce inline-block" style={{ animationDelay: '0ms' }}>🎉</span>
+                  <span>Happy Birthday!</span>
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Tooltip Arrow */}
+          <div 
+            className="absolute -bottom-[5px] w-0 h-0 
+              border-l-[5px] border-l-transparent 
+              border-r-[5px] border-r-transparent 
+              border-t-[5px] border-t-pink-200
+              transition-all duration-300"
+            style={{
+              left: `${avatarRef.current ? 
+                (avatarRef.current.getBoundingClientRect().left + avatarRef.current.getBoundingClientRect().width / 2 - position.left) : 0}px`,
+              filter: 'drop-shadow(0 2px 4px rgba(236, 72, 153, 0.2))'
+            }}
+          >
+          </div>
+          <div 
+            className="absolute -bottom-[4px] w-0 h-0 
+              border-l-[4px] border-l-transparent 
+              border-r-[4px] border-r-transparent 
+              border-t-[4px] border-t-pink-50
+              transition-all duration-300"
+            style={{
+              left: `${avatarRef.current ? 
+                (avatarRef.current.getBoundingClientRect().left + avatarRef.current.getBoundingClientRect().width / 2 - position.left) : 0}px`
+            }}
+          >
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const CalendarUI = ({
   // State
@@ -29,7 +181,7 @@ const CalendarUI = ({
 }) => {
   return (
     <div>
-      <div className="container mx-auto bg-white rounded shadow overflow-hidden w-full">
+      <div className="container mx-auto bg-white rounded shadow w-full">
         <BackBTN />
         <div className="p-4 flex justify-between items-center">
           <span className="text-lg font-bold">
@@ -51,7 +203,8 @@ const CalendarUI = ({
           </div>
         </div>
 
-        <table className="w-full table-fixed">
+        <div className="overflow-visible">
+          <table className="w-full table-fixed overflow-visible">
           <thead>
             <tr>
               {daysOfWeek.map((day, i) => (
@@ -80,14 +233,15 @@ const CalendarUI = ({
                     <td
                       key={di}
                       onClick={() => date && handleDayClick(date)}
-                      className={`border border-gray-200 p-1 h-32 sm:h-40 overflow-hidden cursor-pointer align-top ${
+                      className={`border border-gray-200 p-1 h-32 sm:h-40 cursor-pointer align-top relative ${
                         isToday 
                           ? "bg-gray-200 text-white hover:bg-gray-300" 
                           : "hover:bg-gray-100"
                       }`}
+                      style={{ overflow: "visible" }}
                     >
                       {date ? (
-                        <div className="flex flex-col h-full">
+                        <div className="flex flex-col h-full" style={{ overflow: "visible" }}>
                           <div className={`text-sm text-center rounded-full w-7 h-7 flex items-center justify-center mx-auto ${
                             isToday 
                               ? "bg-white text-blue-600 font-bold" 
@@ -96,7 +250,7 @@ const CalendarUI = ({
                             {date.getDate()}
                           </div>
 
-                          <div className="flex-grow mt-1 overflow-y-auto flex flex-col gap-2 px-1">
+                          <div className="flex-grow mt-1 overflow-y-auto flex flex-col gap-2 px-1" style={{ overflowX: "visible" }}>
                             {/* Events */}
                             {dayEvents.map((ev) => (
                               <div
@@ -128,40 +282,20 @@ const CalendarUI = ({
                             ))}
 
                             {/* Birthdays */}
-                            {birthdays.map((b) => (
-                              <div
-                                key={b.id}
-                                className="p-2.5 rounded-xl shadow-lg border-2 border-pink-100/50 
-                                  bg-white transition-all duration-300 transform hover:scale-[1.03] 
-                                  hover:shadow-2xl cursor-pointer flex items-center gap-3"
-                                style={{ maxWidth: "200px" }}
-                              >
-                                <div className="relative flex-shrink-0">
-                                  <div className="w-8 h-8 p-[1px] rounded-full bg-gradient-to-br from-yellow-300 to-red-500 shadow-md">
-                                    <img
-                                      src={
-                                        b.Photo ||
-                                        "https://placehold.co/40x40/fbcfe8/000?text=P"
-                                      }
-                                      alt={b.Name}
-                                      className="w-full h-full rounded-full object-cover border-2 border-white"
-                                    />
+                            {birthdays.length > 0 && (
+                              <div className="flex items-center -space-x-2 mt-1">
+                                {birthdays.map((b, index) => (
+                                  <div
+                                    key={b.id}
+                                    style={{ zIndex: birthdays.length - index }}
+                                    className="relative"
+                                  >
+                                    <BirthdayTooltip birthday={b} />
                                   </div>
-                                  <span className="absolute -bottom-[2px] -right-[2px] text-xs bg-purple-500 text-white rounded-full w-4 h-4 flex items-center justify-center font-bold shadow-[2px]">
-                                    *
-                                  </span>
-                                </div>
-
-                                <div className="flex flex-col text-left leading-snug overflow-hidden">
-                                  <span className="font-extrabold text-gray-800 text-[10px] truncate">
-                                    {b.Name}
-                                  </span>
-                                  <span className="text-pink-600 font-semibold text-[9px] italic tracking-tight">
-                                    Happy B-Day!
-                                  </span>
-                                </div>
+                                ))}
+                               
                               </div>
-                            ))}
+                            )}
                           </div>
                         </div>
                       ) : null}
@@ -172,6 +306,7 @@ const CalendarUI = ({
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Modal */}
