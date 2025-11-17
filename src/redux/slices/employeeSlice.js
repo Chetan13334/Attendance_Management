@@ -16,9 +16,11 @@ export const listenToEmployees = createAsyncThunk(
   "employees/listenToEmployees",
   async (_, { dispatch, rejectWithValue }) => {
     try {
+      console.log("Setting up employee listener");
       const unsubscribe = onSnapshot(
         collection(db, "Employee_Details"),
         (snapshot) => {
+          console.log(`Received employee snapshot with ${snapshot.docs.length} documents`);
           const employees = snapshot.docs.map((d) => {
             const data = d.data();
 
@@ -39,6 +41,7 @@ export const listenToEmployees = createAsyncThunk(
             };
           });
 
+          console.log("Dispatching employees:", employees.length);
           dispatch(setEmployees(employees));
         },
         (error) => {
@@ -49,6 +52,7 @@ export const listenToEmployees = createAsyncThunk(
       
       // Return a cleanup function
       return () => {
+        console.log("Cleaning up employee listener");
         unsubscribe();
       };
     } catch (err) {
@@ -99,6 +103,7 @@ const employeeSlice = createSlice({
   },
   reducers: {
     setEmployees(state, action) {
+      console.log("Setting employees in Redux:", action.payload.length);
       // Ensure we're creating a new array reference
       state.list = [...action.payload];
     },

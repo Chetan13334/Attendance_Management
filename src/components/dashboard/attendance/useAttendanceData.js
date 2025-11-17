@@ -1,7 +1,7 @@
 // src/components/dashboard/attendance/useAttendanceData.js
 
 import { useSelector, useDispatch } from "react-redux";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { listenToAttendance } from "../../../redux/slices/attendanceSlice";
 
 export const useAttendanceData = () => {
@@ -10,7 +10,20 @@ export const useAttendanceData = () => {
   const attendanceList = useSelector((state) => state.attendance.list || []);
   const attendanceLoading = useSelector((state) => state.attendance.loading || false);
   
+  // State to trigger refresh
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  
+  // Refresh every 30 seconds to ensure data is up to date
   useEffect(() => {
+    const interval = setInterval(() => {
+      setRefreshTrigger(prev => prev + 1);
+    }, 30000); // Refresh every 30 seconds
+    
+    return () => clearInterval(interval);
+  }, []);
+  
+  useEffect(() => {
+    console.log("Setting up attendance listener");
     // Always set up the listener regardless of employee count
     const today = new Date();
     const result = dispatch(listenToAttendance(today));
@@ -18,6 +31,7 @@ export const useAttendanceData = () => {
     // Handle the cleanup function properly
     let cleanup;
     result.then((unsubscribe) => {
+      console.log("Attendance listener set up successfully");
       cleanup = unsubscribe;
     }).catch((error) => {
       console.error("Failed to set up attendance listener:", error);
@@ -25,18 +39,35 @@ export const useAttendanceData = () => {
     
     // Cleanup function to unsubscribe from the listener
     return () => {
+      console.log("Cleaning up attendance listener");
       if (cleanup && typeof cleanup === 'function') {
         cleanup();
       }
     };
-  }, [dispatch]); // Removed employees.length dependency to ensure the listener is always active
+  }, [dispatch, refreshTrigger]); // Add refreshTrigger to dependencies to re-setup listener periodically
+
+  // Debug logging
+  useEffect(() => {
+    console.log("Employees updated:", employees.length);
+    console.log("Attendance list updated:", attendanceList.length);
+    if (attendanceList.length > 0) {
+      console.log("First attendance record:", attendanceList[0]);
+    }
+  }, [employees, attendanceList]);
 
   // Merge employee data with attendance data using useMemo for performance
   const mergedRecords = useMemo(() => {
+    console.log("Recalculating merged records with", employees.length, "employees and", attendanceList.length, "attendance records");
     return employees.map((emp) => {
       // Match employee with attendance record using the same logic as calendar component
       // Check if either emp.empId or emp.id matches the attendance document ID
-      const att = attendanceList.find(a => a.employeeId === emp.empId || a.employeeId === emp.id);
+      const att = attendanceList.find(a => {
+        const match = a.employeeId === emp.empId || a.employeeId === emp.id;
+        console.log(`Matching employee ${emp.id} (${emp.empId}) with attendance ${a.employeeId}: ${match}`);
+        return match;
+      });
+      
+      console.log(`Matching employee ${emp.id} with attendance:`, att);
 
       let status = "Absent";
       let time = "-";

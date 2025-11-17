@@ -8,6 +8,7 @@ const CalendarContainer = () => {
 
   // Show skeleton when loading (during initial load/refresh)
   if (!data || data.loading) {
+    console.log("Showing skeleton loader, loading state:", data?.loading);
     return (
       <div className="p-8 md:p-0 min-h-screen bg-gray-100 font-sans">
         <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
@@ -31,7 +32,7 @@ const CalendarContainer = () => {
     handleToday,
     handleOpenCalendarModal,
     attendanceStatuses,
-    isNextWeekDisabled,   // <-- ADD THIS LINE
+    isNextWeekDisabled,
 } = data;
 
 
@@ -55,18 +56,30 @@ const CalendarContainer = () => {
     },
   };
 
+  // Show loader if we don't have employee data yet
   if (safeFormattedStudents.length === 0) {
+    console.log("Showing employee data loading message");
     return (
-      <div className="flex items-center justify-center h-[70vh] text-gray-500 text-sm">
-        Oops ! No employee data found.
+      <div className="p-8 md:p-0 min-h-screen bg-gray-100 font-sans">
+        <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
+          <div className="flex-grow">
+            <SkeletonLoader type="calendar" />
+          </div>
+        </div>
       </div>
     );
   }
 
+  // Show loader if we don't have days data yet
   if (safeDaysOfWeek.length === 0) {
+    console.log("Showing week data loading message");
     return (
-      <div className="flex items-center justify-center h-[70vh] text-gray-500 text-sm">
-        Loading week view...
+      <div className="p-8 md:p-0 min-h-screen bg-gray-100 font-sans">
+        <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
+          <div className="flex-grow">
+            <SkeletonLoader type="calendar" />
+          </div>
+        </div>
       </div>
     );
   }

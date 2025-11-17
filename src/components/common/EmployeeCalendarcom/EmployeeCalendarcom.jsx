@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { BackBTN } from "../BackBTN";
 import LegendBar from "../../../components/common/LegendBar";
@@ -18,6 +18,10 @@ const EmployeeCalendarCom = ({
   employeeAttendance,
   loading,
 }) => {
+  // Debugging: Log when attendance data changes
+  useEffect(() => {
+    console.log("Employee attendance data updated:", employeeAttendance);
+  }, [employeeAttendance]);
 
   const safeMonthNames = monthNames || [
     "January", "February", "March", "April", "May", "June",
@@ -76,12 +80,8 @@ const EmployeeCalendarCom = ({
   const legendAttendanceData = formatAttendanceDataForLegend();
 
   return (
-
     <div>
-       
-
       <div className="container mx-auto bg-white rounded-xl shadow-md overflow-hidden max-w-7xl">
-        
         <div className="flex justify-between items-center px-1 py-0  ">
           <div>
             <BackBTN />
@@ -89,7 +89,6 @@ const EmployeeCalendarCom = ({
           
           <div className="text-center">
             {selectedEmployee && (
-              
               <p className="text-xl font-bold text-gray-800 tracking-tight">
                 {selectedEmployee.name || selectedEmployee.Name || "Unknown Employee"}
               </p>
@@ -102,8 +101,6 @@ const EmployeeCalendarCom = ({
         </div>
 
         <div className="px-1 py-1 flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-200">
-
-
           <div className="flex items-end gap-1 mt-3 sm:mt-0">
             <button
               onClick={handlePrevMonth}
@@ -117,7 +114,6 @@ const EmployeeCalendarCom = ({
               <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
                 {safeMonthNames[safeCurrentMonth]} <span className="font-normal text-gray-500">{safeCurrentYear}</span>
               </h2>
-
             </div>
             <button
               onClick={handleNextMonth}
@@ -130,18 +126,14 @@ const EmployeeCalendarCom = ({
           </div>
           <div className="mb-2">
             <LegendBar attendanceData={legendAttendanceData} />
-
-
           </div>
-
-                  <button
-                    className="
+          <button
+            className="
             bg-blue-400 hover:bg-blue-700 
             text-white 
             font-20
             py-1 px-2 
             rounded-full
-            
             shadow-sm
             focus:outline-none 
             focus:ring-2 
@@ -150,16 +142,12 @@ const EmployeeCalendarCom = ({
             transition-colors 
             duration-150
           "
-                  >
-                    Generate PDF
-                  </button>
-                 
-                </div>
-
-
+          >
+            Generate PDF
+          </button>
+        </div>
 
         <table className="w-full table-fixed border-collapse">
-
           <thead>
             <tr>
               {safeDaysOfWeek.map((day, i) => (
@@ -206,7 +194,6 @@ const EmployeeCalendarCom = ({
                     >
                       {date ? (
                         <div className="flex flex-col h-full">
-
                           <div
                             className={`text-xl font-semibold w-8 h-8 flex items-center justify-center rounded-full mb-3
                               ${isToday
@@ -217,7 +204,6 @@ const EmployeeCalendarCom = ({
                           >
                             {date.getDate()}
                           </div>
-
 
                           <div className="w-full">
                             {loading ? (
@@ -233,7 +219,6 @@ const EmployeeCalendarCom = ({
                             ) : null}
                           </div>
 
-
                           <div className="flex-grow w-full mt-2 overflow-hidden text-sm text-gray-600">
                             {loading ? (
                               <p className="pt-1 h-4 bg-gray-200 animate-pulse rounded w-3/4"></p>
@@ -241,7 +226,6 @@ const EmployeeCalendarCom = ({
                               <p className="pt-1">
                               </p>
                             ) : null}
-
                           </div>
                         </div>
                       ) : null}

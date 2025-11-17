@@ -1,11 +1,20 @@
 // src/components/dashboard/attendance/AttendanceTable.ui.jsx
 
-import React from "react";
+import React, { useEffect } from "react";
 import { SkeletonLoader } from "../../common/skeleton/Skeleton";
 
 const AttendanceTableUI = ({ mergedRecords, getStatusClasses, loading }) => {
+  // Debugging: Log when records are updated
+  useEffect(() => {
+    console.log("AttendanceTableUI - mergedRecords updated:", mergedRecords.length);
+    if (mergedRecords.length > 0) {
+      console.log("First record:", mergedRecords[0]);
+    }
+  }, [mergedRecords]);
+
   // Show skeleton loader when loading
   if (loading) {
+    console.log("AttendanceTableUI - showing skeleton loader");
     return (
       <div className="bg-white rounded-xl shadow-lg mt-8">
         {/* Header */}
@@ -22,6 +31,8 @@ const AttendanceTableUI = ({ mergedRecords, getStatusClasses, loading }) => {
       </div>
     );
   }
+
+  console.log("AttendanceTableUI - showing data table with", mergedRecords.length, "records");
 
   return (
     <div className="bg-white rounded-xl shadow-lg mt-8">
