@@ -9,6 +9,9 @@ import {
 import { db } from "../../../firebase";
 import { listenToEmployees } from "../../../redux/slices/employeeSlice";
 
+/* --------------------------------------------------------------
+   Helper: YYYY-MM-DD string
+-------------------------------------------------------------- */
 const getLocalDateKey = (date) => {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -16,12 +19,30 @@ const getLocalDateKey = (date) => {
   return `${y}-${m}-${d}`;
 };
 
+/* --------------------------------------------------------------
+   Helper: Get Monday of the week (THIS WAS MISSING!)
+-------------------------------------------------------------- */
+const getMonday = (date) => {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Sunday fix
+  d.setDate(diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+/* --------------------------------------------------------------
+   Helper: Get initials
+-------------------------------------------------------------- */
 const getInitials = (name) =>
   name
     .split(" ")
     .map((n) => n[0])
     .join("");
 
+/* --------------------------------------------------------------
+   Attendance Statuses
+-------------------------------------------------------------- */
 export const attendanceStatuses = {
   "on-time": {
     label: "On time",
@@ -37,6 +58,9 @@ export const attendanceStatuses = {
   },
 };
 
+/* --------------------------------------------------------------
+   Main Hook
+-------------------------------------------------------------- */
 export const useCalendarData = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -49,8 +73,11 @@ export const useCalendarData = () => {
   const [loading, setLoading] = useState(true);
   const [lastLoadedWeek, setLastLoadedWeek] = useState(null);
 
-  const employeeState = useSelector((state) => state.employees);
-  
+  const employeeState = useSelector((state) => state.employees || { list: [] });
+
+  /* ----------------------------------------------------------
+     Load Employees
+  ---------------------------------------------------------- */
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
@@ -58,15 +85,13 @@ export const useCalendarData = () => {
         const list = snap.docs.map((d) => {
           const data = d.data();
           return {
-            id: d.id, 
-            empId: String(data?.EmployeeID ?? data?.employeeId ?? d.id), 
+            id: d.id,
+            empId: String(data?.EmployeeID ?? data?.employeeId ?? d.id),
             name: data?.Name ?? data?.name ?? "Unknown",
             avatarColor: "bg-purple-300",
           };
         });
-
         setEmployees(list);
-        console.log("Loaded Employees directly:", list);
       } catch (e) {
         console.error("Error loading Employee_Details:", e);
       } finally {
@@ -74,181 +99,110 @@ export const useCalendarData = () => {
       }
     };
 
-    if (employeeState.list && employeeState.list.length > 0) {
+    if (employeeState.list?.length > 0) {
       setEmployees(employeeState.list);
-      console.log("Loaded Employees from Redux:", employeeState.list);
       setLoading(false);
     } else {
-   
       fetchEmployees();
     }
+
     dispatch(listenToEmployees());
   }, [dispatch, employeeState.list]);
 
-  
-  const generateWeek = useCallback((start) => {
-    const days = [];
-    const date = new Date(start);
-    const dow = date.getDay();
-    const mondayOffset = dow === 0 ? -6 : 1 - dow; 
-    date.setDate(date.getDate() + mondayOffset);
-
-    for (let i = 0; i < 5; i++) {
-      const d = new Date(date);
-      d.setDate(date.getDate() + i);
-      days.push({
-        fullDate: getLocalDateKey(d),
-        date: d.getDate(),
-        day: d.toLocaleDateString("en-US", { weekday: "long" }),
-        month: d.toLocaleDateString("en-US", { month: "short" }),
-        year: d.getFullYear(),
-      });
-    }
-    return days;
-  }, []);
-
+  /* ----------------------------------------------------------
+     Generate Week Days (Mon - Fri)
+  ---------------------------------------------------------- */
   useEffect(() => {
-    setDaysOfWeek(generateWeek(currentWeekStart));
-  }, [currentWeekStart, generateWeek]);
+    const generateWeek = () => {
+      const days = [];
+      const monday = getMonday(currentWeekStart);
 
-  
+      for (let i = 0; i < 5; i++) {
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        days.push({
+          fullDate: getLocalDateKey(d),
+          date: d.getDate(),
+          day: d.toLocaleDateString("en-US", { weekday: "long" }),
+          month: d.toLocaleDateString("en-US", { month: "short" }),
+          year: d.getFullYear(),
+        });
+      }
+      return days;
+    };
+
+    setDaysOfWeek(generateWeek());
+  }, [currentWeekStart]);
+
+  /* ----------------------------------------------------------
+     Fetch Attendance for Current Week
+  ---------------------------------------------------------- */
   const fetchAttendanceForWeek = useCallback(async () => {
     if (!employees.length || !daysOfWeek.length) return;
 
-    const weekKey = daysOfWeek.map(day => day.fullDate).join('-');
-    if (lastLoadedWeek === weekKey) {
-      return;
-    }
+    const weekKey = daysOfWeek.map(d => d.fullDate).sort().join(",");
+    if (lastLoadedWeek === weekKey) return;
 
     setLoading(true);
     const newAttendance = {};
 
-    const onTimeThreshold = 10 * 60; 
-    const officeEnd = 18 * 60;       
+    const toDate = (ts) => (ts?.toDate ? ts.toDate() : ts ? new Date(ts) : null);
 
-    const toDate = (ts) => {
-      if (!ts) return null;
-      if (typeof ts.toDate === "function") return ts.toDate();
-      return new Date(ts);
-    };
-
-    const determineStatus = (checkIn, onTimeThreshold, officeEnd) => {
-      let status = "absent";
-      
-      if (checkIn && !isNaN(checkIn.getTime())) {
-        const totalMins = checkIn.getHours() * 60 + checkIn.getMinutes();
-      
-        const lateThreshold = 10 * 60 + 15;
-        
-        if (totalMins >= onTimeThreshold && totalMins <= lateThreshold) {
-          status = "on-time";
-        } else if (totalMins > lateThreshold) {
-          status = "late";
-        }
-        
-        else if (totalMins < onTimeThreshold) {
-          status = "on-time";
-        }
-      }
-      
-      return status;
+    const determineStatus = (checkIn) => {
+      if (!checkIn || isNaN(checkIn.getTime())) return "absent";
+      const mins = checkIn.getHours() * 60 + checkIn.getMinutes();
+      return mins <= 10 * 60 + 15 ? "on-time" : "late";
     };
 
     try {
-      
-      const attendancePromises = daysOfWeek.map(async (day) => {
-        const dateKey = day.fullDate;
-        console.log("Checking attendance for date:", dateKey);
-        
-        const dateDocRef = doc(db, "Employee_CheckIn_CheckOut", dateKey);
+      for (const day of daysOfWeek) {
+        const dateDocRef = doc(db, "Employee_CheckIn_CheckOut", day.fullDate);
         const empRecColRef = collection(dateDocRef, "employee_records");
+        const snap = await getDocs(empRecColRef);
 
-        const empSnap = await getDocs(empRecColRef);
-        console.log(`Found ${empSnap.size} employee records for ${dateKey}`);
-
-        const dayAttendance = {};
-        
-        // Initialize all employees as absent for this date
-        employees.forEach(employee => {
-          dayAttendance[employee.id] = "absent";
+        // Initialize all as absent
+        employees.forEach(emp => {
+          if (!newAttendance[emp.id]) newAttendance[emp.id] = {};
+          newAttendance[emp.id][day.fullDate] = "absent";
         });
 
-        // Update status for employees who have records
-        empSnap.forEach((empDoc) => {
-          const empIdFromDoc = empDoc.id;
-          const data = empDoc.data();
-          console.log("Processing employee record:", empIdFromDoc, data);
-
-          const checkIn = toDate(data?.CheckIn);
-          const checkOut = toDate(data?.CheckOut);
-          console.log("CheckIn time:", checkIn);
-
-          const employee = employees.find((e) => e.empId === empIdFromDoc);
-          if (!employee) {
-            const employeeById = employees.find((e) => e.id === empIdFromDoc);
-            if (employeeById) {
-              console.log("Found employee by document ID:", employeeById);
-              const status = determineStatus(checkIn, onTimeThreshold, officeEnd);
-              dayAttendance[employeeById.id] = status;
-            } else {
-              console.log("Could not find employee for ID:", empIdFromDoc);
-            }
-            return;
+        // Update present employees
+        snap.forEach(doc => {
+          const data = doc.data();
+          const emp = employees.find(e => e.empId === doc.id || e.id === doc.id);
+          if (emp && data?.CheckIn) {
+            const checkIn = toDate(data.CheckIn);
+            newAttendance[emp.id][day.fullDate] = determineStatus(checkIn);
           }
-
-          const status = determineStatus(checkIn, onTimeThreshold, officeEnd);
-          console.log("Determined status:", status);
-          dayAttendance[employee.id] = status;
         });
+      }
 
-        return { dateKey, attendance: dayAttendance };
-      });
-
-      // Wait for all attendance data to be fetched
-      const attendanceResults = await Promise.all(attendancePromises);
-
-      // Combine all attendance data
-      attendanceResults.forEach(({ dateKey, attendance: dayAttendance }) => {
-        Object.keys(dayAttendance).forEach((empId) => {
-          if (!newAttendance[empId]) newAttendance[empId] = {};
-          newAttendance[empId][dateKey] = dayAttendance[empId];
-        });
-      });
-
-      console.log("Final attendance data:", newAttendance);
       setAttendance(newAttendance);
       setLastLoadedWeek(weekKey);
     } catch (error) {
-      console.error("Error fetching attendance data:", error);
+      console.error("Error fetching attendance:", error);
     } finally {
       setLoading(false);
     }
   }, [employees, daysOfWeek, lastLoadedWeek]);
 
   useEffect(() => {
-    if (employees.length && daysOfWeek.length) {
-      fetchAttendanceForWeek();
-    } else {
-      setLoading(false);
-    }
-  }, [employees, daysOfWeek, fetchAttendanceForWeek]);
+    fetchAttendanceForWeek();
+  }, [fetchAttendanceForWeek]);
 
   /* ----------------------------------------------------------
-     Navigation: BLOCK FUTURE WEEKS
+     Navigation: Block Future Weeks
   ---------------------------------------------------------- */
-
-  // Always check if going +7 days would exceed current week
   const isNextWeekDisabled = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const currentMonday = getMonday(today);
 
     const nextMonday = new Date(currentWeekStart);
-    nextMonday.setDate(currentWeekStart.getDate() + 7);
-    const nextMondayDate = getMonday(nextMonday);
-    nextMondayDate.setHours(0, 0, 0, 0);
+    nextMonday.setDate(nextMonday.getDate() + 7);
+    const nextWeekMonday = getMonday(nextMonday);
 
-    return nextMondayDate > currentMonday;
+    return nextWeekMonday > currentMonday;
   }, [currentWeekStart]);
 
   const handlePreviousWeek = () => {
@@ -258,68 +212,50 @@ export const useCalendarData = () => {
   };
 
   const handleNextWeek = () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const currentMonday = getMonday(today);
-
+    if (isNextWeekDisabled) return;
     const next = new Date(currentWeekStart);
     next.setDate(next.getDate() + 7);
-    const nextMonday = getMonday(next);
-    nextMonday.setHours(0, 0, 0, 0);
-
-    if (nextMonday > currentMonday) {
-      return; // BLOCK FUTURE
-    }
-
-    setCurrentWeekStart(nextMonday);
+    setCurrentWeekStart(getMonday(next));
   };
 
   const handleToday = () => {
     setCurrentWeekStart(getMonday(new Date()));
   };
 
-  const handleCellClick = useCallback(
-    (studentId, date, currentStatus) => {
-      const keys = Object.keys(attendanceStatuses);
-      const curIdx = keys.indexOf(currentStatus);
-      const nextIdx = (curIdx + 1) % keys.length;
-      const nextStatus = keys[nextIdx];
+  const handleCellClick = useCallback((studentId, date) => {
+    const currentStatus = attendance[studentId]?.[date] || "absent";
+    const keys = Object.keys(attendanceStatuses);
+    const nextIdx = (keys.indexOf(currentStatus) + 1) % keys.length;
+    const nextStatus = keys[nextIdx];
 
-      setAttendance((prev) => ({
-        ...prev,
-        [studentId]: { ...prev[studentId], [date]: nextStatus },
-      }));
-    },
-    []
-  );
+    setAttendance(prev => ({
+      ...prev,
+      [studentId]: { ...prev[studentId], [date]: nextStatus }
+    }));
+  }, [attendance]);
 
   const handleOpenCalendarModal = () => navigate("/calendarcom");
 
   /* ----------------------------------------------------------
-     Auto-correct if somehow in future (safety net)
+     Safety: Never allow future week
   ---------------------------------------------------------- */
   useEffect(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const currentMonday = getMonday(today);
+    const todayMonday = getMonday(new Date());
     const displayedMonday = getMonday(currentWeekStart);
-    displayedMonday.setHours(0, 0, 0, 0);
-
-    if (displayedMonday > currentMonday) {
-      setCurrentWeekStart(currentMonday);
+    if (displayedMonday > todayMonday) {
+      setCurrentWeekStart(todayMonday);
     }
-  }, [currentWeekStart]);
+  }, []);
 
   /* ----------------------------------------------------------
-     Final return
+     Format Students
   ---------------------------------------------------------- */
-  const formattedStudents = employees.map((emp) => ({
+  const formattedStudents = employees.map(emp => ({
     ...emp,
     initials: getInitials(emp.name),
   }));
 
-  // Only show loading state when we're actively fetching data
-  const showLoading = loading && (employees.length === 0 || daysOfWeek.length === 0);
+  const showLoading = loading && employees.length === 0;
 
   return {
     loading: showLoading,

@@ -7,21 +7,35 @@ import { listenToEmployees } from "../../../redux/slices/employeeSlice";
 // Container component - handles data fetching and passes data to UI
 const AttendanceTableContainer = () => {
   const dispatch = useDispatch();
-  const { mergedRecords } = useAttendanceData();
+  const { mergedRecords, loading } = useAttendanceData();
   
   // Check if employees data is loading
   const employees = useSelector((state) => state.employees.list);
-  const loading = !employees || employees.length === 0;
+  const employeesLoading = !employees || employees.length === 0;
 
   useEffect(() => {
-    dispatch(listenToEmployees());
+    const result = dispatch(listenToEmployees());
+    
+    // Handle cleanup
+    let cleanup;
+    result.then((unsubscribe) => {
+      cleanup = unsubscribe;
+    }).catch((error) => {
+      console.error("Failed to set up employee listener:", error);
+    });
+    
+    return () => {
+      if (cleanup && typeof cleanup === 'function') {
+        cleanup();
+      }
+    };
   }, [dispatch]);
 
   return (
     <AttendanceTableUI 
       mergedRecords={mergedRecords}
       getStatusClasses={getStatusClasses}
-      loading={loading}
+      loading={loading || employeesLoading}
     />
   );
 };
