@@ -1,52 +1,142 @@
 // src/components/dashboard/attendance/useAttendanceData.js
 
-import { useSelector } from "react-redux";
-
-// Dummy data to simulate attendance records
-const DUMMY_RECORDS = [
-  { time: "09:05 AM", status: "Present", remarks: "On time" },
-  { time: "09:12 AM", status: "Late", remarks: "5 min late" },
-  { time: "-", status: "Absent", remarks: "Not marked" },
-  { time: "09:00 AM", status: "Present", remarks: "Perfect" },
-  { time: "09:10 AM", status: "Late", remarks: "Slight delay" },
-  { time: "09:03 AM", status: "Present", remarks: "On time" },
-  { time: "-", status: "Absent", remarks: "Leave applied" },
-  { time: "08:59 AM", status: "Present", remarks: "Early" },
-  { time: "09:06 AM", status: "Present", remarks: "On time" },
-  { time: "09:02 AM", status: "Present", remarks: "Good" },
-  { time: "-", status: "Absent", remarks: "No info" },
-  { time: "09:15 AM", status: "Late", remarks: "Traffic" },
-  { time: "09:00 AM", status: "Present", remarks: "Excellent" },
-  { time: "09:07 AM", status: "Present", remarks: "Good" },
-];
+import { useSelector, useDispatch } from "react-redux";
+import { useEffect, useMemo, useState } from "react";
+import { listenToAttendance } from "../../../redux/slices/attendanceSlice";
 
 export const useAttendanceData = () => {
-  const employees = useSelector((state) => state.employees.list);
-
-  const mergedRecords = employees.map((emp, index) => {
-    const dummy = DUMMY_RECORDS[index] || {
-      time: "-",
-      status: "Absent",
-      remarks: "Not marked",
+  const dispatch = useDispatch();
+  const employees = useSelector((state) => state.employees.list || []);
+  const attendanceList = useSelector((state) => state.attendance.list || []);
+  const attendanceLoading = useSelector((state) => state.attendance.loading || false);
+  
+  // State to trigger refresh
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  
+  // Refresh every 30 seconds to ensure data is up to date
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRefreshTrigger(prev => prev + 1);
+    }, 30000); // Refresh every 30 seconds
+    
+    return () => clearInterval(interval);
+  }, []);
+  
+  useEffect(() => {
+    console.log("Setting up attendance listener");
+    // Always set up the listener regardless of employee count
+    const today = new Date();
+    const result = dispatch(listenToAttendance(today));
+    
+    // Handle the cleanup function properly
+    let cleanup;
+    result.then((unsubscribe) => {
+      console.log("Attendance listener set up successfully");
+      cleanup = unsubscribe;
+    }).catch((error) => {
+      console.error("Failed to set up attendance listener:", error);
+    });
+    
+    // Cleanup function to unsubscribe from the listener
+    return () => {
+      console.log("Cleaning up attendance listener");
+      if (cleanup && typeof cleanup === 'function') {
+        cleanup();
+      }
     };
+  }, [dispatch, refreshTrigger]); // Add refreshTrigger to dependencies to re-setup listener periodically
 
-    return {
-      id: emp.id || emp.EmployeeID || "",
-      employeeId: emp.EmployeeID || emp.employeeId || "",
-      name: emp.Name || emp.name || "",
-      photo: emp.Photo || "", // ✅ New field for Cloudinary image
-      date: new Date().toLocaleDateString(),
-      ...dummy,
-    };
-  });
+  // Debug logging
+  useEffect(() => {
+    console.log("Employees updated:", employees.length);
+    console.log("Attendance list updated:", attendanceList.length);
+    if (attendanceList.length > 0) {
+      console.log("First attendance record:", attendanceList[0]);
+    }
+  }, [employees, attendanceList]);
 
-  return { mergedRecords };
+  // Merge employee data with attendance data using useMemo for performance
+  const mergedRecords = useMemo(() => {
+    console.log("Recalculating merged records with", employees.length, "employees and", attendanceList.length, "attendance records");
+    return employees.map((emp) => {
+      // Match employee with attendance record using the same logic as calendar component
+      // Check if either emp.empId or emp.id matches the attendance document ID
+      const att = attendanceList.find(a => {
+        const match = a.employeeId === emp.empId || a.employeeId === emp.id;
+        console.log(`Matching employee ${emp.id} (${emp.empId}) with attendance ${a.employeeId}: ${match}`);
+        return match;
+      });
+      
+      console.log(`Matching employee ${emp.id} with attendance:`, att);
+
+      let status = "Absent";
+      let time = "-";
+      let remarks = "Not marked";
+
+      if (att?.CheckIn) {
+        // Convert Firebase timestamp
+        let checkIn;
+        if (typeof att.CheckIn.toDate === "function") {
+          checkIn = att.CheckIn.toDate();
+        } else if (att.CheckIn.seconds) {
+          checkIn = new Date(att.CheckIn.seconds * 1000);
+        } else {
+          checkIn = new Date(att.CheckIn);
+        }
+
+        // Validate date
+        if (checkIn instanceof Date && !isNaN(checkIn.getTime())) {
+          time = checkIn.toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+
+          const mins = checkIn.getHours() * 60 + checkIn.getMinutes();
+          const cutoff = 10 * 60 + 15; // 10:15 AM
+
+          if (mins <= cutoff) {
+            status = "On time";
+            remarks = "On time";
+          } else {
+            status = "Late";
+            const diff = mins - cutoff;
+
+            if (diff < 60) {
+              remarks = `${diff} min late`;
+            } else {
+              remarks = `${Math.floor(diff / 60)} hr ${diff % 60} min late`;
+            }
+          }
+        } else {
+          // Invalid date
+          status = "Absent";
+          time = "-";
+          remarks = "Invalid data";
+        }
+      }
+
+      return {
+        id: emp.id || '',
+        employeeId: emp.EmployeeID || emp.employeeId || emp.empId || emp.id || '',
+        name: emp.Name || emp.name || 'Unknown',
+        photo: emp.Photo || emp.photo || null,
+        date: new Date().toLocaleDateString(),
+        time,
+        status,
+        remarks,
+      };
+    });
+  }, [employees, attendanceList]); // Recalculate when employees or attendanceList changes
+
+  return { mergedRecords, loading: attendanceLoading };
 };
 
-// ✅ Helper for status color badges
+// ------------------------------------------------------------
+// STATUS COLORS — On time, Late, Absent
+// ------------------------------------------------------------
 export const getStatusClasses = (status) => {
-  if (status === "Present") return "bg-green-100 text-green-800";
-  if (status === "Absent") return "bg-red-100 text-red-800";
+  if (status === "On time") return "bg-green-100 text-green-800";
   if (status === "Late") return "bg-yellow-100 text-yellow-800";
+  if (status === "Absent") return "bg-red-100 text-red-800";
   return "bg-gray-100 text-gray-800";
 };

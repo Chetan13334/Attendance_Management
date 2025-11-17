@@ -1,161 +1,9 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { BackBTN } from "../BackBTN";
 
-const BirthdayTooltip = ({ birthday }) => {
-  const avatarRef = useRef(null);
-  const tooltipRef = useRef(null);
-  const [isHovered, setIsHovered] = useState(false);
-  const [showTooltip, setShowTooltip] = useState(false);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
-  const timeoutRef = useRef(null);
-
-  useEffect(() => {
-    if (isHovered && avatarRef.current && tooltipRef.current) {
-      const avatarRect = avatarRef.current.getBoundingClientRect();
-      const tooltipRect = tooltipRef.current.getBoundingClientRect();
-      
-      const left = avatarRect.left + (avatarRect.width / 2) - (tooltipRect.width / 2);
-      const top = avatarRect.top - tooltipRect.height - 12;
-      
-      const adjustedLeft = Math.max(10, left);
-      
-      const maxLeft = window.innerWidth - tooltipRect.width - 10;
-      const finalLeft = Math.min(adjustedLeft, maxLeft);
-      
-      setPosition({ top, left: finalLeft });
-    }
-  }, [isHovered, showTooltip]);
-
-  const handleMouseEnter = () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    setIsHovered(true);
-    timeoutRef.current = setTimeout(() => {
-      setShowTooltip(true);
-    }, 100);
-  };
-
-  const handleMouseLeave = () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    setShowTooltip(false);
-    timeoutRef.current = setTimeout(() => {
-      setIsHovered(false);
-    }, 200);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-
-  return (
-    <div className="inline-block w-fit">
-      {/* Avatar Only (Default) */}
-      <div 
-        ref={avatarRef}
-        className="relative flex-shrink-0 cursor-pointer transition-all duration-300 hover:scale-110 hover:z-50"
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-      >
-        <div className="w-8 h-8 p-[1px] rounded-full bg-gradient-to-br from-yellow-300 to-red-500 shadow-md 
-          transition-all duration-300 hover:shadow-lg hover:shadow-yellow-300/50 ring-2 ring-white">
-          <img
-            src={
-              birthday.Photo ||
-              "https://placehold.co/40x40/fbcfe8/000?text=P"
-            }
-            alt={birthday.Name}
-            className="w-full h-full rounded-full object-cover border-2 border-white"
-          />
-        </div>
-      </div>
-
-      {/* Tooltip Birthday Card (Hover) - Fixed Position */}
-      {isHovered && (
-        <div 
-          ref={tooltipRef}
-          className="fixed transition-all duration-300 ease-out"
-          style={{ 
-            top: `${position.top}px`,
-            left: `${position.left}px`,
-            zIndex: 999999,
-            opacity: showTooltip && position.top > 0 ? 1 : 0,
-            transform: showTooltip && position.top > 0 
-              ? 'translateY(0) scale(1)' 
-              : 'translateY(10px) scale(0.9)',
-            pointerEvents: 'none'
-          }}
-        >
-          <div className="px-3 py-2 rounded-lg shadow-2xl border-2 border-pink-200
-            bg-gradient-to-br from-pink-50 via-white to-pink-50 backdrop-blur-sm whitespace-nowrap
-            transform transition-all duration-300">
-            <div className="flex items-center gap-2.5">
-              <div className="relative flex-shrink-0">
-                <div className="w-7 h-7 p-[1px] rounded-full bg-gradient-to-br from-yellow-300 via-orange-400 to-red-500 shadow-md">
-                  <img
-                    src={
-                      birthday.Photo ||
-                      "https://placehold.co/40x40/fbcfe8/000?text=P"
-                    }
-                    alt={birthday.Name}
-                    className="w-full h-full rounded-full object-cover border border-white"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col text-left leading-tight">
-                <span className="font-bold text-gray-800 text-xs">
-                  {birthday.Name}
-                </span>
-                <span className="text-pink-600 font-semibold text-[10px] italic flex items-center gap-1">
-                  <span className="animate-bounce inline-block" style={{ animationDelay: '0ms' }}>🎉</span>
-                  <span>Happy Birthday!</span>
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          {/* Tooltip Arrow */}
-          <div 
-            className="absolute -bottom-[5px] w-0 h-0 
-              border-l-[5px] border-l-transparent 
-              border-r-[5px] border-r-transparent 
-              border-t-[5px] border-t-pink-200
-              transition-all duration-300"
-            style={{
-              left: `${avatarRef.current ? 
-                (avatarRef.current.getBoundingClientRect().left + avatarRef.current.getBoundingClientRect().width / 2 - position.left) : 0}px`,
-              filter: 'drop-shadow(0 2px 4px rgba(236, 72, 153, 0.2))'
-            }}
-          >
-          </div>
-          <div 
-            className="absolute -bottom-[4px] w-0 h-0 
-              border-l-[4px] border-l-transparent 
-              border-r-[4px] border-r-transparent 
-              border-t-[4px] border-t-pink-50
-              transition-all duration-300"
-            style={{
-              left: `${avatarRef.current ? 
-                (avatarRef.current.getBoundingClientRect().left + avatarRef.current.getBoundingClientRect().width / 2 - position.left) : 0}px`
-            }}
-          >
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
 const CalendarUI = ({
-  // State
+  
   currentMonth,
   currentYear,
   isModalOpen,
@@ -167,8 +15,8 @@ const CalendarUI = ({
   monthNames,
   parsedEvents,
   parsedEmployees,
-
-  // Functions
+  
+  
   handlePrevMonth,
   handleNextMonth,
   handleDayClick,
@@ -179,31 +27,9 @@ const CalendarUI = ({
   setIsModalOpen,
   setEventForm,
 }) => {
-  // Memoize the events and birthdays for each day to prevent unnecessary re-renders
-  const memoizedDaysData = useMemo(() => {
-    return weeks.map(week => 
-      week.map(date => {
-        if (!date) return { dayEvents: [], birthdays: [] };
-        return {
-          dayEvents: getEventsForDate(date),
-          birthdays: getBirthdaysForDate(date)
-        };
-      })
-    );
-  }, [weeks, getEventsForDate, getBirthdaysForDate, parsedEvents, parsedEmployees]);
-
-  // Check if today for highlighting
-  const isToday = (date) => {
-    if (!date) return false;
-    const today = new Date();
-    return date.getDate() === today.getDate() &&
-           date.getMonth() === today.getMonth() &&
-           date.getFullYear() === today.getFullYear();
-  };
-
   return (
     <div>
-      <div className="container mx-auto bg-white rounded shadow w-full">
+      <div className="container mx-auto bg-white rounded shadow overflow-hidden w-full">
         <BackBTN />
         <div className="p-4 flex justify-between items-center">
           <span className="text-lg font-bold">
@@ -225,8 +51,7 @@ const CalendarUI = ({
           </div>
         </div>
 
-        <div className="overflow-visible">
-          <table className="w-full table-fixed overflow-visible">
+        <table className="w-full table-fixed">
           <thead>
             <tr>
               {daysOfWeek.map((day, i) => (
@@ -239,45 +64,40 @@ const CalendarUI = ({
           </thead>
 
           <tbody>
-            {memoizedDaysData.map((week, wi) => (
+            {weeks.map((week, wi) => (
               <tr key={wi} className="text-center">
-                {week.map((dayData, di) => {
-                  const date = weeks[wi][di];
-                  const { dayEvents, birthdays } = dayData;
+                {week.map((date, di) => {
+                  const dayEvents = getEventsForDate(date);
+                  const birthdays = getBirthdaysForDate(date);
 
                   return (
                     <td
                       key={di}
                       onClick={() => date && handleDayClick(date)}
-                      className={`border border-gray-200 p-1 h-32 sm:h-40 overflow-hidden cursor-pointer align-top ${isToday(date)
-                          ? "bg-gray-200 text-white hover:bg-gray-300"
-                          : "hover:bg-gray-100"
-                        }`}
+                      className="border border-gray-200 p-1 h-32 sm:h-40 overflow-hidden cursor-pointer align-top hover:bg-gray-100"
                     >
                       {date ? (
                         <div className="flex flex-col h-full">
-                          <div className={`text-sm text-center rounded-full w-7 h-7 flex items-center justify-center mx-auto ${isToday(date)
-                              ? "bg-white text-blue-600 font-bold"
-                              : "text-gray-500"
-                            }`}>
+                          <div className="text-gray-500 text-sm text-center">
                             {date.getDate()}
                           </div>
 
-                          <div className="flex-grow mt-1 overflow-y-auto flex flex-col gap-2 px-1" style={{ overflowX: "visible" }}>
-                            {/* Events */}
+                          <div className="flex-grow mt-1 overflow-y-auto flex flex-col gap-2 px-1">
+                            {}
                             {dayEvents.map((ev) => (
                               <div
                                 key={ev.id}
-                                className={`relative group text-white rounded p-1 text-xs mb-1 ${ev.event_theme === "blue"
+                                className={`relative group text-white rounded p-1 text-xs mb-1 ${
+                                  ev.event_theme === "blue"
                                     ? "bg-blue-400"
                                     : ev.event_theme === "red"
-                                      ? "bg-red-400"
-                                      : ev.event_theme === "yellow"
-                                        ? "bg-yellow-400"
-                                        : ev.event_theme === "green"
-                                          ? "bg-green-400"
-                                          : "bg-purple-400"
-                                  }`}
+                                    ? "bg-red-400"
+                                    : ev.event_theme === "yellow"
+                                    ? "bg-yellow-400"
+                                    : ev.event_theme === "green"
+                                    ? "bg-green-400"
+                                    : "bg-purple-400"
+                                }`}
                               >
                                 {ev.event_title}
                                 <button
@@ -293,21 +113,41 @@ const CalendarUI = ({
                               </div>
                             ))}
 
-                            {/* Birthdays */}
-                            {birthdays.length > 0 && (
-                              <div className="flex items-center -space-x-2 mt-1">
-                                {birthdays.map((b, index) => (
-                                  <div
-                                    key={b.id}
-                                    style={{ zIndex: birthdays.length - index }}
-                                    className="relative"
-                                  >
-                                    <BirthdayTooltip birthday={b} />
+                            {}
+                            {birthdays.map((b) => (
+                              <div
+                                key={b.id}
+                                className="p-2.5 rounded-xl shadow-lg border-2 border-pink-100/50 
+                                  bg-white transition-all duration-300 transform hover:scale-[1.03] 
+                                  hover:shadow-2xl cursor-pointer flex items-center gap-3"
+                                style={{ maxWidth: "200px" }}
+                              >
+                                <div className="relative flex-shrink-0">
+                                  <div className="w-8 h-8 p-[1px] rounded-full bg-gradient-to-br from-yellow-300 to-red-500 shadow-md">
+                                    <img
+                                      src={
+                                        b.Photo ||
+                                        "https:"
+                                      }
+                                      alt={b.Name}
+                                      className="w-full h-full rounded-full object-cover border-2 border-white"
+                                    />
                                   </div>
-                                ))}
-                               
+                                  <span className="absolute -bottom-[2px] -right-[2px] text-xs bg-purple-500 text-white rounded-full w-4 h-4 flex items-center justify-center font-bold shadow-[2px]">
+                                    *
+                                  </span>
+                                </div>
+
+                                <div className="flex flex-col text-left leading-snug overflow-hidden">
+                                  <span className="font-extrabold text-gray-800 text-[10px] truncate">
+                                    {b.Name}
+                                  </span>
+                                  <span className="text-pink-600 font-semibold text-[9px] italic tracking-tight">
+                                    Happy B-Day!
+                                  </span>
+                                </div>
                               </div>
-                            )}
+                            ))}
                           </div>
                         </div>
                       ) : null}
@@ -318,98 +158,65 @@ const CalendarUI = ({
             ))}
           </tbody>
         </table>
-        </div>
       </div>
 
-      {/* Modal */}
+      {}
       {isModalOpen && (
-        // 1. Backdrop: Keep the strong backdrop blur
-        <div className="fixed inset-0 flex justify-end items-stretch backdrop-blur-md bg-black/20 z-50">
-
-          {/* 2. Side Sheet Container: Fixes to the right, full height, no corners on the right edge, subtle drop shadow */}
-          <div className="bg-white w-full max-w-sm relative shadow-2xl p-8 transform transition-transform duration-300 ease-out translate-x-0">
-
-            {/* Close Button: Positioned cleanly, using subtle hover effect */}
+        <div className="fixed inset-0 flex items-center justify-center backdrop-blur-sm bg-black/20 z-50">
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-96 relative">
             <button
               onClick={() => setIsModalOpen(false)}
-              className="absolute top-6 right-6 text-gray-500 hover:text-gray-900 p-1 transition-colors"
-              aria-label="Close"
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              X
             </button>
 
-            {/* Header */}
-            <h2 className="text-3xl font-bold mb-1 text-gray-900 mt-2">Schedule Event</h2>
-            <p className="text-md font-medium text-indigo-600 mb-8">
+            <h2 className="text-2xl font-semibold mb-1 text-gray-800">Add Event</h2>
+            <p className="text-sm text-gray-500 mb-4">
               {selectedDate?.toDateString()}
             </p>
 
-            {/* Input Field */}
-            <div className="mb-6">
-              <label htmlFor="event-title" className="text-sm font-semibold text-gray-700 block mb-2">Title</label>
-              <input
-                id="event-title"
-                type="text"
-                placeholder="Event Title"
-                value={eventForm.title}
-                onChange={(e) =>
-                  setEventForm((s) => ({ ...s, title: e.target.value }))
-                }
-                // 3. Input Styling: Minimalist, just a bottom border, sharp focus
-                className="w-full p-2 border-b-2 border-gray-300 focus:border-indigo-600 outline-none transition-all text-lg placeholder-gray-400 bg-transparent"
-              />
-            </div>
+            <input
+              type="text"
+              placeholder="Event Title"
+              value={eventForm.title}
+              onChange={(e) =>
+                setEventForm((s) => ({ ...s, title: e.target.value }))
+              }
+              className="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-400 outline-none mb-4 shadow-sm placeholder-gray-400 transition-all"
+            />
 
+            <select
+              value={eventForm.theme}
+              onChange={(e) =>
+                setEventForm((s) => ({ ...s, theme: e.target.value }))
+              }
+              className="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-400 outline-none mb-6 shadow-sm transition-all cursor-pointer appearance-none bg-white"
+            >
+              <option value="blue">Blue Theme</option>
+              <option value="red">Red Theme</option>
+              <option value="yellow">Yellow Theme</option>
+              <option value="green">Green Theme</option>
+              <option value="purple">Purple Theme</option>
+            </select>
 
-            {/* Select Field */}
-            <div className="mb-10">
-              <label htmlFor="event-theme" className="text-sm font-semibold text-gray-700 block mb-2">Category</label>
-              <div className="relative">
-                <select
-                  id="event-theme"
-                  value={eventForm.theme}
-                  onChange={(e) =>
-                    setEventForm((s) => ({ ...s, theme: e.target.value }))
-                  }
-                  // 4. Select Styling: Consistent with input, clean look
-                  className="w-full p-2 border-b-2 border-gray-300 focus:border-indigo-600 outline-none transition-all cursor-pointer appearance-none bg-transparent text-lg"
-                >
-                  <option value="indigo" className="text-gray-700">Meeting (Indigo)</option>
-                  <option value="red" className="text-gray-700">Urgent (Red)</option>
-                  <option value="yellow" className="text-gray-700">Personal (Yellow)</option>
-                  <option value="green" className="text-gray-700">Task (Green)</option>
-                  <option value="purple" className="text-gray-700">Holiday (Purple)</option>
-                </select>
-                {/* Custom Arrow Icon for Select */}
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-gray-500">
-                  <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="absolute bottom-0 left-0 right-0 p-8 border-t border-gray-100 bg-white/95 backdrop-blur-sm flex justify-end gap-4">
-
-              {/* Cancel Button (Ghost Style) */}
+            <div className="flex justify-end gap-3">
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="px-6 py-3 rounded-full text-gray-600 font-semibold hover:bg-gray-100 transition-all"
+                className="px-5 py-2 rounded-xl bg-gray-200 text-gray-700 font-medium hover:bg-gray-300 transition-all shadow-sm"
               >
                 Cancel
               </button>
-
-              {/* Primary Button (Pill shape, Indigo focus) */}
               <button
                 onClick={handleAddEvent}
                 disabled={loading}
-                className={`px-6 py-3 rounded-full font-bold text-white shadow-md transition-all ${loading
-                    ? "bg-indigo-300 cursor-not-allowed shadow-none"
-                    : "bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 shadow-indigo-500/50"
-                  }`}
+                className={`px-5 py-2 rounded-xl font-medium text-white ${
+                  loading
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-gradient-to-r from-blue-400 to-blue-700 hover:from-blue-500 hover:to-blue-800"
+                } transition-all shadow-md`}
               >
-                {loading ? "Saving..." : "Save Event"}
+                {loading ? "Adding..." : "Add Event"}
               </button>
             </div>
           </div>

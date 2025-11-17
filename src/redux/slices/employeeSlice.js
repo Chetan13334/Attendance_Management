@@ -11,18 +11,16 @@ import {
 } from "firebase/firestore";
 import { db } from "../../firebase";
 
-let unsubscribe = null;
-
 // ✅ Real-time listener renamed to listenToEmployees (Calendar needs this)
 export const listenToEmployees = createAsyncThunk(
   "employees/listenToEmployees",
   async (_, { dispatch, rejectWithValue }) => {
     try {
-      if (unsubscribe) unsubscribe(); // Stop previous listener
-
-      unsubscribe = onSnapshot(
+      console.log("Setting up employee listener");
+      const unsubscribe = onSnapshot(
         collection(db, "Employee_Details"),
         (snapshot) => {
+          console.log(`Received employee snapshot with ${snapshot.docs.length} documents`);
           const employees = snapshot.docs.map((d) => {
             const data = d.data();
 
@@ -43,10 +41,22 @@ export const listenToEmployees = createAsyncThunk(
             };
           });
 
+          console.log("Dispatching employees:", employees.length);
           dispatch(setEmployees(employees));
+        },
+        (error) => {
+          console.error("Employee listener error:", error);
+          dispatch(setEmployees([])); // Clear employees on error
         }
       );
+      
+      // Return a cleanup function
+      return () => {
+        console.log("Cleaning up employee listener");
+        unsubscribe();
+      };
     } catch (err) {
+      console.error("Employee listener setup error:", err);
       return rejectWithValue(err.message);
     }
   }
@@ -93,7 +103,9 @@ const employeeSlice = createSlice({
   },
   reducers: {
     setEmployees(state, action) {
-      state.list = action.payload;
+      console.log("Setting employees in Redux:", action.payload.length);
+      // Ensure we're creating a new array reference
+      state.list = [...action.payload];
     },
     clearCurrentEmployee(state) {
       state.currentEmployee = null;
@@ -110,6 +122,7 @@ const employeeSlice = createSlice({
       .addCase(listenToEmployees.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+        state.list = []; // Clear list on error
       })
       .addCase(createEmployee.fulfilled, (state, action) => {
         state.list.push(action.payload);

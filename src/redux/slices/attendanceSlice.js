@@ -2,24 +2,92 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { collection, onSnapshot, doc, getDocs } from "firebase/firestore";
 import { db } from "../../firebase";
 
-let unsubscribe = null;
+// Store multiple unsubscribe functions
+const unsubscribeFunctions = {};
+// Store attendance data by date
+const attendanceByDate = {};
 
+// Listen to attendance for a specific date
 export const listenToAttendance = createAsyncThunk(
   "attendance/listenToAttendance",
-  async (_, { dispatch, rejectWithValue }) => {
+  async (date, { dispatch, rejectWithValue }) => {
     try {
-      // Stop previous listener if any
-      if (unsubscribe) unsubscribe();
-
-      // Listen to the main attendance collection
-      unsubscribe = onSnapshot(collection(db, "attendance"), (snapshot) => {
-        const data = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        dispatch(setAttendance(data));
+      // Format date as YYYY-MM-DD
+      const dateStr = date instanceof Date ? 
+        `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` :
+        date;
+      
+      console.log("Setting up attendance listener for date:", dateStr, "from input date:", date);
+      
+      // If we already have a listener for this date, clean it up first
+      if (unsubscribeFunctions[dateStr]) {
+        console.log("Cleaning up existing listener for date:", dateStr);
+        unsubscribeFunctions[dateStr]();
+        delete unsubscribeFunctions[dateStr];
+      }
+      
+      // Listen to attendance data from the correct Firestore structure
+      // Employee_CheckIn_CheckOut/{date}/employee_records/{documentId}
+      const dateDocRef = doc(db, "Employee_CheckIn_CheckOut", dateStr);
+      const empRecColRef = collection(dateDocRef, "employee_records");
+      
+      const unsubscribe = onSnapshot(empRecColRef, (empSnapshot) => {
+        console.log(`Received attendance snapshot with ${empSnapshot.docs.length} documents for date:`, dateStr);
+        const allAttendance = [];
+        
+        // For each employee document in employee_records
+        empSnapshot.docs.forEach((empDoc) => {
+          const documentId = empDoc.id; // This is the Firestore document ID
+          const empData = empDoc.data();
+          
+          console.log(`Processing attendance for employee ${documentId} on date ${dateStr}:`, empData);
+          
+          // Add the employee record with document ID as employeeId
+          allAttendance.push({
+            id: documentId,
+            employeeId: documentId, // Using document ID to match with employees
+            date: dateStr,
+            ...empData,
+          });
+        });
+        
+        // Store attendance data for this specific date
+        attendanceByDate[dateStr] = allAttendance;
+        
+        // Combine all attendance data from all dates
+        const combinedAttendance = Object.values(attendanceByDate).flat();
+        
+        console.log("Dispatching combined attendance data:", combinedAttendance.length, "records");
+        console.log("Attendance by date:", attendanceByDate);
+        console.log("Today's attendance data:", allAttendance);
+        dispatch(setAttendance(combinedAttendance));
+      }, (error) => {
+        console.error("Attendance listener error for date:", dateStr, error);
+        // Don't clear the entire attendance list, just remove data for this date
+        delete attendanceByDate[dateStr];
+        // Combine remaining attendance data
+        const combinedAttendance = Object.values(attendanceByDate).flat();
+        dispatch(setAttendance(combinedAttendance));
       });
+      
+      // Store the unsubscribe function
+      unsubscribeFunctions[dateStr] = unsubscribe;
+      
+      // Return a cleanup function
+      return () => {
+        console.log("Cleaning up attendance listener for date:", dateStr);
+        if (unsubscribeFunctions[dateStr]) {
+          unsubscribeFunctions[dateStr]();
+          delete unsubscribeFunctions[dateStr];
+        }
+        // Also remove data for this date
+        delete attendanceByDate[dateStr];
+        // Update the combined attendance
+        const combinedAttendance = Object.values(attendanceByDate).flat();
+        dispatch(setAttendance(combinedAttendance));
+      };
     } catch (err) {
+      console.error("Attendance listener setup error:", err);
       return rejectWithValue(err.message);
     }
   }
@@ -85,7 +153,10 @@ const attendanceSlice = createSlice({
   },
   reducers: {
     setAttendance(state, action) {
-      state.list = action.payload;
+      console.log("Setting attendance in Redux:", action.payload.length, "records");
+      console.log("Attendance data:", action.payload);
+      // Ensure we're creating a new array reference
+      state.list = [...action.payload];
     },
     setCalendarAttendance(state, action) {
       state.calendarData = action.payload;
@@ -94,10 +165,35 @@ const attendanceSlice = createSlice({
       state.list = [];
       state.calendarData = {};
       state.error = null;
+      // Clean up all unsubscribe functions
+      Object.values(unsubscribeFunctions).forEach(unsubscribe => {
+        if (typeof unsubscribe === 'function') {
+          unsubscribe();
+        }
+      });
+      Object.keys(unsubscribeFunctions).forEach(key => {
+        delete unsubscribeFunctions[key];
+      });
+      // Clear attendance data by date
+      Object.keys(attendanceByDate).forEach(key => {
+        delete attendanceByDate[key];
+      });
     },
   },
   extraReducers: (builder) => {
     builder
+      .addCase(listenToAttendance.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(listenToAttendance.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(listenToAttendance.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.list = []; // Clear list on error
+      })
       .addCase(fetchCalendarAttendance.pending, (state) => {
         state.calendarLoading = true;
         state.error = null;

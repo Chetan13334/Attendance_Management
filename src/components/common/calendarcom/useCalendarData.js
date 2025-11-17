@@ -28,8 +28,26 @@ export const useCalendarData = () => {
 
   // --- Start real-time listeners ---
   useEffect(() => {
-    const unsubscribeEvents = dispatch(listenToEvents());
-    const unsubscribeEmployees = dispatch(listenToEmployees());
+    let unsubscribeEvents;
+    let unsubscribeEmployees;
+    
+    // Set up event listener
+    dispatch(listenToEvents()).then((unsubscribe) => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribeEvents = unsubscribe;
+      }
+    }).catch((error) => {
+      console.error("Failed to set up events listener:", error);
+    });
+    
+    // Set up employee listener
+    dispatch(listenToEmployees()).then((unsubscribe) => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribeEmployees = unsubscribe;
+      }
+    }).catch((error) => {
+      console.error("Failed to set up employees listener:", error);
+    });
     
     // Cleanup function to unsubscribe when component unmounts
     return () => {
