@@ -26,6 +26,12 @@ export const listenToAttendance = createAsyncThunk(
         delete unsubscribeFunctions[dateStr];
       }
       
+      // Also clean up data for this date if it exists
+      if (attendanceByDate[dateStr]) {
+        console.log("Removing existing attendance data for date:", dateStr);
+        delete attendanceByDate[dateStr];
+      }
+      
       // Listen to attendance data from the correct Firestore structure
       // Employee_CheckIn_CheckOut/{date}/employee_records/{documentId}
       const dateDocRef = doc(db, "Employee_CheckIn_CheckOut", dateStr);
@@ -162,20 +168,24 @@ const attendanceSlice = createSlice({
       state.calendarData = action.payload;
     },
     clearAttendance(state) {
+      console.log("Clearing attendance data from Redux store");
       state.list = [];
       state.calendarData = {};
       state.error = null;
       // Clean up all unsubscribe functions
       Object.values(unsubscribeFunctions).forEach(unsubscribe => {
         if (typeof unsubscribe === 'function') {
+          console.log("Cleaning up unsubscribe function");
           unsubscribe();
         }
       });
       Object.keys(unsubscribeFunctions).forEach(key => {
+        console.log("Deleting unsubscribe function for date:", key);
         delete unsubscribeFunctions[key];
       });
       // Clear attendance data by date
       Object.keys(attendanceByDate).forEach(key => {
+        console.log("Deleting attendance data for date:", key);
         delete attendanceByDate[key];
       });
     },

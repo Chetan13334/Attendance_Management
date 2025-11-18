@@ -2,7 +2,8 @@ import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import AttendanceTableUI from "./AttendanceTable.ui";
 import { useAttendanceData, getStatusClasses } from "./useAttendanceData";
-import { listenToEmployees } from "../../../redux/slices/employeeSlice";
+import { listenToEmployees, clearEmployees } from "../../../redux/slices/employeeSlice";
+import { clearAttendance } from "../../../redux/slices/attendanceSlice";
 
 // Container component - handles data fetching and passes data to UI
 const AttendanceTableContainer = () => {
@@ -15,6 +16,8 @@ const AttendanceTableContainer = () => {
 
   useEffect(() => {
     console.log("Setting up employee listener in container");
+    // Clear any existing employee data first
+    dispatch(clearEmployees());
     const result = dispatch(listenToEmployees());
     
     // Handle cleanup
@@ -31,6 +34,14 @@ const AttendanceTableContainer = () => {
       if (cleanup && typeof cleanup === 'function') {
         cleanup();
       }
+    };
+  }, [dispatch]);
+
+  // Clear attendance data when component unmounts to prevent stale data
+  useEffect(() => {
+    return () => {
+      console.log("Component unmounting, clearing attendance data");
+      dispatch(clearAttendance());
     };
   }, [dispatch]);
 

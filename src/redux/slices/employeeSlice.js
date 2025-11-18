@@ -110,6 +110,11 @@ const employeeSlice = createSlice({
     clearCurrentEmployee(state) {
       state.currentEmployee = null;
     },
+    clearEmployees(state) {
+      console.log("Clearing employees data from Redux store");
+      state.list = [];
+      state.error = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -138,5 +143,5 @@ const employeeSlice = createSlice({
   },
 });
 
-export const { setEmployees, clearCurrentEmployee } = employeeSlice.actions;
+export const { setEmployees, clearCurrentEmployee, clearEmployees } = employeeSlice.actions;
 export default employeeSlice.reducer;

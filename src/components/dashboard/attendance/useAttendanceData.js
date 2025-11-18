@@ -10,23 +10,46 @@ export const useAttendanceData = () => {
   const attendanceList = useSelector((state) => state.attendance.list || []);
   const attendanceLoading = useSelector((state) => state.attendance.loading || false);
   
-  // State to trigger refresh
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  // State to track current date
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [forceRefresh, setForceRefresh] = useState(0); // Add force refresh mechanism
   
-  // Refresh every 30 seconds to ensure data is up to date
+  // Update current date when component mounts to ensure we have the latest date
   useEffect(() => {
-    const interval = setInterval(() => {
-      setRefreshTrigger(prev => prev + 1);
-    }, 30000); // Refresh every 30 seconds
-    
-    return () => clearInterval(interval);
+    const now = new Date();
+    console.log("Component mounted, setting current date to:", now.toDateString());
+    setCurrentDate(now);
+    // Force a refresh when component mounts
+    setForceRefresh(prev => prev + 1);
   }, []);
   
+  // Update current date when window regains focus and periodically
   useEffect(() => {
-    console.log("Setting up attendance listener");
+    const checkDateChange = () => {
+      const now = new Date();
+      // Check if the date has changed (day, month, or year)
+      if (now.toDateString() !== currentDate.toDateString()) {
+        console.log("Date changed from", currentDate.toDateString(), "to", now.toDateString(), "- updating current date");
+        setCurrentDate(now);
+      }
+    };
+    
+    // Check on window focus
+    window.addEventListener('focus', checkDateChange);
+    
+    // Also check periodically
+    const interval = setInterval(checkDateChange, 60000); // Check every minute
+    
+    return () => {
+      window.removeEventListener('focus', checkDateChange);
+      clearInterval(interval);
+    };
+  }, [currentDate]);
+  
+  useEffect(() => {
+    console.log("Setting up attendance listener for date:", currentDate, "forceRefresh:", forceRefresh);
     // Always set up the listener regardless of employee count
-    const today = new Date();
-    const result = dispatch(listenToAttendance(today));
+    const result = dispatch(listenToAttendance(currentDate));
     
     // Handle the cleanup function properly
     let cleanup;
@@ -44,7 +67,7 @@ export const useAttendanceData = () => {
         cleanup();
       }
     };
-  }, [dispatch, refreshTrigger]); // Add refreshTrigger to dependencies to re-setup listener periodically
+  }, [dispatch, currentDate, forceRefresh]); // Depend on forceRefresh to refresh when component mounts
 
   // Debug logging
   useEffect(() => {
@@ -115,18 +138,21 @@ export const useAttendanceData = () => {
         }
       }
 
+      // Format the current date for display
+      const formattedDate = currentDate.toLocaleDateString();
+
       return {
         id: emp.id || '',
         employeeId: emp.EmployeeID || emp.employeeId || emp.empId || emp.id || '',
         name: emp.Name || emp.name || 'Unknown',
         photo: emp.Photo || emp.photo || null,
-        date: new Date().toLocaleDateString(),
+        date: formattedDate,
         time,
         status,
         remarks,
       };
     });
-  }, [employees, attendanceList]); // Recalculate when employees or attendanceList changes
+  }, [employees, attendanceList, currentDate]); // Recalculate when employees, attendanceList, or currentDate changes
 
   return { mergedRecords, loading: attendanceLoading };
 };
