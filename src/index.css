@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@import "react-date-picker/dist/DatePicker.css";
+@import "react-calendar/dist/Calendar.css";
+@import "react-time-picker/dist/TimePicker.css";
 
 body {
   margin: 0;
@@ -51,4 +54,66 @@ html {
 
 .animate-progress-bar {
   animation: progress-bar 2s linear forwards;
+}
+/* --- Custom CSS for Minimalist Date/Time Pickers (using .minimal-input) --- */
+
+/* 1. Base Input Wrapper Style */
+.minimal-input .react-date-picker__wrapper,
+.minimal-input .react-time-picker__wrapper {
+    /* Tailwind equivalent: p-3.5 border border-gray-200 rounded-xl bg-white shadow-sm */
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem; /* rounded-xl */
+    padding: 0.875rem 1rem; /* py-3.5 px-4 */
+    background-color: #ffffff;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease-in-out;
+}
+
+/* 2. Focus/Active State (Vibrant Cyan Ring) */
+.minimal-input:focus-within .react-date-picker__wrapper,
+.minimal-input:focus-within .react-time-picker__wrapper {
+    /* Tailwind equivalent: focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 */
+    border-color: #06b6d4; /* cyan-500 */
+    box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.2); /* Subtle outer ring */
+}
+
+/* 3. Input Element (Remove defaults) */
+.minimal-input .react-date-picker__inputGroup > input,
+.minimal-input .react-time-picker__inputGroup > input {
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    outline: none !important;
+    font-size: 1rem;
+    color: #374151; /* text-gray-700 */
+    font-weight: 500;
+}
+
+
+/* 4. Calendar Popover Customization */
+.react-calendar {
+    border: 1px solid #e5e7eb !important;
+    border-radius: 1rem !important; /* Rounded corners for the calendar box */
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.04) !important; /* Deeper shadow */
+    font-family: inherit !important;
+    padding: 0.5rem;
+}
+
+/* Highlighted (Selected) Date */
+.react-calendar__tile--active {
+    background-color: #06b6d4 !important; /* cyan-500 */
+    color: white !important;
+    border-radius: 0.5rem !important;
+}
+
+/* Hovered Date */
+.react-calendar__tile:enabled:hover,
+.react-calendar__tile:enabled:focus {
+    background-color: #f0f9ff !important; /* cyan-50 */
+    border-radius: 0.5rem !important;
+}
+
+/* Navigation */
+.react-calendar__navigation__label {
+    font-weight: 600; /* Semibold header */
 }

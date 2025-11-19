@@ -2,8 +2,8 @@ import React, { useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { BackBTN } from "../BackBTN";
 import LegendBar from "../../../components/common/LegendBar";
-import { p } from "framer-motion/client";
-
+import { GeneratePDFButton } from ".";
+import { formatLegendData } from "./legendBarLogic";
 
 const EmployeeCalendarCom = ({
   currentMonth,
@@ -21,7 +21,9 @@ const EmployeeCalendarCom = ({
   // Debugging: Log when attendance data changes
   useEffect(() => {
     console.log("Employee attendance data updated:", employeeAttendance);
-  }, [employeeAttendance]);
+    console.log("Selected employee:", selectedEmployee);
+    console.log("Loading state:", loading);
+  }, [employeeAttendance, selectedEmployee, loading]);
 
   const safeMonthNames = monthNames || [
     "January", "February", "March", "April", "May", "June",
@@ -35,7 +37,6 @@ const EmployeeCalendarCom = ({
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-
 
   const getAttendanceBadgeClass = (status) => {
     switch (status) {
@@ -63,21 +64,13 @@ const EmployeeCalendarCom = ({
     }
   };
 
-
-
-  // Format attendance data for the legend bar
-  const formatAttendanceDataForLegend = () => {
-    // Create a structure that the LegendBar expects: { employeeId: { dateKey: status } }
-    const formattedData = {};
-
-    if (selectedEmployee && employeeAttendance) {
-      formattedData[selectedEmployee.id] = employeeAttendance;
-    }
-
-    return formattedData;
-  };
-
-  const legendAttendanceData = formatAttendanceDataForLegend();
+  // Format attendance data for the legend bar using the new logic
+  const legendAttendanceData = formatLegendData(selectedEmployee, employeeAttendance);
+  
+  // Log the final data being passed to LegendBar
+  console.log("Legend attendance data being passed:", legendAttendanceData);
+  console.log("Employee attendance data:", employeeAttendance);
+  console.log("Current month/year:", safeCurrentMonth, safeCurrentYear);
 
   return (
     <div>
@@ -127,24 +120,7 @@ const EmployeeCalendarCom = ({
           <div className="mb-2">
             <LegendBar attendanceData={legendAttendanceData} />
           </div>
-          <button
-            className="
-            bg-blue-400 hover:bg-blue-700 
-            text-white 
-            font-20
-            py-1 px-2 
-            rounded-full
-            shadow-sm
-            focus:outline-none 
-            focus:ring-2 
-            focus:ring-blue-500 
-            focus:ring-offset-2
-            transition-colors 
-            duration-150
-          "
-          >
-            Generate PDF
-          </button>
+          <GeneratePDFButton />
         </div>
 
         <table className="w-full table-fixed border-collapse">

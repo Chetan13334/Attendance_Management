@@ -1,68 +1,38 @@
 import React from 'react';
+import { calculateLegendPercentages, shouldShowPercentages } from '../common/EmployeeCalendarcom/legendBarLogic';
 
 const LegendBar = ({ attendanceData = {} }) => {
 
+  // Calculate percentages using the new logic
+  const { onTimePercent, latePercent, absentPercent, totalValidRecords } = calculateLegendPercentages(attendanceData);
   
-  const hasData = Object.keys(attendanceData).length > 0 && 
-    Object.values(attendanceData).some(employee => 
-      Object.keys(employee).length > 0
-    );
+  // Determine if we should show percentages
+  const showPercentages = shouldShowPercentages(attendanceData, totalValidRecords);
 
-  const calculatePercentages = () => {
-    let totalCells = 0;
-    let onTimeCount = 0;
-    let lateCount = 0;
-    let absentCount = 0;
-    
-    
-    Object.values(attendanceData).forEach(employee => {
-      Object.values(employee).forEach(status => {
-        totalCells++;
-        if (status === 'on-time') onTimeCount++;
-        else if (status === 'late') lateCount++;
-        else if (status === 'absent') absentCount++;
-      });
-    });
-    
-   
-    const onTimePercent = totalCells > 0 ? Math.round((onTimeCount / totalCells) * 100) : 0;
-    const latePercent = totalCells > 0 ? Math.round((lateCount / totalCells) * 100) : 0;
-    const absentPercent = totalCells > 0 ? Math.round((absentCount / totalCells) * 100) : 0;
-    
-    return { onTimePercent, latePercent, absentPercent };
-  };
-  
-  let percentages = { onTimePercent: 0, latePercent: 0, absentPercent: 0 };
-  try {
-    percentages = calculatePercentages();
-  } catch (error) {
-    console.error("Error calculating percentages:", error);
-  }
-  
-  const { onTimePercent, latePercent, absentPercent } = percentages;
+  console.log("LegendBar - Final display values:", { 
+    showPercentages, 
+    onTimePercent, 
+    latePercent, 
+    absentPercent, 
+    totalValidRecords 
+  });
 
   const legendData = [
-    // {
-    //   label: 'Holiday',
-    //   value: null, 
-    //   dotColor: 'bg-gray-600',
-    //   textColor: 'text-gray-800',
-    // },
     {
       label: 'On time',
-      value: hasData ? `${onTimePercent}%` : '--%',
+      value: showPercentages ? `${onTimePercent}%` : '--%',
       dotColor: 'bg-green-500', 
       textColor: 'text-gray-800',
     },
     {
       label: 'Late',
-      value: hasData ? `${latePercent}%` : '--%',
+      value: showPercentages ? `${latePercent}%` : '--%',
       dotColor: 'bg-yellow-400',
       textColor: 'text-gray-800',
     },
     {
       label: 'Absent',
-      value: hasData ? `${absentPercent}%` : '--%',
+      value: showPercentages ? `${absentPercent}%` : '--%',
       dotColor: 'bg-red-500',
       textColor: 'text-gray-800',
     },

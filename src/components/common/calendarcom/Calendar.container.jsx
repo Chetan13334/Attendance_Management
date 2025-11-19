@@ -1,6 +1,6 @@
 import React from "react";
-import CalendarUI from "./Calendar.ui";
-import { useCalendarData } from "./useCalendarData";
+import CalendarUI from "./CalendarCom.ui";
+import { useCalendarData } from "./useCalendarComData";
 
 const CalendarContainer = () => {
   const calendarData = useCalendarData();
