@@ -23,14 +23,14 @@ const EmployeeFormPage = () => {
 
   if (!isAuthenticated || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="min-h-screen flex items-center justify-center ">
         <div className="text-gray-600">Loading Employee Form...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen  flex">
       {/* Sidebar */}
       <Sidebar
         isOpen={isSidebarOpen}
@@ -44,7 +44,7 @@ const EmployeeFormPage = () => {
         <Navbar toggleSidebar={toggleSidebar} handleSignOut={handleSignOut} />
 
         {/* Employee Form Content */}
-        <main className="pt-20 px-4 sm:px-6 pb-8">
+        <main className="pt-20 px-0 sm:px-0 pb-0">
           <EmployeeForm />
         </main>
       </div>
