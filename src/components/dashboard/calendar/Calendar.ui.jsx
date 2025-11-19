@@ -94,9 +94,8 @@ const CalendarUI = ({
             </button>
 
             <div className="text-sm font-semibold text-gray-700">
-              {daysOfWeek[0]?.month} {daysOfWeek[0]?.date} -{" "}
-              {daysOfWeek[4]?.month} {daysOfWeek[4]?.date},{" "}
-              {daysOfWeek[0]?.year}
+              {daysOfWeek[0] ? new Date(daysOfWeek[0].fullDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : ''} -{" "}
+              {daysOfWeek[4] ? new Date(daysOfWeek[4].fullDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}
             </div>
 
             <button

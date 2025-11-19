@@ -64,7 +64,7 @@ const EmployeeFormUI = ({
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-3">
+                {/* <div className="flex items-start space-x-3">
                   <Calendar className="w-5 h-5 text-indigo-500 mt-1" />
                   <div>
                     <p className="text-xs text-gray-400 uppercase">Joining</p>
@@ -78,7 +78,7 @@ const EmployeeFormUI = ({
                     <p className="text-xs text-gray-400 uppercase">Contact</p>
                     <p className="text-gray-800 font-semibold">{formData.ContactNumber || "N/A"}</p>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
 

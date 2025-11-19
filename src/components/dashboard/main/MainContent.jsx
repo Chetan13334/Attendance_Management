@@ -48,7 +48,7 @@ const EventCard = ({ event, index }) => {
       <h4 className="font-semibold text-gray-800">{event.event_title}</h4>
       <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
         <Calendar className="h-3.5 w-3.5" />
-        {date.toDateString()}
+        {date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
       </p>
     </div>
   );

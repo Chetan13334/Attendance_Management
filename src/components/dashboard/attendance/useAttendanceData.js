@@ -137,9 +137,33 @@ export const useAttendanceData = () => {
           remarks = "Invalid data";
         }
       }
+      
+      // Extract checkOut time if available
+      let checkOutTime = "-";
+      if (att?.CheckOut) {
+        let checkOut;
+        if (typeof att.CheckOut.toDate === "function") {
+          checkOut = att.CheckOut.toDate();
+        } else if (att.CheckOut.seconds) {
+          checkOut = new Date(att.CheckOut.seconds * 1000);
+        } else {
+          checkOut = new Date(att.CheckOut);
+        }
 
-      // Format the current date for display
-      const formattedDate = currentDate.toLocaleDateString();
+        if (checkOut instanceof Date && !isNaN(checkOut.getTime())) {
+          checkOutTime = checkOut.toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+        }
+      }
+
+      // Format the current date for display in "19 Nov 2025" format
+      const formattedDate = currentDate.toLocaleDateString('en-US', { 
+        day: 'numeric', 
+        month: 'short', 
+        year: 'numeric' 
+      });
 
       return {
         id: emp.id || '',
@@ -147,9 +171,11 @@ export const useAttendanceData = () => {
         name: emp.Name || emp.name || 'Unknown',
         photo: emp.Photo || emp.photo || null,
         date: formattedDate,
-        time,
+        checkIn: time,
+        checkOut: checkOutTime,
         status,
         remarks,
+        dateOfJoining: emp.DateOfJoining || null, // Add DateOfJoining for sorting
       };
     });
   }, [employees, attendanceList, currentDate]); // Recalculate when employees, attendanceList, or currentDate changes
