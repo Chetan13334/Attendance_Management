@@ -42,7 +42,7 @@ const EmployeeDetailsUI = ({ employees, loading, error, navigate }) => {
     return <p className="text-center mt-10 text-red-500">Error fetching data: {error}</p>;
 
   return (
-    <div className="min-h-screen bg-white py-10 px-4 overflow-x-hidden">
+    <div className="min-h-screen bg-white py-2 px-4 overflow-x-hidden">
       <h2 className="text-2xl font-bold text-gray-800 mb-8 inline-block pb-1">
         Employee Details
       </h2>

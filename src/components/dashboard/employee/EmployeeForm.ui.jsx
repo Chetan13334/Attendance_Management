@@ -202,32 +202,54 @@ const EmployeeFormUI = ({
 
                 <div className="flex flex-col">
                   <label className="text-sm font-medium text-gray-700 mb-1.5">Role</label>
-                  <input
+                  <select
                     id="Role"
-                    value={formData.Role}
+                    value={formData.Role || ""}
                     onChange={handleChange}
-                    type="text"
-                    placeholder="Software Engineer"
                     className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 text-sm"
-                  />
+                  >
+                    <option value="">Select Role</option>
+                    <option value="Frontend Developer">Frontend Developer</option>
+                    <option value="Backend Developer">Backend Developer</option>
+                    <option value="Fullstack Developer">Fullstack Developer</option>
+                    <option value="Software Engineer">Software Engineer</option>
+                    <option value="Project Manager">Project Manager</option>
+                    <option value="UI/UX Designer">UI/UX Designer</option>
+                    <option value="QA Engineer">QA Engineer</option>
+                    <option value="DevOps Engineer">DevOps Engineer</option>
+                    <option value="Data Scientist">Data Scientist</option>
+                    <option value="Product Manager">Product Manager</option>
+                    <option value="HR Manager">HR Manager</option>
+                    <option value="Finance Manager">Finance Manager</option>
+                  </select>
                 </div>
 
                 <div className="flex flex-col">
                   <label className="text-sm font-medium text-gray-700 mb-1.5">Department</label>
-                  <input
+                  <select
                     id="Department"
-                    value={formData.Department}
+                    value={formData.Department || ""}
                     onChange={handleChange}
-                    type="text"
-                    placeholder="IT"
                     className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 text-sm"
-                  />
+                  >
+                    <option value="">Select Department</option>
+                    <option value="Engineering">Engineering</option>
+                    <option value="Product">Product</option>
+                    <option value="Design">Design</option>
+                    <option value="Marketing">Marketing</option>
+                    <option value="Sales">Sales</option>
+                    <option value="HR">HR</option>
+                    <option value="Finance">Finance</option>
+                    <option value="Operations">Operations</option>
+                    <option value="IT">IT</option>
+                    <option value="Customer Support">Customer Support</option>
+                  </select>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="flex justify-between gap-4 p-6 border-t border-gray-200 bg-white flex-shrink-0">
+          <div className="flex justify-between gap-4 p-2 border-t border-gray-200 bg-white flex-shrink-0">
             <button
               type="button"
               onClick={() => navigate("/employee_details")}

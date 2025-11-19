@@ -51,7 +51,7 @@ const EditEmployeeUI = ({
     <div className="">
       <div className="w-full max-w-7xl mx-auto flex flex-col bg-white h-[85vh] overflow-hidden">
         <form onSubmit={handleSave} className="flex flex-col h-full">
-          <div className="p-6 bg-white text-gray-900 flex-shrink-0 flex justify-between items-center border-b border-gray-200">
+          <div className="p-1 bg-white text-gray-900 flex-shrink-0 flex justify-between items-center border-b border-gray-200">
             <div className="flex items-center gap-4">
               <button
                 type="button"
@@ -122,9 +122,55 @@ const EditEmployeeUI = ({
 
               <h3 className="text-lg font-bold text-gray-900 border-b pb-2 pt-4">Professional & Personal</h3>
               <div className="grid md:grid-cols-2 gap-x-10 gap-y-6">
+                <div className="flex flex-col">
+                  <label htmlFor="Role" className="text-sm font-medium text-gray-700 mb-1.5">Role/Title</label>
+                  <select
+                    id="Role"
+                    name="Role"
+                    value={Role || ""}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2.5 rounded-lg bg-white text-gray-800 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition shadow-inner text-sm"
+                  >
+                    <option value="">Select Role</option>
+                    <option value="Frontend Developer">Frontend Developer</option>
+                    <option value="Backend Developer">Backend Developer</option>
+                    <option value="Fullstack Developer">Fullstack Developer</option>
+                    <option value="Software Engineer">Software Engineer</option>
+                    <option value="Project Manager">Project Manager</option>
+                    <option value="UI/UX Designer">UI/UX Designer</option>
+                    <option value="QA Engineer">QA Engineer</option>
+                    <option value="DevOps Engineer">DevOps Engineer</option>
+                    <option value="Data Scientist">Data Scientist</option>
+                    <option value="Product Manager">Product Manager</option>
+                    <option value="HR Manager">HR Manager</option>
+                    <option value="Finance Manager">Finance Manager</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-col">
+                  <label htmlFor="Department" className="text-sm font-medium text-gray-700 mb-1.5">Department</label>
+                  <select
+                    id="Department"
+                    name="Department"
+                    value={Department || ""}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2.5 rounded-lg bg-white text-gray-800 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition shadow-inner text-sm"
+                  >
+                    <option value="">Select Department</option>
+                    <option value="Engineering">Engineering</option>
+                    <option value="Product">Product</option>
+                    <option value="Design">Design</option>
+                    <option value="Marketing">Marketing</option>
+                    <option value="Sales">Sales</option>
+                    <option value="HR">HR</option>
+                    <option value="Finance">Finance</option>
+                    <option value="Operations">Operations</option>
+                    <option value="IT">IT</option>
+                    <option value="Customer Support">Customer Support</option>
+                  </select>
+                </div>
+
                 {[
-                  { id: "Role", label: "Role/Title", type: "text", placeholder: "Software Engineer", value: Role },
-                  { id: "Department", label: "Department", type: "text", placeholder: "IT", value: Department },
                   { id: "DateOfJoining", label: "Date of Joining", type: "date", value: DateOfJoining },
                   { id: "DateOfBirth", label: "Date of Birth", type: "date", value: DateOfBirth },
                 ].map(({ id, label, type, placeholder, value }) => (

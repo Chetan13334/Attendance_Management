@@ -1,4 +1,4 @@
-import { updateAttendanceRecord, fetchAttendanceRecord } from "../../common/calendarcom/attendanceEditLogic";
+import { updateAttendanceRecord, fetchAttendanceRecord } from "./attendanceEditLogic";
 
 /**
  * Updates or creates an attendance record for an employee on a specific date
@@ -10,9 +10,23 @@ import { updateAttendanceRecord, fetchAttendanceRecord } from "../../common/cale
  */
 export const saveAttendanceData = async (employeeId, date, checkIn, checkOut) => {
   try {
-    return await updateAttendanceRecord(employeeId, date, checkIn, checkOut);
+    // Validate inputs
+    if (!employeeId || !date || !checkIn || !checkOut) {
+      throw new Error("Missing required parameters");
+    }
+    
+    // Validate time format (HH:mm)
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!timeRegex.test(checkIn) || !timeRegex.test(checkOut)) {
+      throw new Error("Invalid time format. Expected HH:mm");
+    }
+    
+    console.log("Saving attendance data:", { employeeId, date, checkIn, checkOut });
+    const result = await updateAttendanceRecord(employeeId, date, checkIn, checkOut);
+    console.log("Attendance data saved successfully:", result);
+    return result;
   } catch (error) {
-    console.error("Error saving attendance data:", error);
+    console.error("Error in saveAttendanceData:", error);
     throw error;
   }
 };
@@ -25,9 +39,16 @@ export const saveAttendanceData = async (employeeId, date, checkIn, checkOut) =>
  */
 export const loadAttendanceData = async (employeeId, date) => {
   try {
-    return await fetchAttendanceRecord(employeeId, date);
+    if (!employeeId || !date) {
+      throw new Error("Missing required parameters");
+    }
+    
+    console.log("Loading attendance data:", { employeeId, date });
+    const result = await fetchAttendanceRecord(employeeId, date);
+    console.log("Attendance data loaded:", result);
+    return result;
   } catch (error) {
-    console.error("Error loading attendance data:", error);
+    console.error("Error in loadAttendanceData:", error);
     throw error;
   }
 };
@@ -44,7 +65,11 @@ export const formatTime = (timeValue) => {
     if (timeValue instanceof Date) {
       return timeValue.toTimeString().slice(0, 5);
     } else {
-      return new Date(timeValue).toTimeString().slice(0, 5);
+      const date = new Date(timeValue);
+      if (isNaN(date.getTime())) {
+        return "09:00";
+      }
+      return date.toTimeString().slice(0, 5);
     }
   } catch (error) {
     console.error("Error formatting time:", error);
