@@ -70,6 +70,9 @@ export const useCalendarData = (employeeId) => {
       }
     });
     
+    // Reset attendance data when changing months to avoid mixing data from different months
+    setEmployeeAttendance({});
+    
     // Set loading state when changing months
     setLoading(true);
     
@@ -171,19 +174,52 @@ export const useCalendarData = (employeeId) => {
             
             newAttendance[dateKey] = status;
           } else {
-            // No record found, set to absent
-            newAttendance[dateKey] = "absent";
+            // No record found, only mark as absent if the date is in the past
+            // Future dates should not be marked as absent
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const currentDate = new Date(dateKey);
+            currentDate.setHours(0, 0, 0, 0);
+            
+            if (currentDate <= today) {
+              // Past or current date without record = absent
+              newAttendance[dateKey] = "absent";
+            } else {
+              // Future date without record = don't set (or set to null/undefined)
+              // This will be excluded from percentage calculations
+              delete newAttendance[dateKey];
+            }
+          }
+          
+          // Check if we've finished loading all dates for the current month
+          const expectedDateCount = new Date(currentYear, currentMonth + 1, 0).getDate();
+          const currentDateCount = Object.keys(newAttendance).filter(date => {
+            // Only count dates that belong to the current month
+            const dateObj = new Date(date);
+            return dateObj.getMonth() === currentMonth && dateObj.getFullYear() === currentYear;
+          }).length;
+          
+          // If we've loaded all dates, set loading to false
+          if (currentDateCount >= expectedDateCount) {
+            setLoading(false);
           }
           
           return newAttendance;
         });
       }, (error) => {
         console.error(`Error in attendance listener for ${dateKey}:`, error);
-        // Set this date to absent on error
-        setEmployeeAttendance(prev => ({
-          ...prev,
-          [dateKey]: "absent"
-        }));
+        // Set this date to absent on error only if it's a past date
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const currentDate = new Date(dateKey);
+        currentDate.setHours(0, 0, 0, 0);
+        
+        if (currentDate <= today) {
+          setEmployeeAttendance(prev => ({
+            ...prev,
+            [dateKey]: "absent"
+          }));
+        }
       });
       
       // Store the unsubscribe function
@@ -193,8 +229,10 @@ export const useCalendarData = (employeeId) => {
     // Update the unsubscribe functions
     setUnsubscribeFunctions(newUnsubscribeFunctions);
     
-    // Set loading to false after setting up all listeners
-    setLoading(false);
+    // Set loading to false after setting up all listeners (fallback in case the above logic doesn't work)
+    setTimeout(() => {
+      setLoading(false);
+    }, 1000);
     
     // Cleanup function for this effect
     return () => {

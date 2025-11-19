@@ -161,11 +161,21 @@ export const useCalendarData = () => {
   };
 
   const handleNextMonth = () => {
-    if (currentMonth === 11) {
-      setCurrentMonth(0);
-      setCurrentYear((y) => y + 1);
-    } else {
-      setCurrentMonth((m) => m + 1);
+    // Check if next month would be in the future
+    const today = new Date();
+    const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1;
+    const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
+    const nextMonthDate = new Date(nextYear, nextMonth);
+    const currentDate = new Date(today.getFullYear(), today.getMonth());
+    
+    // Only allow navigation if next month is not in the future
+    if (nextMonthDate <= currentDate) {
+      if (currentMonth === 11) {
+        setCurrentMonth(0);
+        setCurrentYear((y) => y + 1);
+      } else {
+        setCurrentMonth((m) => m + 1);
+      }
     }
   };
 

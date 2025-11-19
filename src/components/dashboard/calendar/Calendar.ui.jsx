@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import LegendBar from "../../../components/common/LegendBar";
 import AttendanceCellUI from "./AttendanceCell.ui";
 import StudentProfileUI from "./StudentProfile.ui";
+import { EditButton } from "../../../components/common/calendarcom";
 
 const CalendarUI = ({
   selectedStudents,
@@ -74,7 +75,14 @@ const CalendarUI = ({
             >
               Show Calendar
             </button>
+         
+            <EditButton />
+         
           </div>
+
+          
+
+
 
           <div className="flex items-center gap-4">
             <button
