@@ -116,8 +116,8 @@ const EmployeeDetailsUI = ({ employees, loading, error, navigate }) => {
                       </td>
 
                       <td className="px-4 py-4">{emp.ContactNumber || "-"}</td>
-                      <td className="px-4 py-4">{emp.DateOfJoining || "-"}</td>
-                      <td className="px-4 py-4">{emp.DateOfBirth || "-"}</td>
+                      <td className="px-4 py-4">{emp.DateOfJoining ? new Date(emp.DateOfJoining).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : "-"}</td>
+                      <td className="px-4 py-4">{emp.DateOfBirth ? new Date(emp.DateOfBirth).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : "-"}</td>
 
                       <td className="px-4 py-4 text-center">
                         <button
