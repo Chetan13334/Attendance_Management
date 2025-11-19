@@ -15,29 +15,27 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut, isProfileOpen }) => {
   };
 
   const getLinkClass = ({ isActive }) => {
-    return `flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-hidden ${
-      isActive ? "bg-blue-100 font-semibold" : ""
-    }`;
+    return `flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-hidden ${isActive ? "bg-blue-100 font-semibold" : ""
+      }`;
   };
 
-  // Check if we're on a profile-related route or if profile is open
+
   const isProfileActive = isProfileOpen;
 
   return (
     <>
-      {/* Backdrop overlay for mobile */}
+
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0  bg-opacity-50 z-40 lg:hidden"
           onClick={toggleSidebar}
         ></div>
       )}
 
       <div
         id="hs-sidebar-footer"
-        className={`lg:block lg:translate-x-0 lg:end-auto lg:bottom-0 w-64 transition-all duration-300 transform h-full fixed top-0 start-0 bottom-0 z-50 bg-white border-e border-gray-200 ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`lg:block lg:translate-x-0 lg:end-auto lg:bottom-0 w-64 transition-all duration-300 transform h-full fixed top-0 start-0 bottom-0 z-50 bg-white border-e border-gray-200 ${isOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
         role="dialog"
         tabIndex="-1"
         aria-label="Sidebar"
@@ -136,9 +134,8 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut, isProfileOpen }) => {
                 <li>
                   <NavLink
                     to="/calendar"
-                    className={({ isActive }) => 
-                      `w-full flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-hidden ${
-                        isActive ? "bg-blue-100 font-semibold" : ""
+                    className={({ isActive }) =>
+                      `w-full flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-hidden ${isActive ? "bg-blue-100 font-semibold" : ""
                       }`
                     }
                   >
@@ -169,9 +166,8 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut, isProfileOpen }) => {
                 <li className="mt-3 px-2">
                   <NavLink
                     to="/add-employee"
-                    className={({ isActive }) => 
-                      `w-full flex items-center justify-center gap-x-2 py-2 px-3 text-sm font-medium text-white rounded-lg shadow hover:bg-blue-800 focus:outline-none transition ${
-                        isActive ? "bg-blue-700" : "bg-blue-600"
+                    className={({ isActive }) =>
+                      `w-full flex items-center justify-center gap-x-2 py-2 px-3 text-sm font-medium text-white rounded-lg shadow hover:bg-blue-800 focus:outline-none transition ${isActive ? "bg-blue-700" : "bg-blue-600"
                       }`
                     }
                   >
@@ -182,7 +178,7 @@ const Sidebar = ({ isOpen, setIsOpen, handleSignOut, isProfileOpen }) => {
             </div>
           </nav>
 
-          
+
         </div>
       </div>
     </>
