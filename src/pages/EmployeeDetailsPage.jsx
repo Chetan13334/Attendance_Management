@@ -30,7 +30,7 @@ const EmployeeDetailsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen  flex">
       {/* Sidebar */}
       <Sidebar
         isOpen={isSidebarOpen}
@@ -44,7 +44,7 @@ const EmployeeDetailsPage = () => {
         <Navbar toggleSidebar={toggleSidebar} handleSignOut={handleSignOut} />
 
         {/* Employee Details Content */}
-        <main className="pt-20 px-4 sm:px-6 pb-8">
+        <main className="pt-20 px-0 sm:px-0 pb-0">
           <Employee_Details />
         </main>
       </div>

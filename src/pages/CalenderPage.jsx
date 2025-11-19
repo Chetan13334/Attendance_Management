@@ -30,7 +30,7 @@ const CalenderPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen flex">
       {/* Sidebar */}
       <Sidebar
         isOpen={isSidebarOpen}

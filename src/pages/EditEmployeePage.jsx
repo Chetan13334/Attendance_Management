@@ -45,7 +45,7 @@ const EditEmployeePage = () => {
         <Navbar toggleSidebar={toggleSidebar} handleSignOut={handleSignOut} />
 
         {/* Edit Employee Content */}
-        <main className="pt-20 px-0 sm:px-0 pb-0">
+        <main className="pt-23 px-0 sm:px-0 pb-0">
           <EditEmployee employeeId={id} />
         </main>
       </div>

@@ -188,14 +188,14 @@ const EditEmployeeUI = ({
             </div>
           </div>
 
-          <div className="flex justify-between gap-4 p-6 border-t border-gray-200 bg-white flex-shrink-0">
+          <div className="flex justify-between gap-4 p-1 border-t border-gray-200 bg-white flex-shrink-0">
             <button
               type="button"
               onClick={handleDelete}
               className="px-6 py-3 rounded-lg bg-white text-red-600 font-semibold border border-red-300 hover:bg-red-50 hover:border-red-400 shadow-sm transition duration-150"
               disabled={loading}
             >
-              <Lock className="inline w-5 h-5 mr-2" /> Delete Employee
+              <Lock className="inline w-3 h-3 mr-2" /> Delete Employee
             </button>
 
             <div className="flex gap-4">
