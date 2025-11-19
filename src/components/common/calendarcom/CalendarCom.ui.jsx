@@ -57,7 +57,7 @@ const BirthdayTooltip = ({ birthday }) => {
 
   return (
     <div className="inline-block w-fit">
-      {/* Avatar Only (Default) */}
+      
       <div 
         ref={avatarRef}
         className="relative flex-shrink-0 cursor-pointer transition-all duration-300 hover:scale-110 hover:z-50"
@@ -77,7 +77,7 @@ const BirthdayTooltip = ({ birthday }) => {
         </div>
       </div>
 
-      {/* Tooltip Birthday Card (Hover) - Fixed Position */}
+      
       {isHovered && (
         <div 
           ref={tooltipRef}
@@ -122,7 +122,7 @@ const BirthdayTooltip = ({ birthday }) => {
             </div>
           </div>
           
-          {/* Tooltip Arrow */}
+         
           <div 
             className="absolute -bottom-[5px] w-0 h-0 
               border-l-[5px] border-l-transparent 
@@ -155,7 +155,7 @@ const BirthdayTooltip = ({ birthday }) => {
 };
 
 const CalendarUI = ({
-  // State
+
   currentMonth,
   currentYear,
   isModalOpen,
@@ -168,7 +168,7 @@ const CalendarUI = ({
   parsedEvents,
   parsedEmployees,
   
-  // Functions
+
   handlePrevMonth,
   handleNextMonth,
   handleDayClick,
@@ -224,7 +224,7 @@ const CalendarUI = ({
                   const dayEvents = getEventsForDate(date);
                   const birthdays = getBirthdaysForDate(date);
                   
-                  // Check if this date is today
+                  
                   const isToday = date && 
                     date.getDate() === new Date().getDate() &&
                     date.getMonth() === new Date().getMonth() &&
@@ -252,7 +252,7 @@ const CalendarUI = ({
                           </div>
 
                           <div className="flex-grow mt-1 overflow-y-auto flex flex-col gap-2 px-1" style={{ overflowX: "visible" }}>
-                            {/* Events */}
+                          
                             {dayEvents.map((ev) => (
                               <div
                                 key={ev.id}
@@ -282,7 +282,7 @@ const CalendarUI = ({
                               </div>
                             ))}
 
-                            {/* Birthdays */}
+                            
                             {birthdays.length > 0 && (
                               <div className="flex items-center -space-x-2 mt-1">
                                 {birthdays.map((b, index) => (
@@ -310,15 +310,15 @@ const CalendarUI = ({
         </div>
       </div>
 
-      {/* Modal */}
+      
 {isModalOpen && (
-  // 1. Backdrop: Keep the strong backdrop blur
+ 
   <div className="fixed inset-0 flex justify-end items-stretch backdrop-blur-md bg-black/20 z-50">
     
-    {/* 2. Side Sheet Container: Fixes to the right, full height, no corners on the right edge, subtle drop shadow */}
+    
     <div className="bg-white w-full max-w-sm relative shadow-2xl p-8 transform transition-transform duration-300 ease-out translate-x-0">
       
-      {/* Close Button: Positioned cleanly, using subtle hover effect */}
+      
       <button
         onClick={() => setIsModalOpen(false)}
         className="absolute top-6 right-6 text-gray-500 hover:text-gray-900 p-1 transition-colors"
@@ -327,13 +327,13 @@ const CalendarUI = ({
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
       </button>
 
-      {/* Header */}
+      
       <h2 className="text-3xl font-bold mb-1 text-gray-900 mt-2">Schedule Event</h2>
       <p className="text-md font-medium text-indigo-600 mb-8">
         {selectedDate?.toDateString()}
       </p>
 
-      {/* Input Field */}
+     
       <div className="mb-6">
         <label htmlFor="event-title" className="text-sm font-semibold text-gray-700 block mb-2">Title</label>
         <input
@@ -344,13 +344,13 @@ const CalendarUI = ({
           onChange={(e) =>
             setEventForm((s) => ({ ...s, title: e.target.value }))
           }
-          // 3. Input Styling: Minimalist, just a bottom border, sharp focus
+         
           className="w-full p-2 border-b-2 border-gray-300 focus:border-indigo-600 outline-none transition-all text-lg placeholder-gray-400 bg-transparent"
         />
       </div>
 
 
-      {/* Select Field */}
+      
       <div className="mb-10">
         <label htmlFor="event-theme" className="text-sm font-semibold text-gray-700 block mb-2">Category</label>
         <div className="relative">
@@ -360,7 +360,7 @@ const CalendarUI = ({
             onChange={(e) =>
               setEventForm((s) => ({ ...s, theme: e.target.value }))
             }
-            // 4. Select Styling: Consistent with input, clean look
+            
             className="w-full p-2 border-b-2 border-gray-300 focus:border-indigo-600 outline-none transition-all cursor-pointer appearance-none bg-transparent text-lg"
           >
             <option value="indigo" className="text-gray-700">Meeting (Indigo)</option>
@@ -369,7 +369,7 @@ const CalendarUI = ({
             <option value="green" className="text-gray-700">Task (Green)</option>
             <option value="purple" className="text-gray-700">Holiday (Purple)</option>
           </select>
-          {/* Custom Arrow Icon for Select */}
+          
           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-gray-500">
             <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -378,10 +378,10 @@ const CalendarUI = ({
         </div>
       </div>
       
-      {/* Action Buttons */}
+    
       <div className="absolute bottom-0 left-0 right-0 p-8 border-t border-gray-100 bg-white/95 backdrop-blur-sm flex justify-end gap-4">
         
-        {/* Cancel Button (Ghost Style) */}
+       
         <button
           onClick={() => setIsModalOpen(false)}
           className="px-6 py-3 rounded-full text-gray-600 font-semibold hover:bg-gray-100 transition-all"
@@ -389,7 +389,7 @@ const CalendarUI = ({
           Cancel
         </button>
         
-        {/* Primary Button (Pill shape, Indigo focus) */}
+        
         <button
           onClick={handleAddEvent}
           disabled={loading}

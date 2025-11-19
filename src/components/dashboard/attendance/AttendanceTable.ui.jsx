@@ -199,7 +199,7 @@ const AttendanceTableUI = ({ mergedRecords, getStatusClasses, loading }) => {
   return (
     <div className="bg-white rounded-xl shadow-lg mt-8">
       {/* Header */}
-      <div className="p-4 sm:p-6 border-b border-gray-100">
+      <div className="p-4 sm:p-2 border-b border-gray-100">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h3 className="text-xl font-semibold text-gray-800">
             Attendance Records

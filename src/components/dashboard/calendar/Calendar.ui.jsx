@@ -76,7 +76,7 @@ const CalendarUI = ({
               Show Calendar
             </button>
          
-            <EditButton />
+            {/* <EditButton /> */}
          
           </div>
 
