@@ -45,16 +45,18 @@ export const getGenderColor = (gender) => {
 export const useEmployeeDetailsData = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  
+
   // ✅ Get data and state from the Redux store
-  const employees = useSelector((state) => state.employees.list); 
-  const loading = useSelector((state) => state.employees.loading); 
-  const error = useSelector((state) => state.employees.error); 
+  const employees = useSelector((state) => state.employees.list);
+  const loading = useSelector((state) => state.employees.loading);
+  const error = useSelector((state) => state.employees.error);
 
   useEffect(() => {
-    // ✅ Dispatch the asynchronous thunk to fetch data
-    dispatch(listenToEmployees());
-  }, [dispatch]);
+    // ✅ Only fetch if we don't have data yet
+    if (!employees || employees.length === 0) {
+      dispatch(listenToEmployees());
+    }
+  }, [dispatch, employees]);
 
   return {
     employees,

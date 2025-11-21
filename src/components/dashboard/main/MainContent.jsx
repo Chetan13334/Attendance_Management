@@ -20,14 +20,14 @@ const EventCard = ({ event, index }) => {
     theme.includes("blue")
       ? colors.blue
       : theme.includes("red") || theme.includes("holiday")
-      ? colors.red
-      : theme.includes("yellow")
-      ? colors.yellow
-      : theme.includes("green")
-      ? colors.green
-      : theme.includes("purple")
-      ? colors.purple
-      : colors.green;
+        ? colors.red
+        : theme.includes("yellow")
+          ? colors.yellow
+          : theme.includes("green")
+            ? colors.green
+            : theme.includes("purple")
+              ? colors.purple
+              : colors.green;
 
   const date =
     event.event_date?.toDate ? event.event_date.toDate() : new Date(event.event_date);
@@ -56,14 +56,14 @@ const EventCard = ({ event, index }) => {
 
 // Skeleton Loader for Events
 const EventSkeleton = () => (
-  <SkeletonLoader type="card" />
+  <SkeletonLoader type="event" />
 );
 
 const MainContent = () => {
   const [showEvents, setShowEvents] = useState(false);
   const events = useSelector((state) => state.events.list);
   const employees = useSelector((state) => state.employees.list);
-  
+
   // Check if data is loading
   const isLoading = !employees || employees.length === 0;
 

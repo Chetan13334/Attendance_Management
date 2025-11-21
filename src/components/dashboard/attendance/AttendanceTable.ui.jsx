@@ -1,13 +1,36 @@
-// src/components/dashboard/attendance/AttendanceTable.ui.jsx
 
-import React, { useEffect, useState } from "react";
+
+import React, { useEffect, useState, useRef } from "react";
 import { SkeletonLoader } from "../../common/skeleton/Skeleton";
+import { Filter, ChevronDown, Check } from "lucide-react";
 
 const AttendanceTableUI = ({ mergedRecords, getStatusClasses, loading }) => {
   const [sortedRecords, setSortedRecords] = useState([]);
-  const [sortOption, setSortOption] = useState('checkIn'); // default sort by check-in time
+  const [sortOption, setSortOption] = useState('checkIn');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
-  // Apply sorting based on selected option
+  const sortOptions = [
+    { value: 'checkIn', label: 'Early Check-in' },
+    { value: 'joiningDateOld', label: 'Joining Date (Oldest)' },
+    { value: 'joiningDateNew', label: 'Joining Date (Newest)' },
+    { value: 'nameAZ', label: 'Name (A-Z)' },
+    { value: 'nameZA', label: 'Name (Z-A)' },
+    { value: 'earlyCheckout', label: 'Early Checkout' },
+  ];
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+
   useEffect(() => {
     if (!mergedRecords || mergedRecords.length === 0) {
       setSortedRecords([]);
@@ -15,33 +38,32 @@ const AttendanceTableUI = ({ mergedRecords, getStatusClasses, loading }) => {
     }
 
     let sorted = [...mergedRecords];
-    
+
     switch (sortOption) {
       case 'checkIn':
-        // Sort by check-in time (earliest first)
+
         sorted.sort((a, b) => {
           if (a.checkIn === "-" && b.checkIn === "-") return 0;
           if (a.checkIn === "-") return 1;
           if (b.checkIn === "-") return -1;
-          
-          // Parse time in format "HH:MM am/pm" (12-hour format from toLocaleTimeString)
+
+
           const parseTime = (timeStr) => {
-            // Handle the format from toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
-            // Which produces strings like "01:24 pm" or "01:35 am"
-            const parts = timeStr.trim().split(/\s+/); // Split on whitespace
+
+            const parts = timeStr.trim().split(/\s+/);
             if (parts.length !== 2) {
               throw new Error("Invalid time format");
             }
-            
+
             const [time, modifier] = parts;
             let [hours, minutes] = time.split(':').map(Number);
-            
+
             if (modifier.toLowerCase() === "pm" && hours !== 12) hours += 12;
             if (modifier.toLowerCase() === "am" && hours === 12) hours = 0;
-            
+
             return hours * 60 + minutes;
           };
-          
+
           try {
             const aTime = parseTime(a.checkIn);
             const bTime = parseTime(b.checkIn);
@@ -52,70 +74,69 @@ const AttendanceTableUI = ({ mergedRecords, getStatusClasses, loading }) => {
           }
         });
         break;
-        
+
       case 'joiningDateOld':
-        // Sort by joining date (oldest first)
+
         sorted.sort((a, b) => {
           if (!a.dateOfJoining && !b.dateOfJoining) return 0;
           if (!a.dateOfJoining) return 1;
           if (!b.dateOfJoining) return -1;
-          
+
           const dateA = new Date(a.dateOfJoining);
           const dateB = new Date(b.dateOfJoining);
-          
+
           return dateA - dateB;
         });
         break;
-        
+
       case 'joiningDateNew':
-        // Sort by joining date (newest first)
+
         sorted.sort((a, b) => {
           if (!a.dateOfJoining && !b.dateOfJoining) return 0;
           if (!a.dateOfJoining) return 1;
           if (!b.dateOfJoining) return -1;
-          
+
           const dateA = new Date(a.dateOfJoining);
           const dateB = new Date(b.dateOfJoining);
-          
+
           return dateB - dateA;
         });
         break;
-        
+
       case 'nameAZ':
-        // Sort by name (A to Z)
+
         sorted.sort((a, b) => a.name.localeCompare(b.name));
         break;
-        
+
       case 'nameZA':
-        // Sort by name (Z to A)
+
         sorted.sort((a, b) => b.name.localeCompare(a.name));
         break;
-        
+
       case 'earlyCheckout':
-        // Sort by checkout time (earliest first)
+
         sorted.sort((a, b) => {
           if (a.checkOut === "-" && b.checkOut === "-") return 0;
           if (a.checkOut === "-") return 1;
           if (b.checkOut === "-") return -1;
-          
-          // Parse time in format "HH:MM am/pm" (12-hour format from toLocaleTimeString)
+
+
           const parseTime = (timeStr) => {
-            // Handle the format from toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
-            // Which produces strings like "01:24 pm" or "01:35 am"
-            const parts = timeStr.trim().split(/\s+/); // Split on whitespace
+
+            const parts = timeStr.trim().split(/\s+/);
             if (parts.length !== 2) {
               throw new Error("Invalid time format");
             }
-            
+
             const [time, modifier] = parts;
             let [hours, minutes] = time.split(':').map(Number);
-            
+
             if (modifier.toLowerCase() === "pm" && hours !== 12) hours += 12;
             if (modifier.toLowerCase() === "am" && hours === 12) hours = 0;
-            
+
             return hours * 60 + minutes;
           };
-          
+
           try {
             const aTime = parseTime(a.checkOut);
             const bTime = parseTime(b.checkOut);
@@ -126,32 +147,31 @@ const AttendanceTableUI = ({ mergedRecords, getStatusClasses, loading }) => {
           }
         });
         break;
-        
+
       default:
-        // Default sort by check-in time
+
         sorted.sort((a, b) => {
           if (a.checkIn === "-" && b.checkIn === "-") return 0;
           if (a.checkIn === "-") return 1;
           if (b.checkIn === "-") return -1;
-          
-          // Parse time in format "HH:MM am/pm" (12-hour format from toLocaleTimeString)
+
+
           const parseTime = (timeStr) => {
-            // Handle the format from toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
-            // Which produces strings like "01:24 pm" or "01:35 am"
-            const parts = timeStr.trim().split(/\s+/); // Split on whitespace
+
+            const parts = timeStr.trim().split(/\s+/);
             if (parts.length !== 2) {
               throw new Error("Invalid time format");
             }
-            
+
             const [time, modifier] = parts;
             let [hours, minutes] = time.split(':').map(Number);
-            
+
             if (modifier.toLowerCase() === "pm" && hours !== 12) hours += 12;
             if (modifier.toLowerCase() === "am" && hours === 12) hours = 0;
-            
+
             return hours * 60 + minutes;
           };
-          
+
           try {
             const aTime = parseTime(a.checkIn);
             const bTime = parseTime(b.checkIn);
@@ -162,11 +182,11 @@ const AttendanceTableUI = ({ mergedRecords, getStatusClasses, loading }) => {
           }
         });
     }
-    
+
     setSortedRecords(sorted);
   }, [mergedRecords, sortOption]);
 
-  // Debugging: Log when records are updated
+
   useEffect(() => {
     console.log("AttendanceTableUI - mergedRecords updated:", mergedRecords.length);
     if (mergedRecords.length > 0) {
@@ -174,19 +194,19 @@ const AttendanceTableUI = ({ mergedRecords, getStatusClasses, loading }) => {
     }
   }, [mergedRecords]);
 
-  // Show skeleton loader when loading
+
   if (loading) {
     console.log("AttendanceTableUI - showing skeleton loader");
     return (
       <div className="bg-white rounded-xl shadow-lg mt-8">
-        {/* Header */}
+
         <div className="p-4 sm:p-6 border-b border-gray-100">
           <h3 className="text-xl font-semibold text-gray-800">
             Attendance Records
           </h3>
         </div>
 
-        {/* Table Skeleton */}
+
         <div className="overflow-x-auto">
           <SkeletonLoader type="table" rows={8} />
         </div>
@@ -198,36 +218,57 @@ const AttendanceTableUI = ({ mergedRecords, getStatusClasses, loading }) => {
 
   return (
     <div className="bg-white rounded-xl shadow-lg mt-8">
-      {/* Header */}
+
       <div className="p-4 sm:p-6 border-b border-gray-100">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h3 className="text-xl font-semibold text-gray-800">
             Attendance Records
           </h3>
-          
-          {/* Filter Dropdown */}
-          <div className="flex items-center gap-2">
-            <label htmlFor="sortFilter" className="text-sm font-medium text-gray-700">
-              Sort by:
-            </label>
-            <select
-              id="sortFilter"
-              value={sortOption}
-              onChange={(e) => setSortOption(e.target.value)}
-              className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+
+
+          <div className="flex items-center gap-2 relative" ref={dropdownRef}>
+            <span className="text-sm font-medium text-gray-500 hidden sm:block">Sort by:</span>
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
             >
-              <option value="checkIn">Early Check-in</option>
-              <option value="joiningDateOld">Joining Date (Oldest)</option>
-              <option value="joiningDateNew">Joining Date (Newest)</option>
-              <option value="nameAZ">Name (A-Z)</option>
-              <option value="nameZA">Name (Z-A)</option>
-              <option value="earlyCheckout">Early Checkout</option>
-            </select>
+              <Filter className="w-4 h-4 text-indigo-600" />
+              <span className="text-sm font-medium text-gray-700">
+                {sortOptions.find(opt => opt.value === sortOption)?.label}
+              </span>
+              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* Dropdown Menu */}
+            {isDropdownOpen && (
+              <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 z-50 animate-in fade-in zoom-in-95 duration-100">
+                <div className="p-1">
+                  {sortOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => {
+                        setSortOption(option.value);
+                        setIsDropdownOpen(false);
+                      }}
+                      className={`w-full flex items-center justify-between px-3 py-2.5 text-sm rounded-lg transition-colors ${sortOption === option.value
+                        ? 'bg-indigo-50 text-indigo-700'
+                        : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                    >
+                      <span className="font-medium">{option.label}</span>
+                      {sortOption === option.value && (
+                        <Check className="w-4 h-4 text-indigo-600" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Table */}
+
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -251,7 +292,7 @@ const AttendanceTableUI = ({ mergedRecords, getStatusClasses, loading }) => {
                 key={record.id || index}
                 className="transition duration-150 select-none hover:bg-gray-50"
               >
-                {/* ✅ Photo */}
+
                 <td className="px-6 py-4 whitespace-nowrap">
                   {record.photo ? (
                     <img
@@ -266,32 +307,32 @@ const AttendanceTableUI = ({ mergedRecords, getStatusClasses, loading }) => {
                   )}
                 </td>
 
-                {/* ✅ Employee ID */}
+
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-medium">
                   {record.employeeId}
                 </td>
 
-                {/* ✅ Name */}
+
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
                   {record.name}
                 </td>
 
-                {/* ✅ Date */}
+
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {record.date}
                 </td>
 
-                {/* ✅ Check In */}
+
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {record.checkIn}
                 </td>
-                
-                {/* ✅ Check Out */}
+
+
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {record.checkOut}
                 </td>
 
-                {/* ✅ Status */}
+
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
                     className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClasses(
@@ -302,7 +343,7 @@ const AttendanceTableUI = ({ mergedRecords, getStatusClasses, loading }) => {
                   </span>
                 </td>
 
-                {/* ✅ Remarks */}
+
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                   {record.remarks}
                 </td>

@@ -25,8 +25,13 @@ const StatCardUI = ({ title, value, icon: Icon, color, onClick }) => {
   };
 
   return (
-    <div
-      className={`p-6 bg-white rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl flex items-center justify-between border border-gray-100 hover:border-${color}-200 cursor-pointer transform hover:-translate-y-1 ${getShadowColorClass(color)}`}
+    <button
+      className={`w-full text-left p-6 bg-white rounded-2xl shadow-lg transition-all duration-200 
+        hover:shadow-xl hover:-translate-y-1 
+        active:scale-95 active:shadow-md
+        focus:outline-none
+        flex items-center justify-between border border-gray-100 hover:border-${color}-200 
+        ${getShadowColorClass(color)}`}
       onClick={onClick}
     >
       <div>
@@ -40,19 +45,19 @@ const StatCardUI = ({ title, value, icon: Icon, color, onClick }) => {
       >
         {Icon && <Icon className="w-6 h-6" />}
       </div>
-    </div>
+    </button>
   );
 };
 
 // Skeleton version of StatCardUI
 const StatCardSkeleton = () => (
-  <SkeletonLoader type="card" />
+  <SkeletonLoader type="stat" />
 );
 
 const StatsUI = ({ currentStats }) => {
   // Check if we're in loading state (values are "...")
   const isLoading = currentStats.some(stat => stat.value === "...");
-  
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -62,7 +67,7 @@ const StatsUI = ({ currentStats }) => {
       </div>
     );
   }
-  
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {currentStats.map((stat, index) => (

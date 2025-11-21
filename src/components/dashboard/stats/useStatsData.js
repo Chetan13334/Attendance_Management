@@ -5,9 +5,27 @@ export const useStatsData = (stats = [], onEventsClick, events, eventLoading) =>
 
   // Default stats with onEventsClick instead of navigation
   const defaultStats = [
-    { title: "Active Users", value: 1200, icon: UserCheck, color: "green" },
-    { title: "Inactive Users", value: 80, icon: UserX, color: "red" },
-    { title: "Clocked Hours", value: 56, icon: Clock, color: "blue" },
+    {
+      title: "Active Users",
+      value: 1200,
+      icon: UserCheck,
+      color: "green",
+      onClick: () => { } // Dummy handler for click effect
+    },
+    {
+      title: "Inactive Users",
+      value: 80,
+      icon: UserX,
+      color: "red",
+      onClick: () => { } // Dummy handler for click effect
+    },
+    {
+      title: "Clocked Hours",
+      value: 56,
+      icon: Clock,
+      color: "blue",
+      onClick: () => { } // Dummy handler for click effect
+    },
     {
       title: "Events",
       value: eventCount,

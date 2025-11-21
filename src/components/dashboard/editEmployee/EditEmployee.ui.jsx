@@ -55,7 +55,7 @@ const EditEmployeeUI = ({
             <div className="flex items-center gap-4">
               <button
                 type="button"
-                onClick={() => navigate("/employee_list")}
+                onClick={() => navigate("/employee_details")}
                 className="p-2 rounded-full text-indigo-600 hover:bg-indigo-50 transition"
               >
                 <ArrowLeft className="w-6 h-6" />
@@ -201,7 +201,7 @@ const EditEmployeeUI = ({
             <div className="flex gap-4">
               <button
                 type="button"
-                onClick={() => navigate("/employee_list")}
+                onClick={() => navigate("/employee_details")}
                 className="px-6 py-3 rounded-lg bg-white text-gray-700 font-semibold border border-gray-300 hover:bg-gray-100 shadow-sm transition duration-150"
               >
                 Cancel

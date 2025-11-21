@@ -28,7 +28,7 @@ const CalendarUI = ({
     navigate(`/employee-calendarcom?employeeId=${studentId}`);
   };
   const gridColsClass = "grid grid-cols-[300px_repeat(5,minmax(0,1fr))]";
-  
+
   // Skeleton loader component for student rows
   const StudentRowSkeleton = () => (
     <div className={`${gridColsClass} hover:bg-red-50/20 py-4`}>
@@ -40,7 +40,7 @@ const CalendarUI = ({
           <div className="h-3 bg-gray-200 rounded animate-pulse w-1/2"></div>
         </div>
       </div>
-      
+
       {/* Attendance cell skeletons */}
       {[...Array(5)].map((_, index) => (
         <div key={index} className="p-4 border-r border-gray-200 last:border-r-0 flex items-center justify-center">
@@ -71,16 +71,16 @@ const CalendarUI = ({
           <div className="flex items-center gap-2">
             <button
               onClick={handleOpenCalendarModal}
-              className="px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm font-medium"
+              className="px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 hover:shadow-md active:scale-95 transition-all duration-200 text-sm font-medium focus:outline-none"
             >
               Show Calendar
             </button>
-         
+
             <EditButton />
-         
+
           </div>
 
-          
+
 
 
 
@@ -101,11 +101,10 @@ const CalendarUI = ({
             <button
               onClick={handleNextWeek}
               disabled={isNextWeekDisabled} // <-- new prop
-              className={`p-2 rounded-md transition-colors ${
-                isNextWeekDisabled
-                  ? "cursor-not-allowed text-gray-300"
-                  : "hover:bg-gray-200 text-gray-600"
-              }`}
+              className={`p-2 rounded-md transition-colors ${isNextWeekDisabled
+                ? "cursor-not-allowed text-gray-300"
+                : "hover:bg-gray-200 text-gray-600"
+                }`}
               title="Next Week"
             >
               <ChevronRight className="w-5 h-5" />
@@ -130,26 +129,23 @@ const CalendarUI = ({
               <div
                 key={day.fullDate}
                 className={`p-3 border-r border-gray-200 text-sm flex flex-col justify-center transition-colors
-                  ${
-                    day.special === "Holiday"
-                      ? "bg-gray-100 text-gray-500"
-                      : "text-gray-500"
+                  ${day.special === "Holiday"
+                    ? "bg-gray-100 text-gray-500"
+                    : "text-gray-500"
                   }
                   ${isToday ? "bg-blue-50" : ""}
                   ${index === 4 ? "border-r-0" : ""}
                 `}
               >
                 <span
-                  className={`text-lg font-bold ${
-                    isToday ? "text-blue-600" : "text-gray-700"
-                  }`}
+                  className={`text-lg font-bold ${isToday ? "text-blue-600" : "text-gray-700"
+                    }`}
                 >
                   {day.date}
                 </span>
                 <span
-                  className={`text-xs font-medium uppercase mt-0.5 ${
-                    isToday ? "text-blue-600" : ""
-                  }`}
+                  className={`text-xs font-medium uppercase mt-0.5 ${isToday ? "text-blue-600" : ""
+                    }`}
                 >
                   {day.day.substring(0, 3)}
                 </span>
@@ -180,7 +176,7 @@ const CalendarUI = ({
                 {daysOfWeek.map((day) => {
                   // Ensure we have a valid attendance status
                   let statusKey = "absent"; // Default to absent
-                  
+
                   try {
                     // Safely access attendance data
                     if (attendance && typeof attendance === 'object') {
@@ -195,7 +191,7 @@ const CalendarUI = ({
                     console.warn("Error accessing attendance data:", error);
                     statusKey = "absent"; // Fallback to absent on error
                   }
-                  
+
                   const isHoliday = day.special === "Holiday";
                   const holidayDetail = day.detail || null;
 

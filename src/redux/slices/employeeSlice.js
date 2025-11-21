@@ -49,7 +49,7 @@ export const listenToEmployees = createAsyncThunk(
           dispatch(setEmployees([])); // Clear employees on error
         }
       );
-      
+
       // Return a cleanup function
       return () => {
         console.log("Cleaning up employee listener");
@@ -97,7 +97,7 @@ const employeeSlice = createSlice({
   name: "employees",
   initialState: {
     list: [],
-    loading: false,
+    loading: true, // Start loading by default to prevent flash of empty state
     currentEmployee: null,
     error: null,
   },
@@ -106,6 +106,7 @@ const employeeSlice = createSlice({
       console.log("Setting employees in Redux:", action.payload.length);
       // Ensure we're creating a new array reference
       state.list = [...action.payload];
+      state.loading = false; // ✅ Data received, stop loading
     },
     clearCurrentEmployee(state) {
       state.currentEmployee = null;
@@ -114,6 +115,7 @@ const employeeSlice = createSlice({
       console.log("Clearing employees data from Redux store");
       state.list = [];
       state.error = null;
+      // state.loading = false; // Don't reset loading here, let the listener handle it
     },
   },
   extraReducers: (builder) => {
@@ -122,7 +124,8 @@ const employeeSlice = createSlice({
         state.loading = true;
       })
       .addCase(listenToEmployees.fulfilled, (state) => {
-        state.loading = false;
+        // state.loading = false; // ❌ Don't stop loading here, wait for data
+        console.log("Employee listener setup complete");
       })
       .addCase(listenToEmployees.rejected, (state, action) => {
         state.loading = false;

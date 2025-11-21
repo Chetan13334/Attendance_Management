@@ -49,13 +49,18 @@ export const useCalendarData = () => {
   const [attendance, setAttendance] = useState({});
   const [currentWeekStart, setCurrentWeekStart] = useState(() => getMonday(new Date()));
   const [daysOfWeek, setDaysOfWeek] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [hasDispatchedListener, setHasDispatchedListener] = useState(false);
-
   // Use Redux data
   const employeeState = useSelector((state) => state.employees);
   const attendanceState = useSelector((state) => state.attendance);
-  
+
+  // Initialize loading state based on whether we already have employees
+  // If we have employees, we don't need to show the full page skeleton
+  const [loading, setLoading] = useState(() => {
+    return !employeeState.list || employeeState.list.length === 0;
+  });
+
+  const [hasDispatchedListener, setHasDispatchedListener] = useState(false);
+
   // Generate days of the week
   useEffect(() => {
     const generateWeek = () => {
@@ -82,8 +87,9 @@ export const useCalendarData = () => {
   // Set up employee listener
   useEffect(() => {
     let cleanup;
-    
-    if (!hasDispatchedListener) {
+
+    // Only fetch if we don't have data yet
+    if (!hasDispatchedListener && (!employeeState.list || employeeState.list.length === 0)) {
       console.log("Setting up employee listener");
       dispatch(listenToEmployees()).then((unsubscribe) => {
         if (typeof unsubscribe === 'function') {
@@ -92,38 +98,41 @@ export const useCalendarData = () => {
       }).catch((error) => {
         console.error("Failed to set up employee listener:", error);
       });
-      
+
+      setHasDispatchedListener(true);
+    } else if (!hasDispatchedListener && employeeState.list && employeeState.list.length > 0) {
+      // If we already have data, just mark as dispatched so we don't try again
       setHasDispatchedListener(true);
     }
-    
+
     // Cleanup function
     return () => {
       if (cleanup && typeof cleanup === 'function') {
         cleanup();
       }
     };
-  }, [dispatch, hasDispatchedListener]);
+  }, [dispatch, hasDispatchedListener, employeeState.list]);
 
   // Set up attendance listeners for all days in the current week
   useEffect(() => {
     // Log the current week days
     console.log("Setting up attendance listeners for week days:", daysOfWeek);
-    
+
     // Set loading state when changing weeks
     setLoading(true);
-    
+
     // Create listeners for each day in the current week
     const dateListeners = [];
-    
+
     // Create a listener for each day in the week
     daysOfWeek.forEach((day) => {
       const dateStr = day.fullDate;
       console.log("Setting up attendance listener for date:", dateStr);
-      
+
       const result = dispatch(listenToAttendance(new Date(dateStr)));
       dateListeners.push(result);
     });
-    
+
     // Handle cleanup functions
     Promise.all(dateListeners).then((unsubscribes) => {
       console.log("All attendance listeners set up successfully");
@@ -133,7 +142,7 @@ export const useCalendarData = () => {
       console.error("Error setting up attendance listeners:", error);
       setLoading(false);
     });
-    
+
     // Cleanup function for this effect - clean up all listeners when week changes
     return () => {
       console.log("Cleaning up attendance listeners for week");
@@ -153,41 +162,41 @@ export const useCalendarData = () => {
   // Helper function to determine status based on check-in time
   const determineStatus = useCallback((checkIn) => {
     let status = "absent";
-    
+
     if (checkIn && !isNaN(checkIn.getTime())) {
       const totalMins = checkIn.getHours() * 60 + checkIn.getMinutes();
-      
+
       // Define thresholds
       const onTimeThreshold = 10 * 60; // 10:00 AM
       const lateThreshold = 10 * 60 + 15; // 10:15 AM
-      
+
       // On time if check-in is before or at 10:15 AM
       if (totalMins <= lateThreshold) {
         status = "on-time";
-      } 
+      }
       // Late if check-in is after 10:15 AM
       else if (totalMins > lateThreshold) {
         status = "late";
       }
     }
-    
+
     return status;
   }, []);
 
   // Memoize the date keys to avoid unnecessary recalculations
   const dateKeys = useMemo(() => {
     if (!daysOfWeek.length) return [];
-    
+
     // Filter out future dates - only process dates up to today
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     const pastAndCurrentDays = daysOfWeek.filter(day => {
       const dayDate = new Date(day.fullDate);
       dayDate.setHours(0, 0, 0, 0);
       return dayDate <= today;
     });
-    
+
     return pastAndCurrentDays.map(day => day.fullDate);
   }, [daysOfWeek]);
 
@@ -198,14 +207,14 @@ export const useCalendarData = () => {
       attendanceRecords: attendanceState.list?.length,
       dateKeys: dateKeys.length
     });
-    
+
     if (!employeeState.list || !employeeState.list.length || !dateKeys.length) {
       console.log("Not processing attendance - missing data");
       return;
     }
 
     const newAttendance = {};
-    
+
     // Initialize attendance data for all employees - this ensures every employee has an entry
     employeeState.list.forEach(employee => {
       newAttendance[employee.id] = {};
@@ -214,17 +223,17 @@ export const useCalendarData = () => {
         newAttendance[employee.id][dateKey] = "absent";
       });
     });
-    
+
     // Process attendance data from Redux
     // Assuming attendanceState.list contains the attendance records
     if (attendanceState.list && Array.isArray(attendanceState.list)) {
       console.log("Processing", attendanceState.list.length, "attendance records");
       attendanceState.list.forEach(record => {
         // Find the employee that matches this attendance record
-        const employee = employeeState.list.find(e => 
+        const employee = employeeState.list.find(e =>
           e.id === record.employeeId || e.empId === record.employeeId
         );
-        
+
         if (employee && dateKeys.includes(record.date)) {
           console.log("Matching record for employee", employee.id, "on date", record.date);
           // Convert check-in time
@@ -238,7 +247,7 @@ export const useCalendarData = () => {
               checkIn = new Date(record.CheckIn);
             }
           }
-          
+
           const status = determineStatus(checkIn);
           newAttendance[employee.id][record.date] = status;
           console.log("Set status for employee", employee.id, "on date", record.date, "to", status);
@@ -272,7 +281,7 @@ export const useCalendarData = () => {
     prev.setDate(prev.getDate() - 7);
     setCurrentWeekStart(prev);
   };
-  
+
   const handleNextWeek = () => {
     console.log("Next week clicked, setting loading state");
     setLoading(true); // Set loading immediately when navigating
@@ -284,7 +293,7 @@ export const useCalendarData = () => {
     next.setDate(next.getDate() + 7);
     setCurrentWeekStart(next);
   };
-  
+
   const handleToday = () => {
     console.log("Today clicked, setting loading state");
     setLoading(true); // Set loading immediately when navigating
