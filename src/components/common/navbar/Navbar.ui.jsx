@@ -82,7 +82,7 @@ const NavbarUI = ({
               </div>
               <div className="hidden sm:block text-center">
                 <div className="text-sm font-semibold text-gray-800">
-                  {user?.name || user?.email?.split('@')[0] || 'Guest User'}
+                  { user?.email?.split('@')[0] || 'Guest User'}
                 </div>
                 <div className="text-xs text-gray-500">HR</div>
               </div>
