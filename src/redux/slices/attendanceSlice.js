@@ -20,15 +20,12 @@ export const listenToAttendance = createAsyncThunk(
       console.log("Setting up attendance listener for date:", dateStr, "from input date:", date);
 
 
-      // Check if we already have a listener for this date
+      
       if (unsubscribeFunctions[dateStr]) {
         console.log("Listener already exists for date:", dateStr, "- skipping setup");
-        // We return a dummy cleanup function because the caller expects one,
-        // but we don't want to actually unsubscribe the persistent listener
+        
 
-        // IMPORTANT: Even if listener exists, we MUST ensure the Redux state has the data.
-        // The state might have been cleared (e.g. by a different component unmounting),
-        // so we re-dispatch the cached data for this date.
+        
         if (attendanceByDate[dateStr]) {
           console.log("Dispatching cached data for existing listener:", dateStr);
           const combinedAttendance = Object.values(attendanceByDate).flat();

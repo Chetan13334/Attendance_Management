@@ -96,8 +96,8 @@ const EmployeeDetailsUI = ({ employees, loading, error, navigate }) => {
                             onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/160x160/cbd5e1/000?text=P"; }}
                           />
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-xs">
-                            N/A
+                          <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold shadow-sm">
+                            {emp.Name ? emp.Name.charAt(0).toUpperCase() : "E"}
                           </div>
                         )}
                       </td>

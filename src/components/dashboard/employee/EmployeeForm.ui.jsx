@@ -22,7 +22,7 @@ const EmployeeFormUI = ({
         <ArrowLeft className="w-6 h-6" />
       </button>
 
-      <div className="w-full max-w-7xl mx-auto flex flex-col bg-white border border-gray-100 h-[85vh] overflow-hidden">
+      <div className="w-full max-w-7xl mx-auto flex flex-col bg-white h-[85vh] overflow-hidden">
         <form onSubmit={handleSubmit} autoComplete="off" className="flex flex-col h-full">
           <div className="p-6 bg-white text-gray-900 flex-shrink-0 flex justify-between items-center border-b border-gray-200">
             <div>
@@ -34,11 +34,17 @@ const EmployeeFormUI = ({
           <div className="flex-grow flex h-full overflow-hidden">
             <div className="w-1/4 flex-shrink-0 p-8 bg-gray-50 border-r border-gray-200 flex flex-col items-center space-y-8">
               <div className="flex flex-col items-center space-y-4">
-                <img
-                  className="w-28 h-28 rounded-full ring-4 ring-indigo-500 object-cover shadow-lg"
-                  src={photo}
-                  alt="Employee Avatar"
-                />
+                {photo ? (
+                  <img
+                    className="w-28 h-28 rounded-full ring-4 ring-indigo-500 object-cover shadow-lg"
+                    src={photo}
+                    alt="Employee Avatar"
+                  />
+                ) : (
+                  <div className="w-28 h-28 rounded-full ring-4 ring-indigo-500 shadow-lg bg-gray-100 flex flex-col items-center justify-center text-gray-400">
+                    <span className="text-xs font-semibold">Add Photo</span>
+                  </div>
+                )}
 
                 <label className="cursor-pointer py-2 px-4 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-lg shadow-sm hover:bg-indigo-100 transition text-sm font-semibold">
                   Upload Photo
@@ -227,11 +233,11 @@ const EmployeeFormUI = ({
             </div>
           </div>
 
-          <div className="flex justify-between gap-4 p-6 border-t border-gray-200 bg-white flex-shrink-0">
+          <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-white flex-shrink-0">
             <button
               type="button"
               onClick={() => navigate("/employee_details")}
-              className="px-6 py-3 rounded-lg bg-white text-gray-700 font-semibold border border-gray-300 hover:bg-gray-100 shadow-sm transition"
+              className="px-4 py-2 text-sm font-medium rounded-md text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-sm"
             >
               Cancel
             </button>
@@ -239,7 +245,7 @@ const EmployeeFormUI = ({
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-3 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow-lg shadow-indigo-300/50 transition disabled:bg-indigo-300"
+              className="px-4 py-2 text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-sm disabled:bg-indigo-400 disabled:cursor-not-allowed"
             >
               {loading ? "Adding..." : "Add Employee"}
             </button>

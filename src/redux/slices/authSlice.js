@@ -36,17 +36,17 @@ export const signUpWithEmail = createAsyncThunk(
   "auth/signUpWithEmail",
   async ({ email, password, name }, { rejectWithValue }) => {
     try {
-      // Clear any existing user data first
+      
       localStorage.removeItem("user");
       
-      // Create user but don't sign them in automatically
+      
       await createUserWithEmailAndPassword(
         auth,
         email,
         password
       );
       
-      // Return success without user data to prevent automatic login
+      
       return { success: true };
     } catch (error) {
       return rejectWithValue(error.message);
@@ -144,8 +144,7 @@ const authSlice = createSlice({
       })
       .addCase(signUpWithEmail.fulfilled, (state, action) => {
         state.loading = false;
-        // Don't set user or isAuthenticated since we're not logging in automatically
-        // Explicitly clear any existing user state to prevent automatic navigation
+        
         state.user = null;
         state.isAuthenticated = false;
         state.error = null;

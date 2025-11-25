@@ -6,9 +6,11 @@ import {
   deleteEvent,
 } from "../../../redux/slices/eventSlice";
 import { listenToEmployees } from "../../../redux/slices/employeeSlice";
+import usePopup from "../../../components/common/popups/usePopup";
 
 export const useCalendarData = () => {
   const dispatch = useDispatch();
+  const { showToast, showConfirm } = usePopup();
 
   const { list: events } = useSelector((state) => state.events);
   const { list: employees } = useSelector((state) => state.employees);
@@ -180,7 +182,7 @@ export const useCalendarData = () => {
   // --- Add Event ---
   const handleAddEvent = async () => {
     if (!eventForm.title.trim() || !selectedDate) {
-      alert("Please add an event title");
+      showToast("error", "Please add an event title");
       return;
     }
     setLoading(true);
@@ -197,7 +199,7 @@ export const useCalendarData = () => {
       setEventForm({ title: "", theme: "blue" });
     } catch (err) {
       console.error("Error adding event:", err);
-      alert("Failed to add event");
+      showToast("error", "Failed to add event");
     } finally {
       setLoading(false);
     }
@@ -205,13 +207,15 @@ export const useCalendarData = () => {
 
   // --- Delete Event ---
   const handleDeleteEvent = async (id) => {
-    if (!window.confirm("Delete this event?")) return;
-    try {
-      await dispatch(deleteEvent(id)).unwrap();
-    } catch (err) {
-      console.error("Error deleting event:", err);
-      alert("Failed to delete event");
-    }
+    showConfirm("Delete this event?", async () => {
+      try {
+        await dispatch(deleteEvent(id)).unwrap();
+        showToast("success", "Event deleted successfully");
+      } catch (err) {
+        console.error("Error deleting event:", err);
+        showToast("error", "Failed to delete event");
+      }
+    });
   };
 
   return {

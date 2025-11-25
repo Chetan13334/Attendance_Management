@@ -14,6 +14,7 @@ import {
   deleteEvent,
 } from "../../../redux/slices/eventSlice";
 import { listenToEmployees } from "../../../redux/slices/employeeSlice";
+import usePopup from "../../../components/common/popups/usePopup";
 
 // Helper: YYYY-MM-DD string (local timezone)
 const getLocalDateKey = (date) => {
@@ -25,6 +26,7 @@ const getLocalDateKey = (date) => {
 
 export const useCalendarData = (employeeId) => {
   const dispatch = useDispatch();
+  const { showToast, showConfirm } = usePopup();
 
   const { list: events } = useSelector((state) => state.events);
   const { list: employees } = useSelector((state) => state.employees);
@@ -343,7 +345,7 @@ const isNextDisabled = (() => {
   // --- Add Event ---
   const handleAddEvent = useCallback(async () => {
     if (!eventForm.title.trim() || !selectedDate) {
-      alert("Please add an event title");
+      showToast("error", "Please add an event title");
       return;
     }
     setLoading(true);
@@ -360,22 +362,24 @@ const isNextDisabled = (() => {
       setEventForm({ title: "", theme: "blue" });
     } catch (err) {
       console.error("Error adding event:", err);
-      alert("Failed to add event");
+      showToast("error", "Failed to add event");
     } finally {
       setLoading(false);
     }
-  }, [eventForm, selectedDate, dispatch]);
+  }, [eventForm, selectedDate, dispatch, showToast]);
 
   // --- Delete Event ---
   const handleDeleteEvent = useCallback(async (id) => {
-    if (!window.confirm("Delete this event?")) return;
-    try {
-      await dispatch(deleteEvent(id)).unwrap();
-    } catch (err) {
-      console.error("Error deleting event:", err);
-      alert("Failed to delete event");
-    }
-  }, [dispatch]);
+    showConfirm("Delete this event?", async () => {
+      try {
+        await dispatch(deleteEvent(id)).unwrap();
+        showToast("success", "Event deleted successfully");
+      } catch (err) {
+        console.error("Error deleting event:", err);
+        showToast("error", "Failed to delete event");
+      }
+    });
+  }, [dispatch, showConfirm, showToast]);
 
   // --- Parse events safely (Handles ISO string OR Firebase Timestamp) ---
   const getParsedEvents = useCallback(() => {

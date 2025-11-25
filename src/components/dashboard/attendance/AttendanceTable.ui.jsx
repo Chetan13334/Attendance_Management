@@ -299,10 +299,11 @@ const AttendanceTableUI = ({ mergedRecords, getStatusClasses, loading }) => {
                       src={record.photo}
                       alt={record.name}
                       className="w-10 h-10 rounded-full object-cover shadow-sm hover:scale-105 transition-transform duration-150"
+                      onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/160x160/cbd5e1/000?text=P"; }}
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-semibold">
-                      P
+                    <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold shadow-sm">
+                      {record.name ? record.name.charAt(0).toUpperCase() : "E"}
                     </div>
                   )}
                 </td>
