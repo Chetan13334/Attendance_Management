@@ -58,15 +58,18 @@ const EditModal = ({ isOpen, onClose, onSave }) => {
       if (selectedUserId && selectedDate) {
         try {
           setLoading(true);
+          console.log("Loading attendance data for:", { selectedUserId, selectedDate });
           const record = await loadAttendanceData(selectedUserId, selectedDate);
           
           if (record) {
+            console.log("Record found:", record);
             const checkInTime = formatTime(record.CheckIn);
             const checkOutTime = formatTime(record.CheckOut);
               
             setCheckIn(checkInTime);
             setCheckOut(checkOutTime);
           } else {
+            console.log("No record found, using default times");
             const { checkIn: defaultCheckIn, checkOut: defaultCheckOut } = getDefaultTimes();
             setCheckIn(defaultCheckIn);
             setCheckOut(defaultCheckOut);
@@ -99,6 +102,7 @@ const EditModal = ({ isOpen, onClose, onSave }) => {
   };
 
   const handleDateChange = (date) => {
+    console.log("Date selected:", date);
     setSelectedDate(date);
     // Reset time when date changes
     const { checkIn: defaultCheckIn, checkOut: defaultCheckOut } = getDefaultTimes();
@@ -107,10 +111,26 @@ const EditModal = ({ isOpen, onClose, onSave }) => {
   };
 
   const handleSave = async () => {
-    if (!selectedUser || !selectedUserId || !selectedDate) return;
+    if (!selectedUser || !selectedUserId || !selectedDate) {
+      alert("Please select an employee and date");
+      return;
+    }
+    
+    // Validate time format
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!timeRegex.test(checkIn) || !timeRegex.test(checkOut)) {
+      alert("Please enter valid time formats (HH:mm)");
+      return;
+    }
     
     try {
       setLoading(true);
+      console.log("Saving attendance data:", { selectedUserId, selectedDate, checkIn, checkOut });
+      
+      // Log the types of data being passed
+      console.log("Data types - userId:", typeof selectedUserId, "date:", typeof selectedDate, "checkIn:", typeof checkIn, "checkOut:", typeof checkOut);
+      
+      // Ensure we're passing the correct data types
       await saveAttendanceData(selectedUserId, selectedDate, checkIn, checkOut);
       
       if (onSave) {
@@ -126,6 +146,7 @@ const EditModal = ({ isOpen, onClose, onSave }) => {
       onClose();
     } catch (error) {
       console.error("Error saving attendance record:", error);
+      alert("Failed to save attendance record. Please try again.");
     } finally {
       setLoading(false);
     }

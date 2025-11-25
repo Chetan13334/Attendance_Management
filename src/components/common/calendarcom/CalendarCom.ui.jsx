@@ -81,7 +81,7 @@ const BirthdayTooltip = ({ birthday }) => {
         </div>
       </div>
 
-      {/* Tooltip Birthday Card (Hover) - Fixed Position */}
+      
       {isHovered && (
         <div
           ref={tooltipRef}
@@ -163,7 +163,7 @@ const BirthdayTooltip = ({ birthday }) => {
 };
 
 const CalendarUI = ({
-  // State
+
   currentMonth,
   currentYear,
   isModalOpen,

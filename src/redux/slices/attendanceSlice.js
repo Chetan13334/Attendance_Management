@@ -129,7 +129,6 @@ export const fetchCalendarAttendance = createAsyncThunk(
             const empIdFromDoc = empDoc.id;
             const data = empDoc.data();
 
-
             if (!attendanceData[empIdFromDoc]) {
               attendanceData[empIdFromDoc] = {};
             }

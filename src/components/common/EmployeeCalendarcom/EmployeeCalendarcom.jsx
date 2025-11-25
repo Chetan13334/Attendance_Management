@@ -156,7 +156,7 @@ const EmployeeCalendarCom = ({
                     : null;
 
                   const badgeClass = getAttendanceBadgeClass(attendanceStatus);
-                  const attendanceLabel = isFutureDate ? "Future" : getAttendanceLabel(attendanceStatus);
+                  const attendanceLabel = isFutureDate ? "----" : getAttendanceLabel(attendanceStatus);
 
                   return (
                     <td
@@ -184,13 +184,13 @@ const EmployeeCalendarCom = ({
                           <div className="w-full">
                             {loading ? (
                               <div className="text-xs font-medium px-3 py-1 rounded-full bg-gray-200 animate-pulse w-16 h-5"></div>
-                            ) : date && !isFutureDate && attendanceStatus ? (
-                              <span className={`text-xs font-medium px-3 py-1 rounded-full ${badgeClass}`}>
-                                {getAttendanceLabel(attendanceStatus)}
-                              </span>
                             ) : isFutureDate ? (
                               <span className={`text-xs font-medium px-3 py-1 rounded-full bg-gray-100 text-gray-500`}>
                                 {attendanceLabel}
+                              </span>
+                            ) : attendanceStatus ? (
+                              <span className={`text-xs font-medium px-3 py-1 rounded-full ${badgeClass}`}>
+                                {getAttendanceLabel(attendanceStatus)}
                               </span>
                             ) : null}
                           </div>
@@ -198,10 +198,13 @@ const EmployeeCalendarCom = ({
                           <div className="flex-grow w-full mt-2 overflow-hidden text-sm text-gray-600">
                             {loading ? (
                               <p className="pt-1 h-4 bg-gray-200 animate-pulse rounded w-3/4"></p>
-                            ) : date && !isFutureDate ? (
+                            ) : isFutureDate ? (
                               <p className="pt-1">
                               </p>
-                            ) : null}
+                            ) : (
+                              <p className="pt-1">
+                              </p>
+                            )}
                           </div>
                         </div>
                       ) : null}
