@@ -1,3 +1,6 @@
-import { usePopup } from './PopupProvider';
+import { usePopupContext } from "./PopupProvider";
 
-export default usePopup;
+export const usePopup = () => {
+  const { showToast, showConfirm } = usePopupContext();
+  return { showToast, showConfirm };
+};

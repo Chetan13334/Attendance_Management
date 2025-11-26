@@ -26,11 +26,11 @@ export const listenToEmployees = createAsyncThunk(
 
             return {
               id: d.id,
-              empId: String(data?.EmployeeID ?? data?.employeeId ?? d.id), 
+              empId: String(data?.EmployeeID ?? data?.employeeId ?? d.id),
               name: data?.Name ?? data?.name ?? "Unknown",
               ...data,
 
-              
+
               DateOfBirth: data.DateOfBirth?.toDate
                 ? data.DateOfBirth.toDate().toISOString()
                 : data.DateOfBirth || null,
@@ -46,11 +46,11 @@ export const listenToEmployees = createAsyncThunk(
         },
         (error) => {
           console.error("Employee listener error:", error);
-          dispatch(setEmployees([])); 
+          dispatch(setEmployees([]));
         }
       );
 
-      
+
       return () => {
         console.log("Cleaning up employee listener");
         unsubscribe();
@@ -68,7 +68,7 @@ export const createEmployee = createAsyncThunk(
   async (employeeData) => {
     const docRef = await addDoc(collection(db, "Employee_Details"), {
       ...employeeData,
-      createdAt: new Date(), 
+      createdAt: new Date(),
     });
     return { id: docRef.id, ...employeeData };
   }
@@ -104,9 +104,9 @@ const employeeSlice = createSlice({
   reducers: {
     setEmployees(state, action) {
       console.log("Setting employees in Redux:", action.payload.length);
-      
+
       state.list = [...action.payload];
-      state.loading = false; 
+      state.loading = false;
     },
     clearCurrentEmployee(state) {
       state.currentEmployee = null;
@@ -115,7 +115,7 @@ const employeeSlice = createSlice({
       console.log("Clearing employees data from Redux store");
       state.list = [];
       state.error = null;
-     
+
     },
   },
   extraReducers: (builder) => {
@@ -124,13 +124,13 @@ const employeeSlice = createSlice({
         state.loading = true;
       })
       .addCase(listenToEmployees.fulfilled, (state) => {
-        
+
         console.log("Employee listener setup complete");
       })
       .addCase(listenToEmployees.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-        state.list = []; 
+        state.list = [];
       })
       .addCase(createEmployee.fulfilled, (state, action) => {
         state.list.push(action.payload);

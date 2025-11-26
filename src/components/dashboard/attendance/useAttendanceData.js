@@ -118,7 +118,7 @@ export const useAttendanceData = () => {
           });
 
           const mins = checkIn.getHours() * 60 + checkIn.getMinutes();
-          const cutoff = 10 * 60 + 15;
+          const cutoff = 10 * 60 ;
 
           if (mins <= cutoff) {
             status = "On time";
