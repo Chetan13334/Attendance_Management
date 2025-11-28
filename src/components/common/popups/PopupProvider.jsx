@@ -1,70 +1,27 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import ConfirmPopup from './ConfirmPopup';
-import ToastBar from './ToastBar';
+import { createContext, useContext, useState } from "react";
 
 const PopupContext = createContext();
 
-export const usePopup = () => {
-  const context = useContext(PopupContext);
-  if (!context) {
-    throw new Error('usePopup must be used within a PopupProvider');
-  }
-  return context;
-};
-
 export const PopupProvider = ({ children }) => {
-  const [toast, setToast] = useState(null);
-  const [confirm, setConfirm] = useState(null);
-  const toastTimeoutRef = React.useRef(null);
-
-  const showToast = (type, message) => {
-    // Clear any existing timeout
-    if (toastTimeoutRef.current) {
-      clearTimeout(toastTimeoutRef.current);
-    }
-    
-    setToast({ type, message });
-    
-    // Auto dismiss after 3 seconds
-    toastTimeoutRef.current = setTimeout(() => {
-      setToast(null);
-      toastTimeoutRef.current = null;
-    }, 3000);
-  };
-
-  const clearToast = () => {
-    // Clear any existing timeout
-    if (toastTimeoutRef.current) {
-      clearTimeout(toastTimeoutRef.current);
-      toastTimeoutRef.current = null;
-    }
-    setToast(null);
-  };
+  const [confirmData, setConfirmData] = useState(null);
+  const [toastData, setToastData] = useState(null);
 
   const showConfirm = (message, onConfirm) => {
-    setConfirm({ message, onConfirm });
+    setConfirmData({ message, onConfirm });
   };
 
-  const hideConfirm = () => {
-    setConfirm(null);
-  };
+  const hideConfirm = () => setConfirmData(null);
 
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (toastTimeoutRef.current) {
-        clearTimeout(toastTimeoutRef.current);
-      }
-    };
-  }, []);
+  const showToast = (type, message) => {
+    setToastData({ type, message });
+    setTimeout(() => setToastData(null), 2500);
+  };
 
   return (
-    <PopupContext.Provider value={{ showToast, showConfirm, toast, confirm, hideConfirm, clearToast }}>
+    <PopupContext.Provider value={{ showConfirm, showToast, confirmData, hideConfirm, toastData }}>
       {children}
-      {toast && <ToastBar toast={toast} />}
-      {confirm && <ConfirmPopup confirm={confirm} onCancel={hideConfirm} />}
     </PopupContext.Provider>
   );
 };
 
-export default PopupProvider;
+export const usePopupContext = () => useContext(PopupContext);

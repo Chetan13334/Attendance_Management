@@ -11,7 +11,7 @@ import {
 } from "../../../redux/slices/employeeSlice";
 
 // ✅ Import popup system
-import { usePopup } from "../../../common/popups/usePopup";
+import { usePopup } from "../../common/popups/usePopup";
 
 // Test environment variables on component mount
 const useEnvTest = () => {

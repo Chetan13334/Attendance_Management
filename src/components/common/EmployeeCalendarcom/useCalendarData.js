@@ -1,12 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  collection,
-  doc,
-  onSnapshot,
-  query,
-  where,
-} from "firebase/firestore";
 import { db } from "../../../firebase";
 import {
   listenToEvents,
@@ -14,7 +7,8 @@ import {
   deleteEvent,
 } from "../../../redux/slices/eventSlice";
 import { listenToEmployees } from "../../../redux/slices/employeeSlice";
-import usePopup from "../../../components/common/popups/usePopup";
+import { collection, doc, onSnapshot } from "firebase/firestore";
+import { usePopup } from "../../../components/common/popups/usePopup";
 
 // Helper: YYYY-MM-DD string (local timezone)
 const getLocalDateKey = (date) => {

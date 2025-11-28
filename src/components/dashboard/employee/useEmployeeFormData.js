@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createEmployee } from "../../../redux/slices/employeeSlice";
 import { useNavigate } from "react-router-dom";
-import usePopup from "../../../components/common/popups/usePopup";
+import { usePopup } from "../../../components/common/popups/usePopup";
 
 // Test environment variables on component mount
 const useEnvTest = (showToast) => {

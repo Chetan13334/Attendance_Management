@@ -6,7 +6,7 @@ import {
   deleteEvent,
 } from "../../../redux/slices/eventSlice";
 import { listenToEmployees } from "../../../redux/slices/employeeSlice";
-import usePopup from "../../../components/common/popups/usePopup";
+import { usePopup } from "../../../components/common/popups/usePopup";
 
 export const useCalendarData = () => {
   const dispatch = useDispatch();

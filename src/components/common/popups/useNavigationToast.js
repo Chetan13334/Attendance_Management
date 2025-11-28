@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import usePopup from './usePopup';
+import { usePopup } from './usePopup';
 
 // Custom hook to clear toast when navigating
 export const useNavigationToast = () => {
