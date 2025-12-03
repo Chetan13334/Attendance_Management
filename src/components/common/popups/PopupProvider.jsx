@@ -6,8 +6,8 @@ export const PopupProvider = ({ children }) => {
   const [confirmData, setConfirmData] = useState(null);
   const [toastData, setToastData] = useState(null);
 
-  const showConfirm = (message, onConfirm) => {
-    setConfirmData({ message, onConfirm });
+  const showConfirm = (message, onConfirm, confirmText = "Confirm") => {
+    setConfirmData({ message, onConfirm, confirmText });
   };
 
   const hideConfirm = () => setConfirmData(null);
