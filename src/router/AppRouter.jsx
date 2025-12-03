@@ -19,7 +19,8 @@ import EmployeeDetailsPage from "../pages/EmployeeDetailsPage";
 import CalenderComPage from "../pages/CalenderComPage";
 import EditEmployeePage from "../pages/EditEmployeePage";
 import EmployeeCalendarComPage from "../pages/EmployeeCalendarComPage";
-
+import LeaveRequestPage from "../pages/LeaveRequestPage";
+import ViewLeaveRequestPage from "../pages/ViewLeaveRequestPage";
 
 import ProtectedRoute from "./ProtectedRoute";
 import PublicRoute from "./PublicRoute";
@@ -30,7 +31,6 @@ import ToastBar from "../components/common/popups/ToastBar";
 const AppRouter = () => {
   const dispatch = useDispatch();
 
- 
   useEffect(() => {
     dispatch(listenToAuthState());
   }, [dispatch]);
@@ -41,10 +41,8 @@ const AppRouter = () => {
         <ConfirmPopup />
         <ToastBar />
         <Routes>
-          
           <Route path="/" element={<Navigate to="/signin" replace />} />
 
-        
           <Route
             path="/signin"
             element={
@@ -111,7 +109,7 @@ const AppRouter = () => {
               </ProtectedRoute>
             }
           />
-         
+
           <Route
             path="/employee-calendarcom"
             element={
@@ -121,6 +119,23 @@ const AppRouter = () => {
             }
           />
 
+          <Route
+            path="/leave-requests"
+            element={
+              <ProtectedRoute>
+                <LeaveRequestPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/leave-request/:id"
+            element={
+              <ProtectedRoute>
+                <ViewLeaveRequestPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Catch-all Route */}
           <Route path="*" element={<Navigate to="/signin" replace />} />

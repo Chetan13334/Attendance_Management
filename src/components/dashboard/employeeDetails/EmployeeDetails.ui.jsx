@@ -121,7 +121,7 @@ const EmployeeDetailsUI = ({ employees, loading, error, navigate }) => {
 
                       <td className="px-4 py-4 text-center">
                         <button
-                          onClick={() => navigate(`/edit-employee/${emp.id}`)}
+                          onClick={() => navigate(`/edit-employee/${emp.EmployeeID}`)}
                           className="text-blue-600 text-sm font-medium hover:text-blue-800"
                         >
                           Edit

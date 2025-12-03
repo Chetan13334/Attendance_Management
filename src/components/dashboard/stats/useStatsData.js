@@ -1,7 +1,20 @@
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { UserCheck, UserX, Clock, Calendar } from "lucide-react";
+import { fetchLeaveRequests } from "../../../redux/slices/leaveSlice";
 
 export const useStatsData = (stats = [], onEventsClick, events, eventLoading) => {
+  const dispatch = useDispatch();
+  const { list: leaves } = useSelector((state) => state.leaves);
   const eventCount = events ? events.length : 0;
+
+  useEffect(() => {
+    if (leaves.length === 0) {
+      dispatch(fetchLeaveRequests());
+    }
+  }, [dispatch, leaves.length]);
+
+  const pendingLeaves = leaves.filter(l => l.status === "Pending" || l.status === "pending").length;
 
   // Default stats with onEventsClick instead of navigation
   const defaultStats = [
@@ -13,8 +26,8 @@ export const useStatsData = (stats = [], onEventsClick, events, eventLoading) =>
       onClick: () => { } // Dummy handler for click effect
     },
     {
-      title: "Inactive Users",
-      value: 80,
+      title: "Pending Requests", // Changed from Inactive Users to be more relevant
+      value: pendingLeaves,
       icon: UserX,
       color: "red",
       onClick: () => { } // Dummy handler for click effect

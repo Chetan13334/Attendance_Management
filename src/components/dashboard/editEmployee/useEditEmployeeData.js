@@ -105,7 +105,7 @@ export const useEditEmployeeData = () => {
 
   // Load Employee Data
   useEffect(() => {
-    const selected = employees.find((emp) => emp.id === id);
+    const selected = employees.find((emp) => emp.EmployeeID === id);
     if (selected) {
       setFormData(selected);
       if (selected.Photo) setPhoto(selected.Photo);
