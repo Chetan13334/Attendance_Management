@@ -64,18 +64,19 @@ export const useCalendarData = () => {
       .map((ev) => {
         let eventDate = null;
 
-        if (ev.event_date) {
-          if (typeof ev.event_date === "string") {
-            eventDate = new Date(ev.event_date);
-          } else if (ev.event_date.toDate) {
+        if (ev.event_date || ev.start || ev.end) {
+          const dateValue = ev.event_date || ev.start || ev.end;
+          if (typeof dateValue === "string") {
+            eventDate = new Date(dateValue);
+          } else if (dateValue.toDate) {
             // Firebase Timestamp
-            eventDate = ev.event_date.toDate();
-          } else if (ev.event_date instanceof Date) {
-            eventDate = ev.event_date;
+            eventDate = dateValue.toDate();
+          } else if (dateValue instanceof Date) {
+            eventDate = dateValue;
           }
 
           if (!eventDate || isNaN(eventDate.getTime())) {
-            console.warn("Invalid event_date:", ev.event_date, ev);
+            console.warn("Invalid event_date:", dateValue, ev);
             return null;
           }
         }
@@ -89,16 +90,19 @@ export const useCalendarData = () => {
 
   // --- Parse employees ---
   const getParsedEmployees = useMemo(() => {
-    return employees.map((emp) => ({
-      ...emp,
-      DateOfBirth: emp.DateOfBirth
-        ? typeof emp.DateOfBirth === "string"
-          ? new Date(emp.DateOfBirth)
-          : emp.DateOfBirth.toDate
-            ? emp.DateOfBirth.toDate()
-            : emp.DateOfBirth
-        : null,
-    }));
+    return employees.map((emp) => {
+      const dobValue = emp.DateOfBirth || emp.dateOfBirth || emp.dob;
+      return {
+        ...emp,
+        DateOfBirth: dobValue
+          ? typeof dobValue === "string"
+            ? new Date(dobValue)
+            : dobValue.toDate
+              ? dobValue.toDate()
+              : dobValue
+          : null,
+      };
+    });
   }, [employees]);
 
   const parsedEmployees = getParsedEmployees;
@@ -199,7 +203,7 @@ export const useCalendarData = () => {
       setEventForm({ title: "", theme: "blue" });
     } catch (err) {
       console.error("Error adding event:", err);
-      showToast("error", "Failed to add event");
+      showToast("error", err || "Failed to add event");
     } finally {
       setLoading(false);
     }

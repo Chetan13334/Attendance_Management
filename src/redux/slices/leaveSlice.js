@@ -1,27 +1,30 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { collectionGroup, getDocs, doc, updateDoc, onSnapshot, query } from "firebase/firestore";
-import { db } from "../../firebase";
+import { io } from "socket.io-client";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+let socket;
+
+const getAuthHeaders = () => ({
+    'Content-Type': 'application/json'
+});
 
 export const fetchLeaveRequests = createAsyncThunk(
     "leaves/fetchLeaveRequests",
     async (_, { rejectWithValue }) => {
         try {
-            // Using collectionGroup to fetch all 'dates' subcollections across all employees
-            const leavesQuery = collectionGroup(db, "dates");
-            const querySnapshot = await getDocs(leavesQuery);
-
-            const leaves = querySnapshot.docs.map((doc) => {
-                const data = doc.data();
-                return {
-                    id: doc.id, // This is the date string usually, or a unique ID
-                    ...data,
-                    // Ensure we have a consistent ID for the UI
-                    requestId: doc.id,
-                    path: doc.ref.path, // Store path for potential updates
-                };
+            const response = await fetch(`${API_BASE_URL}/leaves`, {
+                headers: getAuthHeaders(),
+                credentials: 'include'
             });
 
-            return leaves;
+            if (!response.ok) throw new Error("Failed to fetch leaves");
+
+            const leaves = await response.json();
+            return leaves.map(l => ({
+                ...l,
+                id: l._id,
+                requestId: l._id // Consistency for UI
+            }));
         } catch (error) {
             console.error("Error fetching leave requests:", error);
             return rejectWithValue(error.message);
@@ -29,36 +32,44 @@ export const fetchLeaveRequests = createAsyncThunk(
     }
 );
 
-// New: Set up real-time listener for leave requests
+// Subscribe to real-time leave updates
 export const subscribeToLeaveRequests = () => (dispatch) => {
-    const leavesQuery = query(collectionGroup(db, "dates"));
+    if (!socket) {
+        socket = io(API_BASE_URL.replace('/api', ''), { withCredentials: true });
+    }
 
-    const unsubscribe = onSnapshot(leavesQuery, (querySnapshot) => {
-        const leaves = querySnapshot.docs.map((doc) => {
-            const data = doc.data();
-            return {
-                id: doc.id,
-                ...data,
-                requestId: doc.id,
-                path: doc.ref.path,
-            };
-        });
-
-        dispatch(setLeaveRequests(leaves));
-    }, (error) => {
-        console.error("Error in leave requests listener:", error);
+    socket.off("leaveUpdated");
+    socket.on("leaveUpdated", (leave) => {
+        console.log("Leave updated event:", leave);
+        // The backend emits the single updated/created leave
+        dispatch(updateOrAddLeave({
+            ...leave,
+            id: leave._id,
+            requestId: leave._id
+        }));
     });
 
-    return unsubscribe;
+    return () => {
+        if (socket) socket.off("leaveUpdated");
+    };
 };
 
 export const updateLeaveStatus = createAsyncThunk(
     "leaves/updateLeaveStatus",
-    async ({ path, status }, { rejectWithValue }) => {
+    async ({ id, status }, { rejectWithValue }) => {
         try {
-            const leaveRef = doc(db, path);
-            await updateDoc(leaveRef, { status });
-            return { path, status };
+            const response = await fetch(`${API_BASE_URL}/leaves/${id}`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                credentials: 'include',
+                body: JSON.stringify({ status })
+            });
+
+            if (!response.ok) throw new Error("Failed to update status");
+
+            const updated = await response.json();
+            return { id, status: updated.leave.status };
+
         } catch (error) {
             console.error("Error updating leave status:", error);
             return rejectWithValue(error.message);
@@ -82,6 +93,15 @@ const leaveSlice = createSlice({
             state.list = action.payload;
             state.loading = false;
         },
+        updateOrAddLeave(state, action) {
+            const leave = action.payload;
+            const index = state.list.findIndex(l => l.id === leave.id);
+            if (index !== -1) {
+                state.list[index] = { ...state.list[index], ...leave };
+            } else {
+                state.list.unshift(leave); // Add new requests to top
+            }
+        }
     },
     extraReducers: (builder) => {
         builder
@@ -98,8 +118,8 @@ const leaveSlice = createSlice({
                 state.error = action.payload;
             })
             .addCase(updateLeaveStatus.fulfilled, (state, action) => {
-                const { path, status } = action.payload;
-                const index = state.list.findIndex((leave) => leave.path === path);
+                const { id, status } = action.payload;
+                const index = state.list.findIndex((leave) => leave.id === id);
                 if (index !== -1) {
                     state.list[index].status = status;
                 }
@@ -107,5 +127,5 @@ const leaveSlice = createSlice({
     },
 });
 
-export const { clearLeaves, setLeaveRequests } = leaveSlice.actions;
+export const { clearLeaves, setLeaveRequests, updateOrAddLeave } = leaveSlice.actions;
 export default leaveSlice.reducer;

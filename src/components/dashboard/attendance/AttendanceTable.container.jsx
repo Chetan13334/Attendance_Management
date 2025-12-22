@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import AttendanceTableUI from "./AttendanceTable.ui";
 import { useAttendanceData, getStatusClasses } from "./useAttendanceData";
-import { listenToEmployees, clearEmployees } from "../../../redux/slices/employeeSlice";
+import { listenToEmployees, subscribeToEmployeeUpdates, clearEmployees } from "../../../redux/slices/employeeSlice";
 import { clearAttendance } from "../../../redux/slices/attendanceSlice";
 
 
@@ -19,6 +19,9 @@ const AttendanceTableContainer = () => {
       console.log("Setting up employee listener in container");
       const result = dispatch(listenToEmployees());
 
+      // Subscribe to real-time updates
+      const unsubscribeSocket = dispatch(subscribeToEmployeeUpdates());
+
       let cleanup;
       result.then((unsubscribe) => {
         console.log("Employee listener set up in container");
@@ -31,6 +34,9 @@ const AttendanceTableContainer = () => {
         console.log("Cleaning up employee listener in container");
         if (cleanup && typeof cleanup === 'function') {
           cleanup();
+        }
+        if (typeof unsubscribeSocket === 'function') {
+          unsubscribeSocket();
         }
       };
     }

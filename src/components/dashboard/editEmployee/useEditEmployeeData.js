@@ -103,28 +103,51 @@ export const useEditEmployeeData = () => {
   const [cdnUrl, setCdnUrl] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  // Helper to format date for input[type="date"] (YYYY-MM-DD)
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "";
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Load Employee Data
   useEffect(() => {
-    const selected = employees.find((emp) => emp.EmployeeID === id);
+    // Robust find: check all possible ID fields
+    const selected = employees.find((emp) =>
+      emp.EmployeeID === id ||
+      emp.id === id ||
+      emp._id === id ||
+      emp.empId === id
+    );
+
     if (selected) {
-      setFormData(selected);
+      console.log("📋 Selected employee data:", selected);
+      console.log("🔑 Password field:", selected.Password || selected.password);
+      console.log("👤 Gender field:", selected.Gender || selected.gender);
+
+      setFormData({
+        ...selected,
+        // Format dates for date inputs
+        DateOfJoining: formatDateForInput(selected.DateOfJoining),
+        DateOfBirth: formatDateForInput(selected.DateOfBirth),
+        // Clear password field (backend returns encrypted hash which is not useful)
+        Password: ""
+      });
       if (selected.Photo) setPhoto(selected.Photo);
     }
-    return () => dispatch(clearCurrentEmployee());
   }, [id, employees, dispatch]);
 
-  // Listen for employees (on refresh)
+  // Listen for employees (on refresh) ensures data is there if user straight navigates
   useEffect(() => {
     let unsubscribe;
     if (employees.length === 0) {
-      dispatch(listenToEmployees()).then((action) => {
-        if (listenToEmployees.fulfilled.match(action)) {
-          unsubscribe = action.payload;
-        }
-      });
+      dispatch(listenToEmployees());
     }
-    return () => unsubscribe && unsubscribe();
-  }, [dispatch]);
+  }, [dispatch, employees.length]);
 
   /* Handle Photo Upload + Preview */
   const handlePhotoChange = async (e) => {
@@ -159,15 +182,30 @@ export const useEditEmployeeData = () => {
     e.preventDefault();
     if (!formData) return;
 
+    // Transform PascalCase UI fields to camelCase backend fields
     const updatedData = {
-      ...formData,
-      Photo: cdnUrl || photo,
+      name: formData.Name,
+      email: formData.Email,
+      employeeId: formData.EmployeeID,
+      department: formData.Department,
+      designation: formData.Role, // UI's "Role" maps to backend's "designation"
+      gender: formData.Gender,
+      contactNumber: formData.ContactNumber,
+      phone: formData.ContactNumber,
+      joiningDate: formData.DateOfJoining,
+      dateOfBirth: formData.DateOfBirth,
+      address: formData.Address || "",
+      image: cdnUrl || photo || formData.Photo,
+      // Only include password if it's not empty
+      ...(formData.Password && formData.Password.trim() !== "" && { password: formData.Password }),
     };
 
     const result = await dispatch(updateEmployeeAsync({ id: formData.id, updatedData }));
 
     if (updateEmployeeAsync.fulfilled.match(result)) {
       showToast("success", "Employee updated successfully!");
+      // Refresh employee list to show updated data immediately
+      await dispatch(listenToEmployees());
       navigate("/employee_details");
     } else {
       showToast("error", "Failed to update employee");
@@ -181,6 +219,8 @@ export const useEditEmployeeData = () => {
 
       if (deleteEmployeeAsync.fulfilled.match(result)) {
         showToast("success", "Employee deleted!");
+        // Refresh employee list to remove deleted employee immediately
+        await dispatch(listenToEmployees());
         navigate("/employee_details");
       } else {
         showToast("error", "Failed to delete employee");

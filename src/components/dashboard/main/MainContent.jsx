@@ -110,7 +110,11 @@ const MainContent = () => {
 
   return (
     <div className="space-y-6">
-      <StatsOverview onEventsClick={handleEventsClick} />
+      <StatsOverview
+        onEventsClick={handleEventsClick}
+        events={events}
+        eventLoading={isLoading}
+      />
       {showEvents ? (
         <div className="bg-white rounded-xl shadow-lg mt-8 p-6">
           <div className="border-b border-gray-100 pb-4 mb-6 flex justify-between items-center">

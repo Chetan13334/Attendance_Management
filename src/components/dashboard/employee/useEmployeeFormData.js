@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { createEmployee } from "../../../redux/slices/employeeSlice";
+import { createEmployee, listenToEmployees } from "../../../redux/slices/employeeSlice";
 import { useNavigate } from "react-router-dom";
 import { usePopup } from "../../../components/common/popups/usePopup";
 
@@ -225,18 +225,26 @@ export const useEmployeeFormData = () => {
 
     try {
 
-      let employeeData = { ...formData }
-      if (cdnUrl) {
-        employeeData = {
-          ...formData,
-          Photo: cdnUrl || "", // Prefer Cloudinary URL
-        };
-      }
+      const payload = {
+        name: formData.Name,
+        employeeId: formData.EmployeeID,
+        email: formData.Email,
+        password: formData.Password,
+        department: formData.Department,
+        designation: formData.Role, // Mapping UI "Role" (job title) to backend "designation"
+        role: "employee", // Default system role
+        gender: formData.Gender,
+        phone: formData.ContactNumber,
+        joiningDate: formData.DateOfJoining,
+        dateOfBirth: formData.DateOfBirth,
+        image: cdnUrl || "",
+        address: "", // Optional field not in form
+        salary: 0 // Required by backend validation
+      };
 
+      console.log("📤 Creating employee with payload:", payload);
 
-      console.log("📤 Creating employee with data:", employeeData);
-
-      const result = await dispatch(createEmployee(employeeData));
+      const result = await dispatch(createEmployee(payload));
 
       if (createEmployee.fulfilled.match(result)) {
         showToast("success", "Employee added successfully!");
@@ -257,12 +265,16 @@ export const useEmployeeFormData = () => {
         setPhoto("");
         setCdnUrl("");
 
+        // Refresh employee list to show the new employee immediately
+        await dispatch(listenToEmployees());
+
         // Delay navigation to allow toast to be visible
         setTimeout(() => {
           navigate("/employee_details");
         }, 1500);
       } else {
-        showToast("error", "Failed to add employee. Please try again.");
+        const errorMsg = result.payload || "Failed to add employee. Please try again.";
+        showToast("error", errorMsg);
       }
     } catch (error) {
       console.error("EmployeeForm error:", error);

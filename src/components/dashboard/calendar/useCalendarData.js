@@ -129,7 +129,7 @@ export const useCalendarData = () => {
       const dateStr = day.fullDate;
       console.log("Setting up attendance listener for date:", dateStr);
 
-      const result = dispatch(listenToAttendance(new Date(dateStr)));
+      const result = dispatch(listenToAttendance(dateStr));
       dateListeners.push(result);
     });
 
