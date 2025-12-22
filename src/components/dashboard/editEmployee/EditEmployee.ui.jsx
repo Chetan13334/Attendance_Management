@@ -158,7 +158,7 @@ const EditEmployeeUI = ({
                       value={Password || ""}
                       onChange={handleChange}
                       type={showPassword ? "text" : "password"}
-                      placeholder="Enter new password"
+                      placeholder="Enter the new Password"
                       autoComplete="new-password"
                       className="w-full px-4 py-2.5 rounded-lg bg-white text-gray-800 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition pr-10 shadow-inner text-sm"
                     />
@@ -170,6 +170,7 @@ const EditEmployeeUI = ({
                       {showPassword ? <EyeOffIcon size={20} /> : <EyeIcon size={20} />}
                     </button>
                   </div>
+                  <p className="text-xs text-gray-500 mt-1">Leave blank to keep the current password unchanged</p>
                 </div>
 
                 <div className="flex flex-col">

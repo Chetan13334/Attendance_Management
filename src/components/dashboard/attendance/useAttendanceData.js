@@ -1,6 +1,6 @@
 import { useSelector, useDispatch } from "react-redux";
 import { useEffect, useMemo, useState } from "react";
-import { listenToAttendance } from "../../../redux/slices/attendanceSlice";
+import { listenToAttendance, subscribeToAttendanceUpdates } from "../../../redux/slices/attendanceSlice";
 
 const getLocalDateKey = (date) => {
   const y = date.getFullYear();
@@ -15,110 +15,86 @@ export const useAttendanceData = () => {
   const attendanceList = useSelector((state) => state.attendance.list || []);
   const attendanceLoading = useSelector((state) => state.attendance.loading || false);
 
-
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [forceRefresh, setForceRefresh] = useState(0);
 
-  useEffect(() => {
-    const now = new Date();
-    console.log("Component mounted, setting current date to:", now.toDateString());
-    setCurrentDate(now);
-
-    setForceRefresh(prev => prev + 1);
-  }, []);
-
-
+  // Refresh interval logic
   useEffect(() => {
     const checkDateChange = () => {
       const now = new Date();
-
       if (now.toDateString() !== currentDate.toDateString()) {
-        console.log("Date changed from", currentDate.toDateString(), "to", now.toDateString(), "- updating current date");
         setCurrentDate(now);
       }
     };
-
     window.addEventListener('focus', checkDateChange);
-
-
-    const interval = setInterval(checkDateChange, 60000);
-
+    const interval = setInterval(checkDateChange, 60000); // Check every minute
     return () => {
       window.removeEventListener('focus', checkDateChange);
       clearInterval(interval);
     };
   }, [currentDate]);
 
+  // Setup data listener
   useEffect(() => {
-    console.log("Setting up attendance listener for date:", currentDate, "forceRefresh:", forceRefresh);
+    const dateKey = getLocalDateKey(currentDate);
 
-    const result = dispatch(listenToAttendance(currentDate));
+    // 1. Fetch initial data
+    const promise = dispatch(listenToAttendance(currentDate));
 
-
-    let cleanup;
-    result.then((unsubscribe) => {
-      console.log("Attendance listener set up successfully");
-      cleanup = unsubscribe;
-    }).catch((error) => {
-      console.error("Failed to set up attendance listener:", error);
-    });
-
+    // 2. Subscribe to real-time updates via Socket.io
+    const unsubscribe = dispatch(subscribeToAttendanceUpdates(dateKey));
 
     return () => {
-      console.log("Cleaning up attendance listener");
-      if (cleanup && typeof cleanup === 'function') {
-        cleanup();
+      // Cleanup on unmount or date change
+      promise.then(cleanup => {
+        if (typeof cleanup === 'function') cleanup();
+      }).catch(e => console.warn("Cleanup error", e));
+
+      if (promise.abort) {
+        promise.abort();
+      }
+
+      // Unsubscribe from socket updates
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
       }
     };
-  }, [dispatch, currentDate, forceRefresh]);
+  }, [dispatch, currentDate]);
 
-
-  useEffect(() => {
-    console.log("Employees updated:", employees.length);
-    console.log("Attendance list updated:", attendanceList.length);
-    if (attendanceList.length > 0) {
-      console.log("First attendance record:", attendanceList[0]);
-    }
-  }, [employees, attendanceList]);
-
-
+  // Merge logic
   const mergedRecords = useMemo(() => {
-    console.log("Recalculating merged records with", employees.length, "employees and", attendanceList.length, "attendance records");
-    return employees.map((emp) => {
+    const dateKey = getLocalDateKey(currentDate);
 
+    if (!employees || employees.length === 0) return [];
+
+    return employees.map((emp) => {
+      // Find attendance record for this employee and date
       const att = attendanceList.find(a => {
-        const matchId = a.employeeId === emp.empId || a.employeeId === emp.id;
-        // Also match the date to avoid picking up records from other loaded days
-        const matchDate = a.date === getLocalDateKey(currentDate);
+        // Id match
+        const matchId = (a.employeeId === emp.empId) || (a.employeeId === emp.id) || (a.id === emp.id);
+        // Date match (optional if list is already filtered by date, but good for safety)
+        const matchDate = a.date === dateKey;
         return matchId && matchDate;
       });
-
-      console.log(`Matching employee ${emp.id} with attendance:`, att);
 
       let status = "Absent";
       let time = "-";
       let remarks = "Not marked";
+      let checkOutTime = "-";
 
+      // --- CHECK IN PROCESSING ---
       if (att?.CheckIn) {
+        // Backend sends ISO string "2024-12-09T09:30:00.000Z"
+        const checkInDate = new Date(att.CheckIn);
 
-        let checkIn;
-        if (typeof att.CheckIn.toDate === "function") {
-          checkIn = att.CheckIn.toDate();
-        } else if (att.CheckIn.seconds) {
-          checkIn = new Date(att.CheckIn.seconds * 1000);
-        } else {
-          checkIn = new Date(att.CheckIn);
-        }
-
-
-        if (checkIn instanceof Date && !isNaN(checkIn.getTime())) {
-          time = checkIn.toLocaleTimeString("en-IN", {
+        if (!isNaN(checkInDate.getTime())) {
+          time = checkInDate.toLocaleTimeString("en-IN", {
             hour: "2-digit",
             minute: "2-digit",
           });
 
-          const mins = checkIn.getHours() * 60 + checkIn.getMinutes();
-          const cutoff = 10 * 60 ;
+          // Late Logic (10:00 AM cutoff)
+          const mins = checkInDate.getHours() * 60 + checkInDate.getMinutes();
+          const cutoff = 10 * 60; // 10:00 AM
 
           if (mins <= cutoff) {
             status = "On time";
@@ -126,7 +102,6 @@ export const useAttendanceData = () => {
           } else {
             status = "Late";
             const diff = mins - cutoff;
-
             if (diff < 60) {
               remarks = `${diff} min late`;
             } else {
@@ -134,33 +109,27 @@ export const useAttendanceData = () => {
             }
           }
         } else {
-
-          status = "Absent";
-          time = "-";
-          remarks = "Invalid data";
+          // Fallback for unexpected data
+          time = "Invalid Time";
         }
       }
 
-
-      let checkOutTime = "-";
+      // --- CHECK OUT PROCESSING ---
       if (att?.CheckOut) {
-        let checkOut;
-        if (typeof att.CheckOut.toDate === "function") {
-          checkOut = att.CheckOut.toDate();
-        } else if (att.CheckOut.seconds) {
-          checkOut = new Date(att.CheckOut.seconds * 1000);
-        } else {
-          checkOut = new Date(att.CheckOut);
-        }
-
-        if (checkOut instanceof Date && !isNaN(checkOut.getTime())) {
-          checkOutTime = checkOut.toLocaleTimeString("en-IN", {
+        const checkOutDate = new Date(att.CheckOut);
+        if (!isNaN(checkOutDate.getTime())) {
+          checkOutTime = checkOutDate.toLocaleTimeString("en-IN", {
             hour: "2-digit",
             minute: "2-digit",
           });
         }
       }
 
+      // If backend explicitly sends 'status', use it (optional override)
+      if (att?.status) {
+        // Map backend status to frontend display if needed, or use directly
+        // status = att.status; 
+      }
 
       const formattedDate = currentDate.toLocaleDateString('en-US', {
         day: 'numeric',
@@ -169,10 +138,12 @@ export const useAttendanceData = () => {
       });
 
       return {
-        id: emp.id || '',
-        employeeId: emp.EmployeeID || emp.employeeId || emp.empId || emp.id || '',
+        id: emp.id,
+        employeeId: emp.EmployeeID || emp.employeeId || emp.empId || emp.id,
         name: emp.Name || emp.name || 'Unknown',
         photo: emp.Photo || emp.photo || null,
+        designation: emp.Designation || emp.designation || '-',
+        department: emp.Department || emp.department || '-',
         date: formattedDate,
         checkIn: time,
         checkOut: checkOutTime,
@@ -185,7 +156,6 @@ export const useAttendanceData = () => {
 
   return { mergedRecords, loading: attendanceLoading };
 };
-
 
 export const getStatusClasses = (status) => {
   if (status === "On time") return "bg-green-100 text-green-800";

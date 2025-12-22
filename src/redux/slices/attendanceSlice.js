@@ -1,108 +1,50 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { collection, onSnapshot, doc, getDocs } from "firebase/firestore";
-import { db } from "../../firebase";
+import { io } from "socket.io-client";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+let socket;
 
-const unsubscribeFunctions = {};
-
-const attendanceByDate = {};
-
+// Helper function to normalize attendance data
+// Backend format: checkInTime (ISO), checkOutTime (ISO), _id
+// Frontend expected format: CheckIn (ISO string), CheckOut (ISO string), id
+const normalizeAttendance = (record) => {
+  return {
+    ...record,
+    id: record._id || record.id || record.employeeId, // Mappings
+    CheckIn: record.checkInTime || record.CheckIn, // Map checkInTime to CheckIn
+    CheckOut: record.checkOutTime || record.CheckOut, // Map checkOutTime to CheckOut
+    date: record.date || (record.checkInTime ? record.checkInTime.split('T')[0] : null) // Ensure date field exists
+  };
+};
 
 export const listenToAttendance = createAsyncThunk(
   "attendance/listenToAttendance",
-  async (date, { dispatch, rejectWithValue }) => {
+  async (dateInput, { dispatch, rejectWithValue }) => {
     try {
-
-      const dateStr = date instanceof Date ?
-        `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` :
-        date;
-
-      console.log("Setting up attendance listener for date:", dateStr, "from input date:", date);
-
-
-      
-      if (unsubscribeFunctions[dateStr]) {
-        console.log("Listener already exists for date:", dateStr, "- skipping setup");
-        
-
-        
-        if (attendanceByDate[dateStr]) {
-          console.log("Dispatching cached data for existing listener:", dateStr);
-          const combinedAttendance = Object.values(attendanceByDate).flat();
-          dispatch(setAttendance(combinedAttendance));
-        }
-
-        return () => { };
+      // Ensure dateInput is a valid string YYYY-MM-DD
+      let dateStr = dateInput;
+      if (dateInput instanceof Date) {
+        dateStr = dateInput.toISOString().split("T")[0];
       }
 
-
-      if (attendanceByDate[dateStr]) {
-        console.log("Removing existing attendance data for date:", dateStr);
-        delete attendanceByDate[dateStr];
-      }
-
-
-      const dateDocRef = doc(db, "Employee_CheckIn_CheckOut", dateStr);
-      const empRecColRef = collection(dateDocRef, "employee_records");
-
-      const unsubscribe = onSnapshot(empRecColRef, (empSnapshot) => {
-        console.log(`Received attendance snapshot with ${empSnapshot.docs.length} documents for date:`, dateStr);
-        const allAttendance = [];
-
-
-        empSnapshot.docs.forEach((empDoc) => {
-          const documentId = empDoc.id;
-          const empData = empDoc.data();
-
-          console.log(`Processing attendance for employee ${documentId} on date ${dateStr}:`, empData);
-
-
-          allAttendance.push({
-            id: documentId,
-            employeeId: documentId,
-            date: dateStr,
-            ...empData,
-          });
-        });
-
-
-        attendanceByDate[dateStr] = allAttendance;
-
-
-        const combinedAttendance = Object.values(attendanceByDate).flat();
-
-        console.log("Dispatching combined attendance data:", combinedAttendance.length, "records");
-        console.log("Attendance by date:", attendanceByDate);
-        console.log("Today's attendance data:", allAttendance);
-        dispatch(setAttendance(combinedAttendance));
-      }, (error) => {
-        console.error("Attendance listener error for date:", dateStr, error);
-
-        delete attendanceByDate[dateStr];
-
-        const combinedAttendance = Object.values(attendanceByDate).flat();
-        dispatch(setAttendance(combinedAttendance));
+      // 1. Initial Fetch via REST API
+      const response = await fetch(`${API_BASE_URL}/attendance?date=${dateStr}`, {
+        credentials: 'include'
       });
+      if (!response.ok) {
+        throw new Error("Failed to fetch initial attendance data");
+      }
+      const data = await response.json();
 
+      const normalizedData = data.map(normalizeAttendance);
 
-      unsubscribeFunctions[dateStr] = unsubscribe;
+      // We assume this returns the data which will be used by the fulfilled reducer
+      // We pass the date as well so the reducer knows which date bucket to update
+      return { date: dateStr, records: normalizedData };
 
-
-      return () => {
-        console.log("Cleaning up attendance listener for date:", dateStr);
-        if (unsubscribeFunctions[dateStr]) {
-          unsubscribeFunctions[dateStr]();
-          delete unsubscribeFunctions[dateStr];
-        }
-
-        delete attendanceByDate[dateStr];
-
-        const combinedAttendance = Object.values(attendanceByDate).flat();
-        dispatch(setAttendance(combinedAttendance));
-      };
-    } catch (err) {
-      console.error("Attendance listener setup error:", err);
-      return rejectWithValue(err.message);
+    } catch (error) {
+      console.error("Error fetching attendance:", error);
+      return rejectWithValue(error.message);
     }
   }
 );
@@ -110,121 +52,126 @@ export const listenToAttendance = createAsyncThunk(
 
 export const fetchCalendarAttendance = createAsyncThunk(
   "attendance/fetchCalendarAttendance",
-  async (dates, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const attendanceData = {};
-
-
-      for (const dateKey of dates) {
-        try {
-
-          const dateDocRef = doc(db, "Employee_CheckIn_CheckOut", dateKey);
-          const empRecColRef = collection(dateDocRef, "employee_records");
-
-
-          const empSnap = await getDocs(empRecColRef);
-
-
-          empSnap.forEach((empDoc) => {
-            const empIdFromDoc = empDoc.id;
-            const data = empDoc.data();
-
-            if (!attendanceData[empIdFromDoc]) {
-              attendanceData[empIdFromDoc] = {};
-            }
-
-
-            const processedData = {
-              ...data,
-              CheckIn: data.CheckIn?.toDate ? data.CheckIn.toDate().toISOString() : data.CheckIn,
-              CheckOut: data.CheckOut?.toDate ? data.CheckOut.toDate().toISOString() : data.CheckOut,
-            };
-
-
-            attendanceData[empIdFromDoc][dateKey] = processedData;
-          });
-        } catch (dateError) {
-          console.warn(`Error fetching attendance for ${dateKey}:`, dateError);
-        }
+      // Fetching attendance for calendar. Current backend supports limit.
+      const response = await fetch(`${API_BASE_URL}/attendance?limit=500`, {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        throw new Error("Failed to fetch calendar data");
       }
+      const data = await response.json();
+      // Group by date for the calendar
+      const calendarData = {};
+      data.forEach(record => {
+        const norm = normalizeAttendance(record);
+        if (!calendarData[norm.date]) {
+          calendarData[norm.date] = [];
+        }
+        calendarData[norm.date].push(norm);
+      });
 
-      return attendanceData;
-    } catch (err) {
-      return rejectWithValue(err.message);
+      return calendarData;
+
+    } catch (error) {
+      return rejectWithValue(error.message);
     }
   }
 );
 
+// Subscribe to real-time updates for a date
+export const subscribeToAttendanceUpdates = (dateStr) => (dispatch) => {
+  // Setup Socket.io listener
+  if (!socket) {
+    socket = io(API_BASE_URL.replace('/api', ''), {
+      withCredentials: true
+    });
+  }
+
+  // Join room for this date
+  socket.emit("subscribeToAttendance", dateStr);
+
+  socket.off("attendanceUpdated");
+  socket.on("attendanceUpdated", (updatedRecord) => {
+    // Only update if it matches the current date being viewed or logic? 
+    // Actually best to just update store and let selectors filter.
+    dispatch(updateAttendanceRecord(normalizeAttendance(updatedRecord)));
+  });
+
+  return () => {
+    if (socket) {
+      socket.off("attendanceUpdated");
+    }
+  };
+};
+
+
 const attendanceSlice = createSlice({
   name: "attendance",
   initialState: {
-    list: [],
-    calendarData: {},
+    list: [], // List of ALL loaded attendance records (flat)
+    calendarData: {}, // Map of date -> attendance list
     loading: false,
-    calendarLoading: false,
     error: null,
   },
   reducers: {
     setAttendance(state, action) {
-      console.log("Setting attendance in Redux:", action.payload.length, "records");
-      console.log("Attendance data:", action.payload);
-
-      state.list = [...action.payload];
+      // Payload expected: { date, records }
+      const { date, records } = action.payload;
+      if (date) {
+        // Remove old records for this date
+        state.list = state.list.filter(r => r.date !== date);
+        // Add new records
+        state.list.push(...records);
+      } else if (Array.isArray(action.payload)) {
+        // Fallback
+        state.list = action.payload;
+      }
+      state.loading = false;
     },
-    setCalendarAttendance(state, action) {
-      state.calendarData = action.payload;
+    updateAttendanceRecord(state, action) {
+      const updatedRecord = action.payload;
+      // Update in data list
+      const index = state.list.findIndex(item => item.id === updatedRecord.id);
+      if (index !== -1) {
+        state.list[index] = { ...state.list[index], ...updatedRecord };
+      } else {
+        state.list.push(updatedRecord);
+      }
     },
     clearAttendance(state) {
-      console.log("Clearing attendance data from Redux store");
       state.list = [];
-      state.calendarData = {};
-      state.error = null;
-
-      Object.values(unsubscribeFunctions).forEach(unsubscribe => {
-        if (typeof unsubscribe === 'function') {
-          console.log("Cleaning up unsubscribe function");
-          unsubscribe();
-        }
-      });
-      Object.keys(unsubscribeFunctions).forEach(key => {
-        console.log("Deleting unsubscribe function for date:", key);
-        delete unsubscribeFunctions[key];
-      });
-
-      Object.keys(attendanceByDate).forEach(key => {
-        console.log("Deleting attendance data for date:", key);
-        delete attendanceByDate[key];
-      });
+      if (socket) {
+        socket.off("attendanceUpdated");
+      }
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(listenToAttendance.pending, (state) => {
         state.loading = true;
-        state.error = null;
       })
-      .addCase(listenToAttendance.fulfilled, (state) => {
+      .addCase(listenToAttendance.fulfilled, (state, action) => {
         state.loading = false;
+        const { date, records } = action.payload;
+        if (date) {
+          state.list = state.list.filter(r => r.date !== date);
+          state.list.push(...records);
+        } else if (Array.isArray(action.payload)) {
+          state.list = action.payload;
+        }
       })
       .addCase(listenToAttendance.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-        state.list = [];
-      })
-      .addCase(fetchCalendarAttendance.pending, (state) => {
-        state.calendarLoading = true;
-        state.error = null;
       })
       .addCase(fetchCalendarAttendance.fulfilled, (state, action) => {
-        state.calendarLoading = false;
         state.calendarData = action.payload;
-      })
-      .addCase(fetchCalendarAttendance.rejected, (state, action) => {
-        state.calendarLoading = false;
-        state.error = action.payload;
       });
   },
 });
 
-export const { setAttendance, setCalendarAttendance, clearAttendance } = attendanceSlice.actions;
+export const { setAttendance, updateAttendanceRecord, clearAttendance } = attendanceSlice.actions;
+
 export default attendanceSlice.reducer;

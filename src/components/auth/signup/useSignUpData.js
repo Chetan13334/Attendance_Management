@@ -9,6 +9,8 @@ export const useSignUpData = () => {
     email: "",
     password: "",
     confirmPassword: "",
+    // defaulting to hr for now as per user request to create HR account
+    role: "hr"
   });
   const [errors, setErrors] = useState({});
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
@@ -50,7 +52,8 @@ export const useSignUpData = () => {
     const result = await dispatch(signUpWithEmail({
       email: formData.email,
       password: formData.password,
-      name: formData.name
+      name: formData.name,
+      role: formData.role
     }));
 
     if (signUpWithEmail.fulfilled.match(result)) {
@@ -71,7 +74,7 @@ export const useSignUpData = () => {
     loading,
     error,
     showSuccessMessage,
-    
+
     // Functions
     setFormData,
     setErrors,
