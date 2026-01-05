@@ -3,28 +3,28 @@ import { useDispatch, useSelector } from "react-redux";
 import { signInWithEmail, signInWithGoogle, setShowSuccessMessage } from "../../../redux/slices/authSlice";
 import { useNavigate } from "react-router-dom";
 
+import { usePopupContext } from "../../common/popups/PopupProvider";
+
 export const useSignInData = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error, showSuccessMessage } = useSelector((state) => state.auth);
+  const { showToast } = usePopupContext();
+  const { loading, error, isAuthenticated, user } = useSelector((state) => state.auth);
 
-  // Redirect to dashboard when login is successful
+  // Fallback direct navigation if PublicRoute fails to detect the change
   useEffect(() => {
-    if (showSuccessMessage) {
-      const timer = setTimeout(() => {
-        navigate("/dashboard");
-      }, 1500);
-      return () => clearTimeout(timer);
+    if (isAuthenticated || user) {
+      console.log("Auth detected in useSignInData, navigating to dashboard...");
+      navigate("/dashboard");
     }
-  }, [showSuccessMessage, navigate]);
+  }, [isAuthenticated, user, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    // Clear specific field error when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
@@ -48,45 +48,72 @@ export const useSignInData = () => {
     e.preventDefault();
     if (!validateForm()) return;
 
+    setErrors({});
+    console.log("Attempting sign in...");
     const result = await dispatch(signInWithEmail({
       email: formData.email,
       password: formData.password
     }));
 
-    if (result.meta.requestStatus === 'rejected') {
-      setErrors({ submit: "Sign In Failed: " + (result.payload || "Invalid email or password") });
+    if (signInWithEmail.fulfilled.match(result)) {
+      console.log("Sign in successful, payload:", result.payload);
+      showToast("success", "Welcome back! Login successful.");
+      // navigation handled by useEffect above
+    } else if (signInWithEmail.rejected.match(result)) {
+      let msg = result.payload || result.error?.message || "Invalid email or password";
+
+      // Better text for server crashes
+      if (msg.includes("500") || msg.includes("Internal Server Error")) {
+        msg = "Server Error (500): The backend crashed. Please check the backend terminal logs.";
+      }
+
+      setErrors({ submit: msg });
+      showToast("error", msg);
+      console.error("Sign in rejected:", msg);
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    const result = await dispatch(signInWithGoogle());
-    
-    if (result.meta.requestStatus === 'rejected') {
-      setErrors({ submit: "Google Sign In Failed: " + (result.payload || "Unknown error") });
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setErrors({});
+    console.log("Google Login payload received, verifying with backend...");
+    const result = await dispatch(signInWithGoogle(credentialResponse.credential));
+
+    if (signInWithGoogle.fulfilled.match(result)) {
+      console.log("Google Sign in successful");
+      showToast("success", "Google Login Successful!");
+      navigate("/dashboard");
+    } else {
+      const msg = result.payload || result.error?.message || "Google verification failed";
+      setErrors({ submit: "Google Sign In Failed: " + msg });
+      showToast("error", msg);
+      console.error("Google Sign in rejected:", msg);
     }
+  };
+
+  const handleGoogleError = () => {
+    setErrors({ submit: "Google Sign In Failed: Login failed" });
+    showToast("error", "Google Login Failed");
   };
 
   // Reset success message when component unmounts
   useEffect(() => {
     return () => {
-      if (showSuccessMessage) {
-        dispatch(setShowSuccessMessage(false));
-      }
+      // cleanup if needed
     };
-  }, [showSuccessMessage, dispatch]);
+  }, [dispatch]);
 
   return {
     // State
     formData,
     errors,
     loading,
-    showSuccessMessage,
-    
+
     // Functions
     setFormData,
     setErrors,
     handleChange,
     handleSubmit,
-    handleGoogleSignIn,
+    handleGoogleSuccess,
+    handleGoogleError,
   };
 };

@@ -6,12 +6,15 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { listenToAuthState } from "../redux/slices/authSlice"; // ✅ sync Redux with Firebase
+import { useDispatch, useSelector } from "react-redux";
+import { listenToAuthState } from "../redux/slices/authSlice";
 
 // ✅ Pages
 import SignInPage from "../pages/SignInPage";
 import SignUpPage from "../pages/SignUpPage";
+import ForgotPasswordPage from "../pages/ForgotPasswordPage";
+import VerifyOtpPage from "../pages/VerifyOtpPage";
+import ResetPasswordPage from "../pages/ResetPasswordPage";
 import DashboardPage from "../pages/AttendancePage";
 import CalenderPage from "../pages/CalenderPage";
 import EmployeeFormPage from "../pages/EmployeeFormPage";
@@ -30,10 +33,19 @@ import ToastBar from "../components/common/popups/ToastBar";
 
 const AppRouter = () => {
   const dispatch = useDispatch();
+  const { isAuthenticated, user, loading } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    dispatch(listenToAuthState());
+    console.log("AppRouter init: Checking localStorage for existing session...");
+    if (localStorage.getItem("user") || localStorage.getItem("authToken")) {
+      dispatch(listenToAuthState());
+    }
   }, [dispatch]);
+
+  // Debugging state changes in the router
+  useEffect(() => {
+    console.log("Auth State Changed - isAuthenticated:", isAuthenticated, "user:", user?.email);
+  }, [isAuthenticated, user]);
 
   return (
     <Router>
@@ -56,6 +68,30 @@ const AppRouter = () => {
             element={
               <PublicRoute>
                 <SignUpPage />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/forgot-password"
+            element={
+              <PublicRoute>
+                <ForgotPasswordPage />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/verify-otp"
+            element={
+              <PublicRoute>
+                <VerifyOtpPage />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/reset-password"
+            element={
+              <PublicRoute>
+                <ResetPasswordPage />
               </PublicRoute>
             }
           />

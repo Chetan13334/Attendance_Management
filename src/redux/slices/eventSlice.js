@@ -1,35 +1,18 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { io } from "socket.io-client";
+import api from "../../utils/api";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://attendmate-backend.onrender.com/api";
 let socket;
-
-const getAuthHeaders = () => {
-  const headers = {
-    'Content-Type': 'application/json'
-  };
-  const token = localStorage.getItem("authToken");
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  return headers;
-};
 
 export const listenToEvents = createAsyncThunk(
   "events/listenToEvents",
   async (_, { dispatch, rejectWithValue }) => {
     try {
       console.log("Fetching events...");
-      const response = await fetch(`${API_BASE_URL}/events`, {
-        headers: getAuthHeaders(),
-        credentials: 'include'
-      });
+      const response = await api.get("/events");
+      const events = response.data;
 
-      if (!response.ok) throw new Error("Failed to fetch events");
-
-      const events = await response.json();
-
-      // Normalize
       // Normalize
       const formattedEvents = events.map(ev => ({
         ...ev,
@@ -44,23 +27,16 @@ export const listenToEvents = createAsyncThunk(
 
       // Socket config
       if (!socket) {
-        // Pass token in auth object for socket handshake if supported
-        // const token = localStorage.getItem("authToken");
         socket = io(API_BASE_URL.replace('/api', ''), {
           withCredentials: true,
-          // auth: { token } // enable if backend socket requires it
         });
       }
 
       socket.off("eventsUpdated");
-      socket.on("eventsUpdated", (event) => {
-        console.log("Event update received:", event);
-        // Simplest robust strategy: Re-fetch list
+      socket.on("eventsUpdated", () => {
         dispatch(listenToEvents());
       });
 
-      // Thunks should NOT return functions (cleanup logic must be handled in useEffects if needed)
-      // We return the data so the fulfilled action has a payload
       return formattedEvents;
 
     } catch (error) {
@@ -75,45 +51,23 @@ export const createEvent = createAsyncThunk(
   "events/createEvent",
   async ({ event_title, event_theme, event_date }, { rejectWithValue }) => {
     try {
-      // map frontend theme colors to backend valid 'type' enum if needed, or just default to 'Event'
-      // Valid backend types likely: 'Event', 'Holiday', 'Meeting'
       let backendType = "Event";
-      if (event_theme === "green") backendType = "Holiday"; // Example mapping
+      if (event_theme === "green") backendType = "Holiday";
       else if (event_theme === "yellow") backendType = "Meeting";
       else backendType = "Event";
 
       const payload = {
         title: event_title,
-        type: backendType, // Sent valid enum
-        event_theme: event_theme || "blue", // Keep visual theme for frontend
+        type: backendType,
+        event_theme: event_theme || "blue",
         start: event_date instanceof Date ? event_date.toISOString() : event_date,
         end: event_date instanceof Date ? event_date.toISOString() : event_date,
         event_date: event_date instanceof Date ? event_date.toISOString() : event_date,
-        description: event_theme || "blue" // Store theme in description to persist it
+        description: event_theme || "blue"
       };
 
-      console.log("POSTING event:", payload);
-
-      const response = await fetch(`${API_BASE_URL}/events/add`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        credentials: 'include',
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        let errorMessage = "Failed to create event";
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.message || errorMessage;
-          console.error("❌ Backend Event Error:", errorData);
-        } catch (e) {
-          console.error("❌ Could not parse backend event error text:", await response.text());
-        }
-        throw new Error(errorMessage);
-      }
-
-      const newEvent = await response.json();
+      const response = await api.post("/events/add", payload);
+      const newEvent = response.data;
       return newEvent.event;
 
     } catch (error) {
@@ -127,19 +81,14 @@ export const deleteEvent = createAsyncThunk(
   "events/deleteEvent",
   async (id, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/events/${id}`, {
-        method: 'DELETE',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-      });
-
-      if (!response.ok) throw new Error("Failed to delete event");
+      await api.delete(`/events/${id}`);
       return id;
     } catch (error) {
       return rejectWithValue(error.message);
     }
   }
 );
+
 
 
 const eventSlice = createSlice({
