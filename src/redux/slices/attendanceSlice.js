@@ -1,12 +1,10 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { io } from "socket.io-client";
+import api, { API_BASE_URL } from "../../utils/api";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 let socket;
 
 // Helper function to normalize attendance data
-// Backend format: checkInTime (ISO), checkOutTime (ISO), _id
-// Frontend expected format: CheckIn (ISO string), CheckOut (ISO string), id
 const normalizeAttendance = (record) => {
   return {
     ...record,
@@ -19,27 +17,17 @@ const normalizeAttendance = (record) => {
 
 export const listenToAttendance = createAsyncThunk(
   "attendance/listenToAttendance",
-  async (dateInput, { dispatch, rejectWithValue }) => {
+  async (dateInput, { rejectWithValue }) => {
     try {
-      // Ensure dateInput is a valid string YYYY-MM-DD
       let dateStr = dateInput;
       if (dateInput instanceof Date) {
         dateStr = dateInput.toISOString().split("T")[0];
       }
 
-      // 1. Initial Fetch via REST API
-      const response = await fetch(`${API_BASE_URL}/attendance?date=${dateStr}`, {
-        credentials: 'include'
-      });
-      if (!response.ok) {
-        throw new Error("Failed to fetch initial attendance data");
-      }
-      const data = await response.json();
+      const response = await api.get(`/attendance?date=${dateStr}`);
+      const data = response.data;
 
       const normalizedData = data.map(normalizeAttendance);
-
-      // We assume this returns the data which will be used by the fulfilled reducer
-      // We pass the date as well so the reducer knows which date bucket to update
       return { date: dateStr, records: normalizedData };
 
     } catch (error) {
@@ -54,14 +42,9 @@ export const fetchCalendarAttendance = createAsyncThunk(
   "attendance/fetchCalendarAttendance",
   async (_, { rejectWithValue }) => {
     try {
-      // Fetching attendance for calendar. Current backend supports limit.
-      const response = await fetch(`${API_BASE_URL}/attendance?limit=500`, {
-        credentials: 'include'
-      });
-      if (!response.ok) {
-        throw new Error("Failed to fetch calendar data");
-      }
-      const data = await response.json();
+      const response = await api.get("/attendance?limit=500");
+      const data = response.data;
+
       // Group by date for the calendar
       const calendarData = {};
       data.forEach(record => {
@@ -79,6 +62,7 @@ export const fetchCalendarAttendance = createAsyncThunk(
     }
   }
 );
+
 
 // Subscribe to real-time updates for a date
 export const subscribeToAttendanceUpdates = (dateStr) => (dispatch) => {

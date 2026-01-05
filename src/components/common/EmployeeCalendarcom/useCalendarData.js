@@ -1,13 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { db } from "../../../firebase";
 import {
   listenToEvents,
   createEvent,
   deleteEvent,
 } from "../../../redux/slices/eventSlice";
 import { listenToEmployees } from "../../../redux/slices/employeeSlice";
-import { collection, doc, onSnapshot } from "firebase/firestore";
+import { fetchCalendarAttendance } from "../../../redux/slices/attendanceSlice";
 import { usePopup } from "../../../components/common/popups/usePopup";
 
 // Helper: YYYY-MM-DD string (local timezone)
@@ -22,8 +21,11 @@ export const useCalendarData = (employeeId) => {
   const dispatch = useDispatch();
   const { showToast, showConfirm } = usePopup();
 
+  // Redux Selectors
   const { list: events } = useSelector((state) => state.events);
   const { list: employees } = useSelector((state) => state.employees);
+  // calendarData is { "YYYY-MM-DD": [ { id, EmployeeID, CheckIn, ... }, ... ] }
+  const { calendarData } = useSelector((state) => state.attendance);
 
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
@@ -33,7 +35,6 @@ export const useCalendarData = (employeeId) => {
   const [loading, setLoading] = useState(false);
   const [employeeAttendance, setEmployeeAttendance] = useState({});
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [unsubscribeFunctions, setUnsubscribeFunctions] = useState({});
 
   const monthNames = useMemo(() => [
     "January", "February", "March", "April", "May", "June",
@@ -42,212 +43,100 @@ export const useCalendarData = (employeeId) => {
 
   const daysOfWeek = useMemo(() => ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"], []);
 
-  // --- Start real-time listeners ---
+  // --- 1. Initial Fetching ---
   useEffect(() => {
     dispatch(listenToEvents());
     dispatch(listenToEmployees());
+    // Fetch attendance data for calendar
+    dispatch(fetchCalendarAttendance());
   }, [dispatch]);
 
-  // --- Find selected employee ---
+  // --- 2. Identify Selected Employee ---
   useEffect(() => {
     if (employeeId && employees.length > 0) {
-      // Find employee by document ID (this is what's passed from the calendar)
       const employee = employees.find(emp => emp.id === employeeId);
       setSelectedEmployee(employee);
     }
   }, [employeeId, employees]);
 
-  // --- Set up real-time listeners for all days in the current month ---
+  // --- 3. Calculate Attendance Status for Current Month ---
   useEffect(() => {
-    // Clean up previous listeners
-    Object.values(unsubscribeFunctions).forEach(unsubscribe => {
-      if (typeof unsubscribe === 'function') {
-        unsubscribe();
-      }
-    });
-    
-    // Reset attendance data when changing months to avoid mixing data from different months
-    setEmployeeAttendance({});
-    
-    // Set loading state when changing months
     setLoading(true);
-    
-    // Get all days in the current month
-    const firstDay = new Date(currentYear, currentMonth, 1);
+
+    const newAttendance = {};
     const lastDay = new Date(currentYear, currentMonth + 1, 0);
     const daysInMonth = lastDay.getDate();
-    
-    // Create listeners for each day in the current month
-    const newUnsubscribeFunctions = {};
-    
+
+    // Iterate through all days of the viewed month
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(currentYear, currentMonth, day);
       const dateKey = getLocalDateKey(date);
-      
-      // Create date document reference
-      const dateDocRef = doc(db, "Employee_CheckIn_CheckOut", dateKey);
-      const empRecColRef = collection(dateDocRef, "employee_records");
-      
-      // Set up real-time listener for this date
-      const unsubscribe = onSnapshot(empRecColRef, (empSnapshot) => {
-        // Process the snapshot data
-        let employeeRecord = null;
-        
-        // Try to find the record for our specific employee
-        if (employeeId && selectedEmployee) {
-          // Try different ways to match the employee:
-          // 1. Try to find by the employee's empId field
-          if (selectedEmployee.empId) {
-            empSnapshot.forEach((empDoc) => {
-              if (empDoc.id === selectedEmployee.empId) {
-                employeeRecord = empDoc.data();
-              }
-            });
-          }
-          
-          // 2. Try by document ID
-          if (!employeeRecord) {
-            empSnapshot.forEach((empDoc) => {
-              if (empDoc.id === employeeId) {
-                employeeRecord = empDoc.data();
-              }
-            });
-          }
-          
-          // 3. Try by EmployeeID field in the employee data
-          if (!employeeRecord && selectedEmployee.EmployeeID) {
-            empSnapshot.forEach((empDoc) => {
-              if (empDoc.id === selectedEmployee.EmployeeID) {
-                employeeRecord = empDoc.data();
-              }
-            });
-          }
-          
-          // 4. Try by employeeId field in the employee data
-          if (!employeeRecord && selectedEmployee.employeeId) {
-            empSnapshot.forEach((empDoc) => {
-              if (empDoc.id === selectedEmployee.employeeId) {
-                employeeRecord = empDoc.data();
-              }
-            });
+
+      // Get records for this date from Redux
+      const dailyRecords = calendarData[dateKey] || [];
+
+      // Find the record corresponding to the current employee
+      let employeeRecord = null;
+      if (employeeId) {
+        employeeRecord = dailyRecords.find(r =>
+          r.id === employeeId ||
+          r.employeeId === employeeId ||
+          (selectedEmployee && r.employeeId === selectedEmployee.EmployeeID) // Check custom ID field
+        );
+      }
+
+      if (employeeRecord) {
+        // Determine status based on CheckIn time
+        let checkIn = null;
+        if (employeeRecord.CheckIn) {
+          checkIn = new Date(employeeRecord.CheckIn);
+        }
+
+        let status = "absent";
+        if (checkIn && !isNaN(checkIn.getTime())) {
+          const totalMins = checkIn.getHours() * 60 + checkIn.getMinutes();
+          const onTimeThreshold = 10 * 60; // 10:00 AM
+          const lateThreshold = 10 * 60 + 15; // 10:15 AM
+
+          if (totalMins >= onTimeThreshold && totalMins <= lateThreshold) {
+            status = "on-time";
+          } else if (totalMins > lateThreshold) {
+            status = "late";
+          } else if (totalMins < onTimeThreshold) {
+            // Early check-in is also considered on-time effectively
+            status = "on-time";
           }
         }
-        
-        // Update the attendance state for this specific date
-        setEmployeeAttendance(prev => {
-          const newAttendance = { ...prev };
-          
-          if (employeeRecord && employeeId && selectedEmployee) {
-            // Convert check-in time
-            let checkIn = null;
-            if (employeeRecord.CheckIn) {
-              if (typeof employeeRecord.CheckIn.toDate === "function") {
-                checkIn = employeeRecord.CheckIn.toDate();
-              } else if (employeeRecord.CheckIn.seconds) {
-                checkIn = new Date(employeeRecord.CheckIn.seconds * 1000);
-              } else {
-                checkIn = new Date(employeeRecord.CheckIn);
-              }
-            }
-            
-            // Determine status
-            let status = "absent";
-            if (checkIn && !isNaN(checkIn.getTime())) {
-              const totalMins = checkIn.getHours() * 60 + checkIn.getMinutes();
-              
-              // Define thresholds
-              const onTimeThreshold = 10 * 60; // 10:00 AM
-              const lateThreshold = 10 * 60 + 15; // 10:15 AM
-              
-              if (totalMins >= onTimeThreshold && totalMins <= lateThreshold) {
-                status = "on-time";
-              } else if (totalMins > lateThreshold) {
-                status = "late";
-              } else if (totalMins < onTimeThreshold) {
-                status = "on-time";
-              }
-            }
-            
-            newAttendance[dateKey] = status;
-          } else {
-            // No record found, only mark as absent if the date is in the past
-            // Future dates should not be marked as absent
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const currentDate = new Date(dateKey);
-            currentDate.setHours(0, 0, 0, 0);
-            
-            if (currentDate <= today) {
-              // Past or current date without record = absent
-              newAttendance[dateKey] = "absent";
-            } else {
-              // Future date without record = don't set (or set to null/undefined)
-              // This will be excluded from percentage calculations
-              delete newAttendance[dateKey];
-            }
-          }
-          
-          // Check if we've finished loading all dates for the current month
-          const expectedDateCount = new Date(currentYear, currentMonth + 1, 0).getDate();
-          const currentDateCount = Object.keys(newAttendance).filter(date => {
-            // Only count dates that belong to the current month
-            const dateObj = new Date(date);
-            return dateObj.getMonth() === currentMonth && dateObj.getFullYear() === currentYear;
-          }).length;
-          
-          // If we've loaded all dates, set loading to false
-          if (currentDateCount >= expectedDateCount) {
-            setLoading(false);
-          }
-          
-          return newAttendance;
-        });
-      }, (error) => {
-        console.error(`Error in attendance listener for ${dateKey}:`, error);
-        // Set this date to absent on error only if it's a past date
+        newAttendance[dateKey] = status;
+      } else {
+        // No record logic
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const currentDate = new Date(dateKey);
-        currentDate.setHours(0, 0, 0, 0);
-        
+        currentDate.setHours(0, 0, 0, 0); // Normalize
+
         if (currentDate <= today) {
-          setEmployeeAttendance(prev => ({
-            ...prev,
-            [dateKey]: "absent"
-          }));
+          // Past dates without record are absent
+          newAttendance[dateKey] = "absent";
+        } else {
+          // Future dates: no status
         }
-      });
-      
-      // Store the unsubscribe function
-      newUnsubscribeFunctions[dateKey] = unsubscribe;
+      }
     }
-    
-    // Update the unsubscribe functions
-    setUnsubscribeFunctions(newUnsubscribeFunctions);
-    
-    // Set loading to false after setting up all listeners (fallback in case the above logic doesn't work)
-    setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-    
-    // Cleanup function for this effect
-    return () => {
-      Object.values(newUnsubscribeFunctions).forEach(unsubscribe => {
-        if (typeof unsubscribe === 'function') {
-          unsubscribe();
-        }
-      });
-    };
-  }, [currentMonth, currentYear, employeeId, selectedEmployee]);
 
-  // --- Helper: convert Firestore Timestamp → Date (handles both Timestamp & plain object) ---
-  const toDate = useCallback((ts) => {
-    if (!ts) return null;
-    if (typeof ts.toDate === "function") return ts.toDate();
-    return new Date(ts);
-  }, []);
+    setEmployeeAttendance(newAttendance);
 
-  // --- Calendar days ---
+    // Simulate short loading effect or just done
+    const timer = setTimeout(() => setLoading(false), 300);
+    return () => clearTimeout(timer);
+
+  }, [calendarData, currentMonth, currentYear, employeeId, selectedEmployee]);
+
+
+  // --- Helper: Parsing Dates ---
+  // No longer need Firestore timestamp conversion hooks, usage of standard Date is fine.
+
+  // --- Calendar Layout ---
   const getCalendarDays = useCallback(() => {
     const firstDay = new Date(currentYear, currentMonth, 1);
     const lastDay = new Date(currentYear, currentMonth + 1, 0);
@@ -259,7 +148,7 @@ export const useCalendarData = (employeeId) => {
   }, [currentMonth, currentYear]);
 
   const calendarDays = useMemo(() => getCalendarDays(), [getCalendarDays]);
-  
+
   const weeks = useMemo(() => {
     const weeksArray = [];
     for (let i = 0; i < calendarDays.length; i += 7)
@@ -267,19 +156,15 @@ export const useCalendarData = (employeeId) => {
     return weeksArray;
   }, [calendarDays]);
 
-  // --- Get attendance status for a specific date ---
+  // --- Get Status Helper ---
   const getAttendanceStatusForDate = useCallback((date) => {
     if (!date || !employeeId) return "absent";
-    
-    // Format date as YYYY-MM-DD
     const dateKey = getLocalDateKey(date);
     return employeeAttendance[dateKey] || "absent";
   }, [employeeId, employeeAttendance]);
 
-  // --- Navigation ---
+  // --- Navigation Handlers ---
   const handlePrevMonth = useCallback(() => {
-    console.log("Previous month clicked, setting loading state");
-    setLoading(true); // Set loading immediately when navigating
     if (currentMonth === 0) {
       setCurrentMonth(11);
       setCurrentYear((y) => y - 1);
@@ -289,23 +174,14 @@ export const useCalendarData = (employeeId) => {
   }, [currentMonth]);
 
   const handleNextMonth = useCallback(() => {
-    console.log("Next month clicked, setting loading state");
-    setLoading(true); // Set loading immediately when navigating
     const today = new Date();
-
     const thisYear = today.getFullYear();
-    const thisMonth = today.getMonth(); // 0-based
+    const thisMonth = today.getMonth();
 
-    // Prevent navigating to future months
-    if (
-      currentYear > thisYear ||
-      (currentYear === thisYear && currentMonth >= thisMonth)
-    ) {
-      setLoading(false); // Reset loading if navigation is blocked
-      return; // Stop navigation
+    if (currentYear > thisYear || (currentYear === thisYear && currentMonth >= thisMonth)) {
+      return;
     }
 
-    // Otherwise allow month change
     if (currentMonth === 11) {
       setCurrentMonth(0);
       setCurrentYear((y) => y + 1);
@@ -314,21 +190,14 @@ export const useCalendarData = (employeeId) => {
     }
   }, [currentMonth, currentYear]);
 
+  const isNextDisabled = (() => {
+    const today = new Date();
+    const thisYear = today.getFullYear();
+    const thisMonth = today.getMonth();
+    return (currentYear > thisYear || (currentYear === thisYear && currentMonth >= thisMonth));
+  })();
 
-// Disable next-month button if trying to move into the future
-const isNextDisabled = (() => {
-  const today = new Date();
-  const thisYear = today.getFullYear();
-  const thisMonth = today.getMonth(); // 0-based index
-
-  // If current page month is ahead of today's month → disable next
-  return (
-    currentYear > thisYear ||
-    (currentYear === thisYear && currentMonth >= thisMonth)
-  );
-})();
-
-  // --- Modal ---
+  // --- Event Handling ---
   const handleDayClick = useCallback((date) => {
     if (!date) return;
     setSelectedDate(date);
@@ -336,7 +205,6 @@ const isNextDisabled = (() => {
     setIsModalOpen(true);
   }, []);
 
-  // --- Add Event ---
   const handleAddEvent = useCallback(async () => {
     if (!eventForm.title.trim() || !selectedDate) {
       showToast("error", "Please add an event title");
@@ -348,7 +216,7 @@ const isNextDisabled = (() => {
         createEvent({
           event_title: eventForm.title,
           event_theme: eventForm.theme,
-          event_date: selectedDate, // ← Date object
+          event_date: selectedDate,
         })
       ).unwrap();
 
@@ -362,7 +230,6 @@ const isNextDisabled = (() => {
     }
   }, [eventForm, selectedDate, dispatch, showToast]);
 
-  // --- Delete Event ---
   const handleDeleteEvent = useCallback(async (id) => {
     showConfirm("Delete this event?", async () => {
       try {
@@ -375,53 +242,29 @@ const isNextDisabled = (() => {
     });
   }, [dispatch, showConfirm, showToast]);
 
-  // --- Parse events safely (Handles ISO string OR Firebase Timestamp) ---
-  const getParsedEvents = useCallback(() => {
+  // --- Parsed Events (Normalization) ---
+  const parsedEvents = useMemo(() => {
     return events
       .map((ev) => {
         let eventDate = null;
-
         if (ev.event_date) {
-          if (typeof ev.event_date === "string") {
-            eventDate = new Date(ev.event_date);
-          } else if (ev.event_date.toDate) {
-            // Firebase Timestamp
-            eventDate = ev.event_date.toDate();
-          } else if (ev.event_date instanceof Date) {
-            eventDate = ev.event_date;
-          }
-
-          if (!eventDate || isNaN(eventDate.getTime())) {
-            console.warn("Invalid event_date:", ev.event_date, ev);
-            return null;
-          }
+          // Handle various string/object formats safely
+          eventDate = new Date(ev.event_date);
         }
-
+        if (!eventDate || isNaN(eventDate.getTime())) return null;
         return { ...ev, event_date: eventDate };
       })
-      .filter(Boolean); // Remove nulls
+      .filter(Boolean);
   }, [events]);
 
-  const parsedEvents = useMemo(() => getParsedEvents(), [getParsedEvents]);
-
-  // --- Parse employees ---
-  const getParsedEmployees = useCallback(() => {
+  const parsedEmployees = useMemo(() => {
     return employees.map((emp) => ({
       ...emp,
-      DateOfBirth: emp.DateOfBirth
-        ? typeof emp.DateOfBirth === "string"
-          ? new Date(emp.DateOfBirth)
-          : emp.DateOfBirth.toDate
-          ? emp.DateOfBirth.toDate()
-          : emp.DateOfBirth
-        : null,
+      DateOfBirth: emp.DateOfBirth ? new Date(emp.DateOfBirth) : null,
     }));
   }, [employees]);
 
-  const parsedEmployees = useMemo(() => getParsedEmployees(), [getParsedEmployees]);
-
   return {
-    // State
     currentMonth,
     currentYear,
     isModalOpen,
@@ -436,11 +279,8 @@ const isNextDisabled = (() => {
     employeeAttendance,
     selectedEmployee,
     getAttendanceStatusForDate,
-
-    // ADD THIS ↓↓↓
     isNextDisabled,
-    
-    // Functions
+
     setCurrentMonth,
     setCurrentYear,
     setIsModalOpen,
@@ -452,5 +292,5 @@ const isNextDisabled = (() => {
     handleDayClick,
     handleAddEvent,
     handleDeleteEvent,
-};
+  };
 };

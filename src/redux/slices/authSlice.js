@@ -1,83 +1,60 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
-
-// Helper to get headers
-const getHeaders = () => {
-  return {
-    'Content-Type': 'application/json'
-  };
-};
+import api from "../../utils/api";
 
 // --- Thunks ---
 
+/**
+ * Verified Auth State
+ * Checks with the backend if the current token is valid.
+ * Does NOT set loading to true if we already have a user (optimistic).
+ */
 export const listenToAuthState = createAsyncThunk(
   "auth/listenToAuthState",
   async (_, { dispatch, getState }) => {
-    // First, check if we have a user in localStorage
-    const savedUser = JSON.parse(localStorage.getItem("user"));
-
-    if (savedUser) {
-      // Optimistically set the user from localStorage
-      dispatch(setUser(savedUser));
-    }
-
-    // Then verify with backend (but don't logout on network errors)
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/me`, {
-        headers: getHeaders(),
-        credentials: 'include'
-      });
+      const response = await api.get("/auth/me");
+      const data = response.data;
 
-      if (response.ok) {
-        const data = await response.json();
+      if (data?.user) {
         const user = {
           ...data.user,
-          uid: data.user.id,
+          uid: data.user.id || data.user._id,
           photo: data.user.picture || data.user.image || null
         };
 
         localStorage.setItem("user", JSON.stringify(user));
         dispatch(setUser(user));
-      } else if (response.status === 401 || response.status === 403) {
-        // Only logout on explicit authentication failures
-        console.log("Session expired or unauthorized");
-        localStorage.removeItem("user");
-        dispatch(logout());
       } else {
-        // For other errors (500, network issues), keep the user logged in
-        console.warn("Auth check failed with status:", response.status);
-        // Keep using the savedUser from localStorage
+        // Only logout if we are currently "authenticated" in Redux but the server says otherwise
+        const { auth } = getState();
+        if (auth.isAuthenticated) {
+          dispatch(logout());
+        }
       }
     } catch (e) {
-      // Network error or backend down - keep user logged in from localStorage
-      console.warn("Auth check failed (network error):", e.message);
-      // Don't logout - the user might still have a valid session
-      // The backend will reject requests if the session is actually invalid
+      const { auth } = getState();
+      // If unauthorized (401), clear the session
+      if (e.message.toLowerCase().includes("unauthorized") || e.message.toLowerCase().includes("401")) {
+        if (auth.isAuthenticated) {
+          dispatch(logout());
+        }
+      }
+      console.warn("Auth check failed:", e.message);
     }
   }
 );
 
 export const signUpWithEmail = createAsyncThunk(
   "auth/signUpWithEmail",
-  async ({ email, password, name, role }, { rejectWithValue }) => {
+  async (userData, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: 'POST',
-        headers: getHeaders(),
-        credentials: 'include',
-        body: JSON.stringify({ email, password, name, role: role || 'employee' })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Registration failed");
-      }
-
-      return { success: true };
+      console.log("Sending Reg Data to backend:", userData);
+      const response = await api.post("/auth/register", userData);
+      return response.data;
     } catch (error) {
-      return rejectWithValue(error.message);
+      const message = error.response?.data?.message || error.message || "Registration failed";
+      console.error("Signup API error:", message);
+      return rejectWithValue(message);
     }
   }
 );
@@ -86,23 +63,14 @@ export const signInWithEmail = createAsyncThunk(
   "auth/signInWithEmail",
   async ({ email, password }, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: getHeaders(),
-        credentials: 'include',
-        body: JSON.stringify({ email, password })
-      });
+      const response = await api.post("/auth/login", { email, password });
+      const data = response.data;
 
-      const data = await response.json();
+      if (!data?.user) throw new Error("User data missing in response");
 
-      if (!response.ok) {
-        throw new Error(data.message || "Login failed");
-      }
-
-      // Data expected: { user: {...}, token: "..." }
       const user = {
         ...data.user,
-        uid: data.user.id,
+        uid: data.user.id || data.user._id,
         photo: data.user.picture || null
       };
 
@@ -112,7 +80,8 @@ export const signInWithEmail = createAsyncThunk(
       }
       return { user };
     } catch (error) {
-      return rejectWithValue(error.message);
+      const message = error.response?.data?.message || error.message || "Login failed";
+      return rejectWithValue(message);
     }
   }
 );
@@ -120,36 +89,15 @@ export const signInWithEmail = createAsyncThunk(
 export const signInWithGoogle = createAsyncThunk(
   "auth/signInWithGoogle",
   async (idToken, { rejectWithValue }) => {
-    // Note: The frontend component usually handles the Google Popup and gets the idToken.
-    // Then we send it here. If the existing component was using signInWithPopup(auth, provider),
-    // we need to adjust the calling component to use a Google Login library or similar, 
-    // OR we might need to keep firebase/auth JUST for the client-side popup if not using 'react-google-login'.
-    // WITHOUT Firebase client SDK, you need 'react-oauth/google' or similar.
-    // Assuming for now the caller provides the token or we adapt.
-
-    // IF we are removing Firebase completely, we cannot use `signInWithPopup(auth, provider)`.
-    // The user needs a way to get the Google ID Token.
-
-    // For this migration step, I will assume the backend accepts the token. 
-    // But generating the token on client usually requires a library.
-
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/google`, {
-        method: 'POST',
-        headers: getHeaders(),
-        credentials: 'include',
-        body: JSON.stringify({ idToken })
-      });
+      const response = await api.post("/auth/google", { idToken });
+      const data = response.data;
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Google login failed");
-      }
+      if (!data?.user) throw new Error("Google login failed: User data missing");
 
       const user = {
         ...data.user,
-        uid: data.user.id,
+        uid: data.user.id || data.user._id,
         photo: data.user.picture
       };
 
@@ -160,31 +108,35 @@ export const signInWithGoogle = createAsyncThunk(
       return { user };
 
     } catch (error) {
-      return rejectWithValue(error.message);
+      const message = error.response?.data?.message || error.message || "Google login failed";
+      return rejectWithValue(message);
     }
   }
 );
 
 export const signOutUser = createAsyncThunk(
   "auth/signOutUser",
-  async (_, { rejectWithValue }) => {
+  async (_, { dispatch }) => {
     try {
-      await fetch(`${API_BASE_URL}/auth/logout`, {
-        method: 'POST',
-        credentials: 'include'
-      });
+      await api.post("/auth/logout");
+    } finally {
       localStorage.removeItem("user");
       localStorage.removeItem("authToken");
-    } catch (error) {
-      // Even if backend fails, clear local state
-      localStorage.removeItem("user");
-      localStorage.removeItem("authToken");
-      return rejectWithValue(error.message);
+      dispatch(logout());
     }
   }
 );
 
-const savedUser = JSON.parse(localStorage.getItem("user"));
+
+const getInitialUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem("user"));
+  } catch (e) {
+    return null;
+  }
+};
+
+const savedUser = getInitialUser();
 
 const authSlice = createSlice({
   name: "auth",
@@ -204,6 +156,7 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.showSuccessMessage = false;
       localStorage.removeItem("user");
+      localStorage.removeItem("authToken");
     },
     setUser: (state, action) => {
       state.user = action.payload;
@@ -222,8 +175,6 @@ const authSlice = createSlice({
       })
       .addCase(signUpWithEmail.fulfilled, (state) => {
         state.loading = false;
-        state.user = null;
-        state.isAuthenticated = false;
         state.error = null;
       })
       .addCase(signUpWithEmail.rejected, (state, action) => {
@@ -266,14 +217,12 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.showSuccessMessage = false;
       })
-      .addCase(signOutUser.rejected, (state, action) => {
-        state.error = action.payload;
-        state.user = null;
-        state.isAuthenticated = false;
-      })
       // Auth State Check
       .addCase(listenToAuthState.pending, (state) => {
-        state.loading = true;
+        // Only show loading if we haven't recovered a user from localStorage
+        if (!state.isAuthenticated) {
+          state.loading = true;
+        }
       })
       .addCase(listenToAuthState.fulfilled, (state) => {
         state.loading = false;

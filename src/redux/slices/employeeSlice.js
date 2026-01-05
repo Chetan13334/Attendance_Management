@@ -1,35 +1,18 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { io } from "socket.io-client";
+import api from "../../utils/api";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 let socket;
-
-const getAuthHeaders = () => {
-  const headers = {
-    'Content-Type': 'application/json'
-  };
-  const token = localStorage.getItem("authToken");
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  return headers;
-};
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://attendmate-backend.onrender.com/api";
 
 export const listenToEmployees = createAsyncThunk(
   "employees/fetchEmployees",
-  async (_, { dispatch, rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
       console.log("Fetching employees from API...");
-      const response = await fetch(`${API_BASE_URL}/employees`, {
-        headers: getAuthHeaders(),
-        credentials: 'include'
-      });
+      const response = await api.get("/employees");
+      const data = response.data;
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch employees: ${response.statusText}`);
-      }
-
-      const data = await response.json();
       console.log("🔍 Raw backend employee data (first employee - full):", JSON.stringify(data[0], null, 2));
 
       // Normalize data to match application expectations (PascalCase for UI)
@@ -92,26 +75,9 @@ export const createEmployee = createAsyncThunk(
     try {
       console.log("🌐 POSTING to /employees/add with body:", JSON.stringify(employeeData, null, 2));
 
-      const response = await fetch(`${API_BASE_URL}/employees/add`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        credentials: 'include',
-        body: JSON.stringify(employeeData)
-      });
+      const response = await api.post("/employees/add", employeeData);
+      const newEmployee = response.data;
 
-      if (!response.ok) {
-        let errorMessage = "Failed to create employee";
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.message || errorMessage;
-          console.error("❌ Backend Error Response:", errorData);
-        } catch (e) {
-          console.error("❌ Could not parse backend error JSON:", await response.text());
-        }
-        throw new Error(errorMessage);
-      }
-
-      const newEmployee = await response.json();
       console.log("✨ Backend response after creating employee:", JSON.stringify(newEmployee, null, 2));
 
       // Backend returns { message: "...", employee: {...} }
@@ -152,18 +118,7 @@ export const updateEmployeeAsync = createAsyncThunk(
   "employees/updateEmployee",
   async ({ id, updatedData }, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/employees/${id}`, {
-        method: 'PUT',
-        headers: getAuthHeaders(),
-        credentials: 'include',
-        body: JSON.stringify(updatedData)
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update employee");
-      }
-
-      // Backend usually returns updated doc or message
+      await api.put(`/employees/${id}`, updatedData);
       // returning arg data to update local store optimistically
       return { id, updatedData };
     } catch (err) {
@@ -177,21 +132,14 @@ export const deleteEmployeeAsync = createAsyncThunk(
   "employees/deleteEmployee",
   async (id, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/employees/${id}`, {
-        method: 'DELETE',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete employee");
-      }
+      await api.delete(`/employees/${id}`);
       return id;
     } catch (err) {
       return rejectWithValue(err.message);
     }
   }
 );
+
 
 const employeeSlice = createSlice({
   name: "employees",

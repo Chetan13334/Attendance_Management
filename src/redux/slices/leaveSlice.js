@@ -1,25 +1,16 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { io } from "socket.io-client";
+import api from "../../utils/api";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://attendmate-backend.onrender.com/api";
 let socket;
-
-const getAuthHeaders = () => ({
-    'Content-Type': 'application/json'
-});
 
 export const fetchLeaveRequests = createAsyncThunk(
     "leaves/fetchLeaveRequests",
     async (_, { rejectWithValue }) => {
         try {
-            const response = await fetch(`${API_BASE_URL}/leaves`, {
-                headers: getAuthHeaders(),
-                credentials: 'include'
-            });
-
-            if (!response.ok) throw new Error("Failed to fetch leaves");
-
-            const leaves = await response.json();
+            const response = await api.get("/leaves");
+            const leaves = response.data;
             return leaves.map(l => ({
                 ...l,
                 id: l._id,
@@ -58,16 +49,8 @@ export const updateLeaveStatus = createAsyncThunk(
     "leaves/updateLeaveStatus",
     async ({ id, status }, { rejectWithValue }) => {
         try {
-            const response = await fetch(`${API_BASE_URL}/leaves/${id}`, {
-                method: 'PUT',
-                headers: getAuthHeaders(),
-                credentials: 'include',
-                body: JSON.stringify({ status })
-            });
-
-            if (!response.ok) throw new Error("Failed to update status");
-
-            const updated = await response.json();
+            const response = await api.put(`/leaves/${id}`, { status });
+            const updated = response.data;
             return { id, status: updated.leave.status };
 
         } catch (error) {
@@ -76,6 +59,7 @@ export const updateLeaveStatus = createAsyncThunk(
         }
     }
 );
+
 
 const leaveSlice = createSlice({
     name: "leaves",
